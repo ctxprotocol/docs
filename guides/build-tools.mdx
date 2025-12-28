@@ -1,0 +1,285 @@
+---
+title: "Build & List Your Tool"
+description: "Step-by-step guide to building an MCP server and listing it on the Context marketplace"
+---
+
+## Overview
+
+Want to earn revenue from your data? Build an MCP server and register it as an **MCP Tool** on the Context marketplace.
+
+<Info>
+**Earnings Model**: You earn **90%** of every query fee. Set your price (e.g., $0.01/query) and get paid in USDC instantly every time an Agent calls your tool.
+</Info>
+
+---
+
+## Step 1: Build a Standard MCP Server
+
+Use the official `@modelcontextprotocol/sdk` to build your server, plus `@ctxprotocol/sdk` to secure your endpoint.
+
+### Install Dependencies
+
+```bash
+pnpm add @modelcontextprotocol/sdk express
+pnpm add @ctxprotocol/sdk
+pnpm add -D @types/express
+```
+
+### Implement Structured Output
+
+<Warning>
+**Required for Context**: You must implement the MCP structured output standard:
+- `outputSchema` in your tool definitions (JSON Schema describing your response structure)
+- `structuredContent` in your responses (the machine-readable data matching your schema)
+</Warning>
+
+```typescript
+// MCP spec compliant server (see: modelcontextprotocol.io/specification)
+const TOOLS = [{
+  name: "get_gas_price",
+  description: "Get current gas prices for any EVM chain",
+  inputSchema: {
+    type: "object",
+    properties: {
+      chainId: { type: "number", description: "EVM chain ID" },
+    },
+  },
+  outputSchema: {  // 👈 Required by Context
+    type: "object",
+    properties: {
+      gasPrice: { type: "number" },
+      unit: { type: "string" },
+    },
+    required: ["gasPrice", "unit"],
+  },
+}];
+
+// In your tool handler
+return {
+  content: [{ type: "text", text: JSON.stringify(data) }],  // Backward compat
+  structuredContent: data,  // 👈 Required by Context
+};
+```
+
+### Secure Your Endpoint
+
+Add Context's middleware to verify that requests are legitimate:
+
+```typescript
+import express from "express";
+import { createContextMiddleware } from "@ctxprotocol/sdk";
+
+const app = express();
+app.use(express.json());
+
+// 1 line of code to secure your endpoint & handle payments
+app.use("/mcp", createContextMiddleware());
+
+// ...
+
+// Why this middleware is critical:
+// 1. Verifies that requests are signed by the Context Platform (preventing free-riding)
+// 2. Injects user context (if requested)
+// 3. Handles payment verification automatically
+```
+
+---
+
+## Step 2: Test Your Tool Locally
+
+Before deploying, ensure your server works as expected. You can use the [official MCP Inspector](https://github.com/modelcontextprotocol/inspector) or `curl` to test your tool locally.
+
+### Using Curl
+
+```bash
+# Test your endpoint (assuming it's running on localhost:3000)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/list",
+    "id": 1
+  }'
+```
+
+---
+
+## Step 3: Deploy Your Server
+
+Your server needs to be **publicly accessible**. We support both transport methods:
+
+| Transport | URL Format | Recommendation |
+|-----------|------------|----------------|
+| HTTP Streaming | `https://your-server.com/mcp` | ✅ Recommended |
+| SSE (Server-Sent Events) | `https://your-server.com/sse` | Supported |
+
+<Tip>
+Deploy to any platform: Vercel, Railway, Render, AWS, or your own infrastructure. The only requirement is a publicly accessible HTTPS endpoint.
+</Tip>
+
+---
+
+## Step 3: Register in the App
+
+<Steps>
+  <Step title="Go to /contribute">
+    Navigate to the contribute page in the running Context app
+  </Step>
+  <Step title="Select MCP Tool">
+    Choose "MCP Tool" (the default option)
+  </Step>
+  <Step title="Paste Your Endpoint URL">
+    Enter your publicly accessible endpoint URL
+  </Step>
+  <Step title="Auto-Discovery">
+    We'll auto-discover your skills via `listTools()`
+  </Step>
+</Steps>
+
+---
+
+## Step 4: Set a Price
+
+Choose your fee per query:
+
+| Price | Use Case |
+|-------|----------|
+| **$0.00** | Free tools (great for adoption and visibility) |
+| **$0.01+** | Paid tools (earn revenue per query) |
+
+<Note>
+This fee is paid **once per chat turn**. The Agent can call your skills up to 100 times within that single paid turn via `callMcpSkill()`.
+</Note>
+
+---
+
+## Step 5: Stake USDC
+
+All tools require a minimum USDC stake, enforced on-chain.
+
+| Tool Type | Minimum Stake |
+|-----------|---------------|
+| Free Tools | $10 USDC |
+| Paid Tools | $10 USDC or 100× query price (whichever is higher) |
+
+<Info>
+Stakes are **fully refundable** with a 7-day withdrawal delay. This creates accountability and enables slashing for fraud.
+</Info>
+
+---
+
+## Step 6: You're Live! 🎉
+
+Your MCP Tool is now instantly available on the decentralized marketplace. Users can discover it via search, and AI agents can autonomously purchase and use your tool.
+
+---
+
+## Schema Accuracy & Dispute Resolution
+
+<Warning>
+Your `outputSchema` isn't just documentation — **it's a contract**.
+</Warning>
+
+Context uses automated schema validation as part of our crypto-native dispute resolution system:
+
+1. Users can dispute tool outputs by providing their `transaction_hash` (proof of payment)
+2. **Robot judge** auto-adjudicates by validating your actual output against your declared `outputSchema`
+3. If schema mismatches, the dispute is resolved against you automatically
+4. Repeated violations (5+ flags) lead to tool deactivation
+
+### Example: Schema Compliance
+
+```typescript
+// ❌ BAD: Schema says number, but you return string
+outputSchema: { temperature: { type: "number" } }
+structuredContent: { temperature: "72" }  // GUILTY - schema mismatch!
+
+// ✅ GOOD: Output matches schema exactly
+outputSchema: { temperature: { type: "number" } }
+structuredContent: { temperature: 72 }  // Valid
+```
+
+<Tip>
+**Why this matters**: Unlike Web2 "star ratings" that can be gamed by bots, Context disputes require **economic proof** (you paid for the query). This protects honest developers from spam while ensuring bad actors face consequences.
+</Tip>
+
+---
+
+## Complete Server Example
+
+Here's a full working example of an MCP server ready for Context:
+
+```typescript
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import express from "express";
+import { createContextMiddleware } from "@ctxprotocol/sdk";
+
+const app = express();
+app.use(express.json());
+
+// Secure endpoint with Context middleware
+app.use("/mcp", createContextMiddleware());
+
+// Define tools with outputSchema
+const TOOLS = [{
+  name: "get_gas_price",
+  description: "Get current gas prices",
+  inputSchema: {
+    type: "object",
+    properties: {
+      chainId: { type: "number", description: "EVM chain ID" },
+    },
+  },
+  outputSchema: {
+    type: "object",
+    properties: {
+      gasPrice: { type: "number" },
+      unit: { type: "string" },
+    },
+    required: ["gasPrice", "unit"],
+  },
+}];
+
+// Standard MCP server setup
+const server = new Server(
+  { name: "my-gas-tool", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: TOOLS,
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const data = await fetchGasData(request.params.arguments.chainId);
+  
+  return {
+    content: [{ type: "text", text: JSON.stringify(data) }],
+    structuredContent: data,
+  };
+});
+
+app.listen(3000, () => {
+  console.log("MCP server running on port 3000");
+});
+```
+
+---
+
+## Example Servers
+
+Check out these complete working examples:
+
+<CardGroup cols={3}>
+  <Card title="Blocknative" icon="gas-pump" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/blocknative-contributor">
+    Gas price API (3 tools)
+  </Card>
+  <Card title="Hyperliquid" icon="chart-line" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/hyperliquid-contributor">
+    DeFi analytics (16 tools)
+  </Card>
+  <Card title="Polymarket" icon="chart-pie" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor">
+    Prediction market intelligence
+  </Card>
+</CardGroup>
+

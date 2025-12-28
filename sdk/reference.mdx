@@ -1,0 +1,435 @@
+---
+title: "SDK Reference"
+description: "Complete API reference for @ctxprotocol/sdk — installation, configuration, methods, and types"
+---
+
+## Installation
+
+<CodeGroup>
+```bash npm
+npm install @ctxprotocol/sdk
+```
+
+```bash pnpm
+pnpm add @ctxprotocol/sdk
+```
+
+```bash yarn
+yarn add @ctxprotocol/sdk
+```
+</CodeGroup>
+
+### Requirements
+
+- Node.js 18+ (for native fetch)
+- TypeScript 5+ (recommended)
+
+---
+
+## Prerequisites
+
+Before using the API, complete setup at [ctxprotocol.com](https://ctxprotocol.com):
+
+<Steps>
+  <Step title="Sign in">
+    Creates your embedded wallet
+  </Step>
+  <Step title="Enable Auto Pay">
+    Approve USDC spending for tool payments
+  </Step>
+  <Step title="Fund wallet">
+    Add USDC for tool execution fees
+  </Step>
+  <Step title="Generate API key">
+    In Settings page
+  </Step>
+</Steps>
+
+---
+
+## Quick Start
+
+```typescript
+import { ContextClient } from "@ctxprotocol/sdk";
+
+const client = new ContextClient({
+  apiKey: "sk_live_...",
+});
+
+// Discover tools
+const tools = await client.discovery.search("gas prices");
+
+// Execute a tool
+const result = await client.tools.execute({
+  toolId: tools[0].id,
+  toolName: tools[0].mcpTools[0].name,
+  args: { chainId: 1 },
+});
+
+console.log(result.result);
+```
+
+---
+
+## Configuration
+
+### Client Options
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `apiKey` | `string` | Yes | — | Your Context Protocol API key |
+| `baseUrl` | `string` | No | `https://ctxprotocol.com` | API base URL (for development) |
+
+```typescript
+// Production
+const client = new ContextClient({
+  apiKey: process.env.CONTEXT_API_KEY!,
+});
+
+// Local development
+const client = new ContextClient({
+  apiKey: "sk_test_...",
+  baseUrl: "http://localhost:3000",
+});
+```
+
+---
+
+## API Reference
+
+### Discovery
+
+#### `client.discovery.search(query, limit?)`
+
+Search for tools matching a query string.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | `string` | Yes | Search query |
+| `limit` | `number` | No | Maximum results to return |
+
+**Returns:** `Promise<Tool[]>`
+
+```typescript
+const tools = await client.discovery.search("ethereum gas", 10);
+```
+
+---
+
+#### `client.discovery.getFeatured(limit?)`
+
+Get featured/popular tools.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `limit` | `number` | No | Maximum results to return |
+
+**Returns:** `Promise<Tool[]>`
+
+```typescript
+const featured = await client.discovery.getFeatured(5);
+```
+
+---
+
+### Tools
+
+#### `client.tools.execute(options)`
+
+Execute a tool method.
+
+**Parameters:**
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `toolId` | `string` | Yes | UUID of the tool |
+| `toolName` | `string` | Yes | Name of the method to call |
+| `args` | `object` | No | Arguments matching the tool's `inputSchema` |
+
+**Returns:** `Promise<ExecutionResult>`
+
+```typescript
+const result = await client.tools.execute({
+  toolId: "uuid-of-tool",
+  toolName: "get_gas_prices",
+  args: { chainId: 1 },
+});
+```
+
+---
+
+## Types
+
+### Import Types
+
+```typescript
+import {
+  // Constant for declaring context requirements
+  CONTEXT_REQUIREMENTS_KEY,
+  // Auth utilities for tool contributors
+  verifyContextRequest,
+  isProtectedMcpMethod,
+  isOpenMcpMethod,
+} from "@ctxprotocol/sdk";
+
+import type {
+  // Client types
+  ContextClientOptions,
+  Tool,
+  McpTool,
+  ExecuteOptions,
+  ExecutionResult,
+  ContextErrorCode,
+  // Auth types (for MCP server contributors)
+  VerifyRequestOptions,
+  // Context types (for MCP server contributors receiving injected data)
+  ContextRequirementType,
+  HyperliquidContext,
+  PolymarketContext,
+  WalletContext,
+  UserContext,
+} from "@ctxprotocol/sdk";
+```
+
+---
+
+### Tool
+
+```typescript
+interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  category?: string;
+  isVerified?: boolean;
+  mcpTools?: McpTool[];
+}
+```
+
+---
+
+### McpTool
+
+```typescript
+interface McpTool {
+  name: string;
+  description: string;
+  inputSchema?: Record<string, unknown>;  // JSON Schema for arguments
+  outputSchema?: Record<string, unknown>; // JSON Schema for response
+}
+```
+
+---
+
+### ExecutionResult
+
+```typescript
+interface ExecutionResult<T = unknown> {
+  result: T;
+  tool: { id: string; name: string };
+  durationMs: number;
+}
+```
+
+---
+
+### Context Requirement Types
+
+For MCP server contributors building tools that need user context (e.g., wallet data, portfolio positions):
+
+<Info>
+**Why Context Injection Matters:**
+
+- **No Auth Required**: Public blockchain/user data is fetched by the platform, so you don't need to handle API keys or user login.
+- **Security**: Your MCP server never handles private keys or sensitive credentials.
+- **Simplicity**: You receive structured, type-safe data directly in your tool arguments.
+</Info>
+
+```typescript
+import { 
+  CONTEXT_REQUIREMENTS_KEY, 
+  type ContextRequirementType 
+} from "@ctxprotocol/sdk";
+
+/** Context types supported by the marketplace */
+// "wallet" is a generic type for any EVM address context
+type ContextRequirementType = "polymarket" | "hyperliquid" | "wallet";
+
+/** JSON Schema extension key for declaring context requirements */
+const CONTEXT_REQUIREMENTS_KEY = "x-context-requirements";
+
+// Usage in inputSchema:
+inputSchema: {
+  type: "object",
+  [CONTEXT_REQUIREMENTS_KEY]: ["hyperliquid"] as ContextRequirementType[],
+  properties: { portfolio: { type: "object" } },
+  required: ["portfolio"]
+}
+```
+
+---
+
+### Injected Context Types
+
+#### HyperliquidContext
+
+```typescript
+interface HyperliquidContext {
+  walletAddress: string;
+  perpPositions: HyperliquidPerpPosition[];
+  spotBalances: HyperliquidSpotBalance[];
+  openOrders: HyperliquidOrder[];
+  accountSummary: HyperliquidAccountSummary;
+  fetchedAt: string;
+}
+```
+
+#### PolymarketContext
+
+```typescript
+interface PolymarketContext {
+  walletAddress: string;
+  positions: PolymarketPosition[];
+  openOrders: PolymarketOrder[];
+  totalValue?: number;
+  fetchedAt: string;
+}
+```
+
+#### WalletContext
+
+```typescript
+interface WalletContext {
+  address: string;
+  chainId: number;
+  balances: TokenBalance[];
+  fetchedAt: string;
+}
+```
+
+---
+
+## Error Handling
+
+The SDK throws `ContextError` with specific error codes:
+
+```typescript
+import { ContextError } from "@ctxprotocol/sdk";
+
+try {
+  const result = await client.tools.execute({ ... });
+} catch (error) {
+  if (error instanceof ContextError) {
+    switch (error.code) {
+      case "no_wallet":
+        // User needs to set up wallet
+        console.log("Setup required:", error.helpUrl);
+        break;
+      case "insufficient_allowance":
+        // User needs to enable Auto Pay
+        console.log("Enable Auto Pay:", error.helpUrl);
+        break;
+      case "payment_failed":
+        // Insufficient USDC balance
+        break;
+      case "execution_failed":
+        // Tool execution error
+        break;
+    }
+  }
+}
+```
+
+### Error Codes
+
+| Code | Description | Handling |
+|------|-------------|----------|
+| `unauthorized` | Invalid API key | Check configuration |
+| `no_wallet` | Wallet not set up | Direct user to `helpUrl` |
+| `insufficient_allowance` | Auto Pay not enabled | Direct user to `helpUrl` |
+| `payment_failed` | USDC payment failed | Check balance |
+| `execution_failed` | Tool error | Retry with different args |
+
+---
+
+## Securing Your Tool (MCP Contributors)
+
+If you're building an MCP server, verify incoming requests are legitimate:
+
+### Quick Implementation
+
+```typescript
+import express from "express";
+import { createContextMiddleware } from "@ctxprotocol/sdk";
+
+const app = express();
+app.use(express.json());
+
+// 1 line of code to secure your endpoint
+app.use("/mcp", createContextMiddleware());
+
+app.post("/mcp", (req, res) => {
+  // req.context contains verified JWT payload (on protected methods)
+  // Handle MCP request...
+});
+```
+
+### Security Model
+
+| MCP Method | Auth Required | Reason |
+|------------|---------------|--------|
+| `tools/list` | ❌ No | Discovery - just returns tool schemas |
+| `tools/call` | ✅ Yes | Execution - runs code, may cost money |
+| `initialize` | ❌ No | Session setup |
+| `resources/list` | ❌ No | Discovery |
+| `prompts/list` | ❌ No | Discovery |
+
+### Manual Verification
+
+For more control, use the lower-level utilities:
+
+```typescript
+import { 
+  verifyContextRequest, 
+  isProtectedMcpMethod, 
+  ContextError 
+} from "@ctxprotocol/sdk";
+
+// Check if a method requires auth
+if (isProtectedMcpMethod(body.method)) {
+  const payload = await verifyContextRequest({
+    authorizationHeader: req.headers.authorization,
+    audience: "https://your-tool.com/mcp", // optional
+  });
+  // payload contains verified JWT claims
+}
+```
+
+### Verification Options
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `authorizationHeader` | `string` | Yes | Full Authorization header (e.g., `"Bearer eyJ..."`) |
+| `audience` | `string` | No | Expected audience claim for stricter validation |
+
+---
+
+## Payment Flow
+
+When you execute a tool:
+
+1. Your pre-approved USDC allowance is used
+2. **90%** goes to the tool developer
+3. **10%** goes to the protocol
+4. Tool executes and returns results
+
+---
+
+## Links
+
+- [Context Protocol](https://ctxprotocol.com) — Main website
+- [GitHub](https://github.com/ctxprotocol/sdk/tree/main) — Main project
+- [NPM Package](https://www.npmjs.com/package/@ctxprotocol/sdk)
+

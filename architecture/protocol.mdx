@@ -1,0 +1,255 @@
+---
+title: "Protocol Architecture"
+description: "How the settlement layer, read-only safety, and staking system work together"
+---
+
+## Overview
+
+Context is built on a **Code Execution paradigm**. Instead of rigid "tool calling" schemas, the Agent writes and executes TypeScript code to interact with the world.
+
+The architecture consists of four layers:
+
+1. **The Marketplace** — Supply of tools from developers
+2. **The Agent** — Demand from users executing queries
+3. **The Protocol** — Settlement layer on Base
+4. **Context Injection** — Portfolio data for personalized tools
+
+---
+
+## The Marketplace (Supply)
+
+Developers register **Tools** (the paid product) powered by standard Model Context Protocol servers. Just paste your endpoint URL and we auto-discover your skills via `listTools()`.
+
+### Terminology
+
+| Term | Definition |
+|------|------------|
+| **Tool** | The paid marketplace listing (what users see in the sidebar) |
+| **Skill** | The execution function (can be called multiple times per tool payment) |
+
+### How It Works
+
+1. You build an MCP server exposing your data/APIs
+2. You register it as an "MCP Tool" on Context with a price (e.g., $0.01/query)
+3. When users query the AI, it discovers and calls your skills via `callMcpSkill()`
+4. You get paid instantly in USDC on Base
+
+---
+
+## The Data Broker Standard
+
+<Warning>
+Context is not a text-based chat platform — it is a **Structured Data Marketplace**. We treat your tool like a financial API, not a conversational bot.
+</Warning>
+
+### Why `outputSchema` and `structuredContent` Matter
+
+The MCP specification defines `outputSchema` and `structuredContent` as optional features for tools. **Context requires them for all paid tools** because structured data enables powerful marketplace features:
+
+| Feature | Without Schema | With Schema |
+|---------|----------------|-------------|
+| AI Code Generation | Agent guesses response format | Agent writes precise parsing code |
+| Type Safety | Runtime errors, broken parsing | Guaranteed structure |
+| Dispute Resolution | Manual review required | Auto-adjudicated on-chain |
+| Trust Signal | Unknown reliability | "Data Broker" verified |
+
+### Why Context Requires These Fields
+
+While optional in vanilla MCP, Context requires structured outputs because:
+
+- **AI Agent Benefit**: The agent uses your `outputSchema` to write accurate TypeScript code that parses your response correctly.
+- **Payment Verification**: Our smart contracts can verify that your returned JSON matches your promised schema.
+- **Dispute Resolution**: Schema mismatches can be auto-adjudicated on-chain without manual review.
+
+<Info>
+**Result:** You are not just a "Prompt Engineer" — you are a **Data Broker** selling verifiable information on-chain.
+</Info>
+
+---
+
+## The Agent (Demand)
+
+When a user asks a complex question (e.g., *"Is it profitable to arb Uniswap vs Aave?"*), the Agent:
+
+<Steps>
+  <Step title="Discover">
+    Finds relevant tools from the marketplace (or uses pre-selected ones)
+  </Step>
+  <Step title="Plan">
+    Creates a solution using composability
+  </Step>
+  <Step title="Write Code">
+    Generates code to invoke the necessary paid Tools via `callMcpSkill()`
+  </Step>
+  <Step title="Execute">
+    Runs the code securely in our sandbox
+  </Step>
+  <Step title="Pay">
+    Transfers fees instantly to developers via `ContextRouter`
+  </Step>
+  <Step title="Synthesize">
+    Combines results into a coherent answer
+  </Step>
+</Steps>
+
+<Note>
+**Composability is the superpower of Context.** Any frontier model can stitch together disparate tools into a coherent workflow, creating infinite new use cases from your single MCP server.
+</Note>
+
+---
+
+## The Protocol (Settlement)
+
+All value flows through `ContextRouter.sol` on Base.
+
+### Payment Distribution
+
+| Recipient | Share |
+|-----------|-------|
+| Tool Developer | 90% |
+| Protocol Treasury | 10% |
+
+When multiple tools are used, payments are **batched into a single transaction**.
+
+---
+
+## Staking System
+
+All tools (including free) require a minimum stake, enforced on-chain.
+
+| Tool Type | Minimum Stake |
+|-----------|---------------|
+| Free Tools | $10 USDC |
+| Paid Tools | $10 USDC or 100× query price (whichever is higher) |
+
+### Stake Properties
+
+- **Fully refundable** with a 7-day withdrawal delay
+- **Creates accountability** and enables slashing for fraud
+- **On-chain enforcement** via smart contracts
+
+---
+
+## Security: Financial Protocol Architecture
+
+We use **Asymmetric Request Signing (RS256)** to secure the marketplace. This is not just "auth" — it's the foundation of a financial protocol.
+
+### Why This Matters
+
+| Approach | Result |
+|----------|--------|
+| Without Auth | A toy — anyone can `curl` your endpoint |
+| With Shared Secrets | A security liability — secrets can leak |
+| With Asymmetric Signing | Professional infrastructure (like Stripe/Visa) |
+
+### How It Works
+
+1. **Platform signs requests** with a private key (stored securely in environment)
+2. **Tool servers verify requests** using the public key (distributed via SDK)
+3. **Short-lived tokens** (2-minute expiration) prevent replay attacks
+
+### JWT Claims
+
+| Claim | Description |
+|-------|-------------|
+| `iss` | `https://ctxprotocol.com` (issuer) |
+| `aud` | Tool endpoint URL (audience) |
+| `toolId` | Database ID of the tool being called |
+| `iat` | Issue timestamp |
+| `exp` | Expiration (2 minutes from issue) |
+
+### For MCP Tool Developers
+
+Secure your endpoint with a single line:
+
+```typescript
+import { createContextMiddleware } from "@ctxprotocol/sdk";
+
+// 1 line to secure your endpoint
+app.use("/mcp", createContextMiddleware());
+```
+
+---
+
+## Context Injection (User Data)
+
+For tools that need access to user-specific data (e.g., *"Analyze my positions"* or *"Check my balances"*), Context uses a **Context Injection** pattern.
+
+<Note>
+**Beyond Crypto**: While we currently focus on on-chain portfolio data, this system is designed to inject *any* type of user context (identity, preferences, etc.) in the future without exposing sensitive credentials.
+</Note>
+
+| Step | Who | Action |
+|------|-----|--------|
+| 1 | User | Links external wallet/account in Settings |
+| 2 | Context App | Checks tool's `x-context-requirements` in `inputSchema` |
+| 3 | Context App | Fetches data from protocol APIs (client-side) |
+| 4 | Context App | Injects data as `portfolio` argument to tool |
+| 5 | MCP Tool | Receives ready-to-analyze data, returns insights |
+
+### Why This Matters
+
+- **No Auth Required**: Public data is fetched by the platform, so you don't need to handle API keys or user login.
+- **Security**: MCP servers never see private keys or credentials.
+- **Simplicity**: Tool developers receive structured data directly in tool arguments.
+
+### Currently Supported
+
+We are starting with high-value crypto data types:
+
+| Context Type | Description | Injected Data |
+|--------------|-------------|---------------|
+| `"hyperliquid"` | Hyperliquid perpetuals & spot | Positions, balances, account summary |
+| `"polymarket"` | Polymarket prediction markets | Positions, orders, market data |
+| `"wallet"` | Generic EVM wallet | Address, token balances for any chain |
+
+### Declaring Context Requirements
+
+If your tool needs user data, declare it using the `_meta.contextRequirements` field:
+
+```typescript
+{
+  name: "analyze_my_positions",
+  
+  // ✅ Use _meta for custom tool metadata (MCP spec)
+  _meta: {
+    contextRequirements: ["hyperliquid"]  // or "polymarket", "wallet"
+  },
+  
+  inputSchema: {
+    type: "object",
+    properties: {
+      portfolio: { type: "object" }
+    },
+    required: ["portfolio"]
+  }
+}
+```
+
+<Info>
+**Why `_meta`?** The MCP SDK strips non-standard fields from tools. The `_meta` field is part of the MCP specification for arbitrary tool metadata and is preserved through transport.
+</Info>
+
+---
+
+## Tool Safety Limits
+
+Each tool invocation runs inside a **sandboxed code-execution environment**.
+
+### MCP Tools Limits
+
+| Limit | Value |
+|-------|-------|
+| Max calls per turn | 100 |
+| VM timeout | 5000ms |
+
+Every `callMcpSkill({ toolId, toolName, args })` increments an internal counter. Once `executionCount >= 100`, the platform throws an error for that turn.
+
+### Economic Model
+
+| Scenario | Behavior |
+|----------|----------|
+| Free tools ($0.00) | Can be used immediately without payment |
+| Paid tools | Require user authorization via the sidebar |
+| Multiple paid tools | Single batched transaction |
+

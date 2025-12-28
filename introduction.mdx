@@ -1,0 +1,117 @@
+---
+title: "Introduction"
+description: "The Monetization Layer for MCP — Connect Users, Builders, and Developers in a Decentralized Marketplace"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="Context Protocol Hero"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="Context Protocol Hero"
+/>
+
+<CardGroup cols={2}>
+  <Card title="Launch App" icon="rocket" href="https://ctxprotocol.com">
+    Use the God Mode Agent
+  </Card>
+  <Card title="Get the SDK" icon="code" href="/sdk/reference">
+    Build autonomous agents
+  </Card>
+</CardGroup>
+
+## The Ecosystem
+
+Context is not just a chatbot — it's an **economic engine for the AI era**. We connect three distinct groups in a decentralized marketplace for [Model Context Protocol (MCP)](https://modelcontextprotocol.io) tools.
+
+Build a standard MCP server, paste your endpoint URL, set a price, and get paid in USDC every time an AI agent uses your tool.
+
+---
+
+## For Users: The "God Mode" Agent
+
+Stop switching tabs. Context gives you an AI agent with **real-time, read/write access to the world**.
+
+<CardGroup cols={2}>
+  <Card title="Auto Mode" icon="wand-magic-sparkles">
+    Ask *"Find the best yield on Base"* and the Agent autonomously searches the marketplace, buys the necessary data tools, analyzes the returns, and presents the answer.
+  </Card>
+  <Card title="One Wallet" icon="wallet">
+    Pay for everything — from gas data to premium stock analysis — using a single USDC balance. No subscriptions, just pay-per-query.
+  </Card>
+</CardGroup>
+
+---
+
+## For Tool Builders: The "App Store" for MCP
+
+Monetize your data **without building a frontend**.
+
+| Benefit | Description |
+|---------|-------------|
+| **Build Once, Sell Everywhere** | Create a standard MCP Server |
+| **Zero UI Required** | You provide the API; our Agent provides the interface |
+| **Instant Revenue** | Set a price (e.g., $0.01/query). Get paid in USDC instantly every time an Agent calls your tool |
+
+---
+
+## For App Developers: The Universal Adapter
+
+Build your own agents using the Context Protocol as your **infrastructure layer**.
+
+<Steps>
+  <Step title="Stop Integrating APIs">
+    Instead of integrating CoinGecko, Tavily, and Weather APIs separately, just install `@ctxprotocol/sdk`.
+  </Step>
+  <Step title="Dynamic Discovery">
+    Your agent can search our marketplace at runtime: `client.discovery.search("gas prices")`.
+  </Step>
+  <Step title="Schema Inspection">
+    The API exposes full Input/Output schemas, allowing your LLM to self-construct arguments and execute tools it has never seen before.
+  </Step>
+  <Step title="Zero-Ops">
+    We host the connections. You just send JSON and get results.
+  </Step>
+</Steps>
+
+---
+
+## The npm for AI Capabilities
+
+<Info>
+**"Context Protocol is npm for AI capabilities."**
+
+Just as `npm install` gives you code other people wrote, Context gives your Agent **capabilities other people built**.
+</Info>
+
+```typescript
+import { ContextClient } from "@ctxprotocol/sdk";
+
+const client = new ContextClient({ apiKey: "sk_live_..." });
+
+// Discover tools dynamically
+const tools = await client.discovery.search("ethereum gas prices");
+
+// Execute any tool from the marketplace
+const result = await client.tools.execute({
+  toolId: tools[0].id,
+  toolName: tools[0].mcpTools[0].name,
+  args: { chainId: 1 },
+});
+```
+
+<CardGroup cols={3}>
+  <Card title="Users" icon="user" href="https://ctxprotocol.com">
+    Start querying with the God Mode Agent
+  </Card>
+  <Card title="Builders" icon="hammer" href="/guides/build-tools">
+    Monetize your MCP server
+  </Card>
+  <Card title="Developers" icon="code" href="/sdk/reference">
+    Integrate the SDK into your agents
+  </Card>
+</CardGroup>
+
