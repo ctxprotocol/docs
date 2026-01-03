@@ -1,0 +1,436 @@
+---
+title: "Python SDK Reference"
+description: "Complete API reference for ctxprotocol (Python) — installation, configuration, methods, and types"
+---
+
+## Installation
+
+<CodeGroup>
+```bash pip
+pip install ctxprotocol
+```
+
+```bash poetry
+poetry add ctxprotocol
+```
+
+```bash uv
+uv add ctxprotocol
+```
+</CodeGroup>
+
+With optional FastAPI support:
+
+```bash
+pip install ctxprotocol[fastapi]
+```
+
+### Requirements
+
+- Python 3.10+
+- httpx (async HTTP)
+- pydantic (type validation)
+- pyjwt[crypto] (JWT verification)
+
+---
+
+## Prerequisites
+
+Before using the API, complete setup at [ctxprotocol.com](https://ctxprotocol.com):
+
+<Steps>
+  <Step title="Sign in">
+    Creates your embedded wallet
+  </Step>
+  <Step title="Enable Auto Pay">
+    Approve USDC spending for tool payments
+  </Step>
+  <Step title="Fund wallet">
+    Add USDC for tool execution fees
+  </Step>
+  <Step title="Generate API key">
+    In Settings page
+  </Step>
+</Steps>
+
+---
+
+## Quick Start
+
+```python
+import asyncio
+from ctxprotocol import ContextClient
+
+async def main():
+    async with ContextClient(api_key="sk_live_...") as client:
+        # Discover tools
+        tools = await client.discovery.search("gas prices")
+
+        # Execute a tool
+        result = await client.tools.execute(
+            tool_id=tools[0].id,
+            tool_name=tools[0].mcp_tools[0].name,
+            args={"chainId": 1},
+        )
+
+        print(result.result)
+
+asyncio.run(main())
+```
+
+---
+
+## Configuration
+
+### Client Options
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| `api_key` | `str` | Yes | — | Your Context Protocol API key |
+| `base_url` | `str` | No | `https://ctxprotocol.com` | API base URL (for development) |
+
+```python
+import os
+from ctxprotocol import ContextClient
+
+# Production
+client = ContextClient(api_key=os.environ["CONTEXT_API_KEY"])
+
+# Local development
+client = ContextClient(
+    api_key="sk_test_...",
+    base_url="http://localhost:3000",
+)
+```
+
+<Note>
+Always use `async with` context manager or call `await client.close()` when done to properly release resources.
+</Note>
+
+---
+
+## API Reference
+
+### Discovery
+
+#### `client.discovery.search(query, limit?)`
+
+Search for tools matching a query string.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | `str` | Yes | Search query |
+| `limit` | `int` | No | Maximum results to return (1-50) |
+
+**Returns:** `list[Tool]`
+
+```python
+tools = await client.discovery.search("ethereum gas", limit=10)
+```
+
+---
+
+#### `client.discovery.get_featured(limit?)`
+
+Get featured/popular tools.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `limit` | `int` | No | Maximum results to return |
+
+**Returns:** `list[Tool]`
+
+```python
+featured = await client.discovery.get_featured(limit=5)
+```
+
+---
+
+### Tools
+
+#### `client.tools.execute(tool_id, tool_name, args?)`
+
+Execute a tool method.
+
+**Parameters:**
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `tool_id` | `str` | Yes | UUID of the tool |
+| `tool_name` | `str` | Yes | Name of the method to call |
+| `args` | `dict` | No | Arguments matching the tool's `inputSchema` |
+
+**Returns:** `ExecutionResult`
+
+```python
+result = await client.tools.execute(
+    tool_id="uuid-of-tool",
+    tool_name="get_gas_prices",
+    args={"chainId": 1},
+)
+```
+
+---
+
+## Types
+
+### Import Types
+
+```python
+from ctxprotocol import (
+    # Auth utilities for tool contributors
+    verify_context_request,
+    is_protected_mcp_method,
+    is_open_mcp_method,
+
+    # Client types
+    ContextClientOptions,
+    Tool,
+    McpTool,
+    ExecuteOptions,
+    ExecutionResult,
+    ContextErrorCode,
+
+    # Auth types (for MCP server contributors)
+    VerifyRequestOptions,
+
+    # Context types (for MCP server contributors receiving injected data)
+    ContextRequirementType,
+    HyperliquidContext,
+    PolymarketContext,
+    WalletContext,
+    UserContext,
+)
+```
+
+---
+
+### Tool
+
+```python
+class Tool(BaseModel):
+    id: str
+    name: str
+    description: str
+    price: str
+    category: str | None
+    is_verified: bool | None
+    mcp_tools: list[McpTool] | None
+```
+
+---
+
+### McpTool
+
+```python
+class McpTool(BaseModel):
+    name: str
+    description: str
+    input_schema: dict[str, Any] | None  # JSON Schema for arguments
+    output_schema: dict[str, Any] | None  # JSON Schema for response
+```
+
+---
+
+### ExecutionResult
+
+```python
+class ExecutionResult(BaseModel):
+    result: Any
+    tool: ToolInfo  # { id: str, name: str }
+    duration_ms: int
+```
+
+---
+
+### Context Requirement Types
+
+For MCP server contributors building tools that need user context:
+
+<Info>
+**Why Context Injection Matters:**
+
+- **No Auth Required**: Public blockchain/user data is fetched by the platform
+- **Security**: Your MCP server never handles private keys
+- **Simplicity**: You receive structured, type-safe data
+</Info>
+
+```python
+from ctxprotocol import CONTEXT_REQUIREMENTS_KEY
+
+# Context types supported by the marketplace
+ContextRequirementType = Literal["polymarket", "hyperliquid", "wallet"]
+
+# Usage: Declare context requirements in _meta at the tool level
+TOOLS = [{
+    "name": "analyze_my_positions",
+    "description": "Analyze your positions with personalized insights",
+    "_meta": {
+        "contextRequirements": ["hyperliquid"],
+    },
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "portfolio": {
+                "type": "object",
+                "description": "Portfolio context (injected by platform)",
+            },
+        },
+        "required": ["portfolio"],
+    },
+}]
+```
+
+---
+
+### Injected Context Types
+
+#### HyperliquidContext
+
+```python
+class HyperliquidContext(BaseModel):
+    wallet_address: str
+    perp_positions: list[HyperliquidPerpPosition]
+    spot_balances: list[HyperliquidSpotBalance]
+    open_orders: list[HyperliquidOrder]
+    account_summary: HyperliquidAccountSummary
+    fetched_at: str
+```
+
+#### PolymarketContext
+
+```python
+class PolymarketContext(BaseModel):
+    wallet_address: str
+    positions: list[PolymarketPosition]
+    open_orders: list[PolymarketOrder]
+    total_value: float | None
+    fetched_at: str
+```
+
+#### WalletContext
+
+```python
+class WalletContext(BaseModel):
+    address: str
+    chain_id: int
+    native_balance: str | None
+```
+
+---
+
+## Error Handling
+
+The SDK raises `ContextError` with specific error codes:
+
+```python
+from ctxprotocol import ContextClient, ContextError
+
+try:
+    result = await client.tools.execute(...)
+except ContextError as e:
+    match e.code:
+        case "no_wallet":
+            # User needs to set up wallet
+            print(f"Setup required: {e.help_url}")
+        case "insufficient_allowance":
+            # User needs to enable Auto Pay
+            print(f"Enable Auto Pay: {e.help_url}")
+        case "payment_failed":
+            # Insufficient USDC balance
+            pass
+        case "execution_failed":
+            # Tool execution error
+            pass
+```
+
+### Error Codes
+
+| Code | Description | Handling |
+|------|-------------|----------|
+| `unauthorized` | Invalid API key | Check configuration |
+| `no_wallet` | Wallet not set up | Direct user to `help_url` |
+| `insufficient_allowance` | Auto Pay not enabled | Direct user to `help_url` |
+| `payment_failed` | USDC payment failed | Check balance |
+| `execution_failed` | Tool error | Retry with different args |
+
+---
+
+## Securing Your Tool (MCP Contributors)
+
+If you're building an MCP server, verify incoming requests:
+
+### Quick Implementation with FastAPI
+
+```python
+from fastapi import FastAPI, Request, Depends, HTTPException
+from ctxprotocol import create_context_middleware, ContextError
+
+app = FastAPI()
+verify_context = create_context_middleware(audience="https://your-tool.com/mcp")
+
+@app.post("/mcp")
+async def handle_mcp(request: Request, context: dict = Depends(verify_context)):
+    # context contains verified JWT payload (on protected methods)
+    # None for open methods like tools/list
+    body = await request.json()
+    # Handle MCP request...
+```
+
+### Manual Verification
+
+For more control, use the lower-level utilities:
+
+```python
+from ctxprotocol import verify_context_request, is_protected_mcp_method, ContextError
+
+# Check if a method requires auth
+if is_protected_mcp_method(body["method"]):
+    try:
+        payload = await verify_context_request(
+            authorization_header=request.headers.get("authorization"),
+            audience="https://your-tool.com/mcp",  # optional
+        )
+        # payload contains verified JWT claims
+    except ContextError:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+```
+
+### Verification Options
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `authorization_header` | `str` | Yes | Full Authorization header (e.g., `"Bearer eyJ..."`) |
+| `audience` | `str` | No | Expected audience claim for stricter validation |
+
+### Security Model
+
+| MCP Method | Auth Required | Reason |
+|------------|---------------|--------|
+| `tools/list` | ❌ No | Discovery - just returns tool schemas |
+| `tools/call` | ✅ Yes | Execution - runs code, may cost money |
+| `initialize` | ❌ No | Session setup |
+| `resources/list` | ❌ No | Discovery |
+| `prompts/list` | ❌ No | Discovery |
+
+---
+
+## Payment Flow
+
+When you execute a tool:
+
+1. Your pre-approved USDC allowance is used
+2. **90%** goes to the tool developer
+3. **10%** goes to the protocol
+4. Tool executes and returns results
+
+---
+
+## Links
+
+- [Context Protocol](https://ctxprotocol.com) — Main website
+- [PyPI Package](https://pypi.org/project/ctxprotocol/)
+- [GitHub (Python SDK)](https://github.com/ctxprotocol/sdk-python)
+- [TypeScript SDK](/sdk/reference) — For Node.js
+

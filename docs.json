@@ -41,7 +41,8 @@
             "group": "Universal SDK",
             "pages": [
               "sdk/agentic-pattern",
-              "sdk/reference"
+              "sdk/reference",
+              "sdk/python-reference"
             ]
           }
         ]

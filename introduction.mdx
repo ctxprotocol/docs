@@ -14,12 +14,15 @@ description: "The Monetization Layer for MCP — Connect Users, Builders, and De
   alt="Context Protocol Hero"
 />
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Launch App" icon="rocket" href="https://ctxprotocol.com">
     Use the God Mode Agent
   </Card>
-  <Card title="Get the SDK" icon="code" href="/sdk/reference">
-    Build autonomous agents
+  <Card title="TypeScript SDK" icon="js" href="/sdk/reference">
+    Build with Node.js
+  </Card>
+  <Card title="Python SDK" icon="python" href="/sdk/python-reference">
+    Build with Python
   </Card>
 </CardGroup>
 
@@ -64,7 +67,7 @@ Build your own agents using the Context Protocol as your **infrastructure layer*
 
 <Steps>
   <Step title="Stop Integrating APIs">
-    Instead of integrating CoinGecko, Tavily, and Weather APIs separately, just install `@ctxprotocol/sdk`.
+    Instead of integrating CoinGecko, Tavily, and Weather APIs separately, just install `@ctxprotocol/sdk` (TypeScript) or `ctxprotocol` (Python).
   </Step>
   <Step title="Dynamic Discovery">
     Your agent can search our marketplace at runtime: `client.discovery.search("gas prices")`.
@@ -79,15 +82,16 @@ Build your own agents using the Context Protocol as your **infrastructure layer*
 
 ---
 
-## The npm for AI Capabilities
+## The npm/pip for AI Capabilities
 
 <Info>
-**"Context Protocol is npm for AI capabilities."**
+**"Context Protocol is npm/pip for AI capabilities."**
 
-Just as `npm install` gives you code other people wrote, Context gives your Agent **capabilities other people built**.
+Just as `npm install` or `pip install` gives you code other people wrote, Context gives your Agent **capabilities other people built**.
 </Info>
 
-```typescript
+<CodeGroup>
+```typescript TypeScript
 import { ContextClient } from "@ctxprotocol/sdk";
 
 const client = new ContextClient({ apiKey: "sk_live_..." });
@@ -102,6 +106,26 @@ const result = await client.tools.execute({
   args: { chainId: 1 },
 });
 ```
+
+```python Python
+import asyncio
+from ctxprotocol import ContextClient
+
+async def main():
+    async with ContextClient(api_key="sk_live_...") as client:
+        # Discover tools dynamically
+        tools = await client.discovery.search("ethereum gas prices")
+
+        # Execute any tool from the marketplace
+        result = await client.tools.execute(
+            tool_id=tools[0].id,
+            tool_name=tools[0].mcp_tools[0].name,
+            args={"chainId": 1},
+        )
+
+asyncio.run(main())
+```
+</CodeGroup>
 
 <CardGroup cols={3}>
   <Card title="Users" icon="user" href="https://ctxprotocol.com">
