@@ -12,7 +12,7 @@ The architecture consists of four layers:
 1. **The Marketplace** — Supply of tools from developers
 2. **The Agent** — Demand from users executing queries
 3. **The Protocol** — Settlement layer on Base
-4. **Context Injection** — Portfolio data for personalized tools
+4. **Context Injection** — User data for personalized tools
 
 ---
 
@@ -182,7 +182,7 @@ For tools that need access to user-specific data (e.g., *"Analyze my positions"*
 | Step | Who | Action |
 |------|-----|--------|
 | 1 | User | Links external wallet/account in Settings |
-| 2 | Context App | Checks tool's `x-context-requirements` in `inputSchema` |
+| 2 | Context App | Checks tool's `_meta.contextRequirements` on the tool definition |
 | 3 | Context App | Fetches data from protocol APIs (client-side) |
 | 4 | Context App | Injects data as `portfolio` argument to tool |
 | 5 | MCP Tool | Receives ready-to-analyze data, returns insights |
