@@ -26,6 +26,34 @@ description: "The Monetization Layer for MCP — Connect Users, Builders, and De
   </Card>
 </CardGroup>
 
+---
+
+## Why use Context?
+
+- 🔌 **One Interface, Everything:** Stop integrating APIs one by one. Use a single SDK to access any tool in the marketplace.
+- 🧠 **Zero-Ops:** We're a gateway to the best MCP tools. Just send the JSON and get the result.
+- ⚡️ **Agentic Discovery:** Your Agent can search the marketplace at runtime to find tools it didn't know it needed.
+- 💸 **Micro-Billing:** Pay only for what you use (e.g., $0.001/query). No monthly subscriptions for tools you rarely use.
+
+---
+
+## Who Is This SDK For?
+
+| Role | What You Use |
+|------|--------------|
+| **AI Agent Developer** | `@ctxprotocol/sdk` (TypeScript) or `ctxprotocol` (Python) — Query marketplace, execute tools, handle payments |
+| **Tool Contributor (Data Broker)** | `@modelcontextprotocol/sdk` + `@ctxprotocol/sdk` — Standard MCP server + security middleware |
+
+<Info>
+**For AI Agent Developers:** Use the SDK to search the marketplace, execute tools, and handle micro-payments.
+
+**For Tool Contributors:** You need **both** SDKs:
+- `@modelcontextprotocol/sdk` — Build your MCP server (tools, schemas, handlers)
+- `@ctxprotocol/sdk` — Secure your endpoint with `createContextMiddleware()` to verify payments
+</Info>
+
+---
+
 ## The Ecosystem
 
 Context is not just a chatbot — it's an **economic engine for the AI era**. We connect three distinct groups in a decentralized marketplace for [Model Context Protocol (MCP)](https://modelcontextprotocol.io) tools.
