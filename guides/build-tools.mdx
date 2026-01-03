@@ -83,6 +83,27 @@ app.use("/mcp", createContextMiddleware());
 // 3. Handles payment verification automatically
 ```
 
+### MCP Security Model
+
+<Warning>
+**Understanding what's protected:** Not all MCP methods require authentication. Discovery methods are open so agents can find your tools, but execution requires payment verification.
+</Warning>
+
+| MCP Method | Auth Required | Why |
+|------------|---------------|-----|
+| `initialize` | ❌ No | Session setup |
+| `tools/list` | ❌ No | Discovery - agents need to see your schemas |
+| `resources/list` | ❌ No | Discovery |
+| `prompts/list` | ❌ No | Discovery |
+| `tools/call` | ✅ **Yes** | **Execution - costs money, runs your code** |
+
+<Info>
+**This means:**
+- Anyone can call `/mcp` with `initialize` or `tools/list` to discover your tools
+- Only requests with a valid Context Protocol JWT can call `tools/call`
+- The middleware handles this automatically - you don't need to implement it yourself
+</Info>
+
 ---
 
 ## Step 2: Test Your Tool Locally
