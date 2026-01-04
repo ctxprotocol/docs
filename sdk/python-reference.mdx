@@ -359,9 +359,51 @@ except ContextError as e:
 
 ## Securing Your Tool (MCP Contributors)
 
-If you're building an MCP server, verify incoming requests:
+If you're building an MCP server, verify incoming requests using `ctxprotocol`.
 
-### Quick Implementation with FastAPI
+### Option 1: FastMCP (Recommended)
+
+[FastMCP](https://gofastmcp.com) is the fastest way to build MCP servers. Use `ctxprotocol` middleware:
+
+```python
+from fastmcp import FastMCP
+from fastmcp.server.middleware import Middleware, MiddlewareContext
+from fastmcp.server.dependencies import get_http_headers
+from fastmcp.exceptions import ToolError
+from ctxprotocol import verify_context_request, ContextError
+
+mcp = FastMCP("my-tool")
+
+class ContextProtocolAuth(Middleware):
+    """Verify Context Protocol JWT on tool calls only."""
+    
+    async def on_call_tool(self, context: MiddlewareContext, call_next):
+        headers = get_http_headers()
+        try:
+            await verify_context_request(
+                authorization_header=headers.get("authorization", "")
+            )
+        except ContextError as e:
+            raise ToolError(f"Unauthorized: {e.message}")
+        return await call_next(context)
+
+mcp.add_middleware(ContextProtocolAuth())
+
+@mcp.tool
+def get_data(query: str) -> dict:
+    return {"result": "..."}
+
+if __name__ == "__main__":
+    mcp.run(transport="http", port=3000)
+```
+
+<Tip>
+FastMCP auto-generates `outputSchema` from Pydantic return types and includes `structuredContent` in responses - both required by Context Protocol.
+</Tip>
+
+### Option 2: Raw FastAPI
+
+For more control, use FastAPI with our middleware:
 
 ```python
 from fastapi import FastAPI, Request, Depends, HTTPException

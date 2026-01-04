@@ -292,6 +292,8 @@ app.listen(3000, () => {
 
 Check out these complete working examples:
 
+### TypeScript (Express + MCP SDK)
+
 <CardGroup cols={3}>
   <Card title="Blocknative" icon="gas-pump" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/blocknative-contributor">
     Gas price API (3 tools)
@@ -303,4 +305,16 @@ Check out these complete working examples:
     Prediction market intelligence
   </Card>
 </CardGroup>
+
+### Python (FastMCP + ctxprotocol)
+
+<CardGroup cols={2}>
+  <Card title="Hummingbot Market Intel" icon="python" href="https://github.com/ctxprotocol/sdk-python/tree/main/examples/server/hummingbot-contributor">
+    Multi-exchange market data (6 tools) — prices, order books, funding rates, trade impact analysis
+  </Card>
+</CardGroup>
+
+<Tip>
+The Python example uses [FastMCP](https://gofastmcp.com) which auto-generates `outputSchema` from Pydantic models and includes `structuredContent` in responses automatically.
+</Tip>
 
