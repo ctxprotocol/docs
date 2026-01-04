@@ -226,6 +226,135 @@ structuredContent: { temperature: 72 }  // Valid
 
 ---
 
+## Execution Limits & Product Design
+
+<Warning>
+**Critical**: MCP tool execution on the Context platform has a **~60 second timeout**. This is intentional — it shapes the marketplace toward high-quality data products.
+</Warning>
+
+### Where the Timeout Comes From
+
+The timeout is enforced by the **platform infrastructure** (and in standard MCP setups like Claude Desktop, by the LLM client itself). When your tool is called, the system waits for a response — if it doesn't arrive in ~60 seconds, execution fails.
+
+<Note>
+This isn't an MCP protocol limitation — SSE connections can stay open indefinitely. The timeout exists at the application layer (LLM clients, API gateways, platform infrastructure) and serves as a **quality forcing function**.
+</Note>
+
+### Why the Timeout Is Actually Good
+
+The timeout isn't a bug — it's a feature that forces data brokers to build **actual products** instead of raw data access.
+
+| Raw Access (❌ Bad Product) | Data Broker Product (✅ Good Product) |
+|----------------------------|--------------------------------------|
+| "Run any SQL on Dune" | "Smart Money Wallet Tracker" |
+| "Query 4 years of NFT data" | "NFT Alpha Signals" |
+| "Scan all whale wallets" | "Whale Alert Feed" |
+| Timeout after 60s ❌ | Instant response ✅ |
+
+<Note>
+**The reframe**: The best data businesses don't sell raw database access. They sell curated, **pre-computed insights**. This is exactly how Bloomberg, Nansen, Arkham, and Messari work.
+</Note>
+
+### The Data Broker Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    DATA BROKER'S JOB (offline)                      │
+│                                                                     │
+│  1. Run heavy queries on your data source (30 min timeout - OK)    │
+│  2. Pre-compute valuable insights ("wallets that sold tops")       │
+│  3. Store results in your own database                             │
+│  4. Update daily/hourly via cron jobs                              │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    MCP TOOL (instant)                               │
+│                                                                     │
+│  User: "What are the smart money wallets holding?"                 │
+│  Tool: SELECT * FROM my_precomputed_smart_money LIMIT 10           │
+│  Response: < 1 second ✅                                            │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Product Tiers
+
+<AccordionGroup>
+  <Accordion title="Tier 1: Real-time Queries (< 60s)" icon="bolt">
+    Perfect for MCP — works great today:
+    - Current prices, recent trades, portfolio snapshots
+    - "What's in Vitalik's wallet right now?"
+    - "Get current gas prices on Ethereum"
+    
+    **Implementation**: Direct API calls that return quickly
+  </Accordion>
+  
+  <Accordion title="Tier 2: Pre-computed Insights (instant)" icon="database">
+    **This is the REAL product** — where data brokers add massive value:
+    - "Smart money wallets" (pre-computed daily)
+    - "Whale alerts" (pre-computed hourly)
+    - "NFT trending collections" (pre-computed)
+    
+    **Implementation**: Heavy queries run offline via cron, results served instantly via MCP
+  </Accordion>
+  
+  <Accordion title="Tier 3: Async Jobs (future)" icon="clock">
+    For heavy analysis that can't be pre-computed:
+    - User submits query → gets job ID
+    - Polls for results (or webhook callback)
+    - Results stored for later retrieval
+    
+    **Implementation**: 
+    ```typescript
+    // Submit job
+    { name: "submit_analysis_job", returns: { jobId: "abc123", estimatedTime: "5 min" } }
+    
+    // Get results
+    { name: "get_job_results", args: { jobId: "abc123" } }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Example: Good vs Bad Tool Design
+
+```typescript
+// ❌ BAD: Raw SQL tool (timeout-prone, no moat)
+{
+  name: "run_sql",
+  description: "Run any SQL against blockchain data"
+  // This is a demo, not a product
+}
+
+// ✅ GOOD: Pre-computed insight tools
+{
+  name: "get_smart_money_wallets",
+  description: "Get top 100 wallets that historically timed market tops",
+  // Data broker pre-computes this daily, serves instantly
+}
+
+{
+  name: "get_whale_holdings",
+  description: "Current holdings of known whale wallets",
+  // Pre-computed hourly, instant response
+}
+```
+
+<Tip>
+**The value you create**: Your data brokers should be selling "Nansen-as-a-service" and "Arkham-as-a-service" — not raw SQL access. The timeout forces this quality bar.
+</Tip>
+
+### Why This Is BETTER for the Marketplace
+
+| Raw SQL Model | Data Broker Product Model |
+|---------------|--------------------------|
+| Anyone can build (no moat) | Requires expertise (defensible) |
+| Competes on price (race to bottom) | Competes on quality (premium pricing) |
+| Users frustrated by timeouts | Users delighted by instant results |
+| Data broker adds no value | Data broker adds **massive** value |
+
+---
+
 ## Complete Server Example
 
 Here's a full working example of an MCP server ready for Context:

@@ -238,12 +238,19 @@ Each tool invocation runs inside a **sandboxed code-execution environment**.
 
 ### MCP Tools Limits
 
-| Limit | Value |
-|-------|-------|
-| Max calls per turn | 100 |
-| VM timeout | 5000ms |
+| Limit | Value | Purpose |
+|-------|-------|---------|
+| Max calls per turn | 100 | Prevent runaway loops |
+| VM timeout | 5000ms | Code execution limit |
+| **MCP execution timeout** | **~60 seconds** | Encourages pre-computed products |
 
 Every `callMcpSkill({ toolId, toolName, args })` increments an internal counter. Once `executionCount >= 100`, the platform throws an error for that turn.
+
+<Warning>
+**The ~60 second timeout is intentional.** This limit is enforced at the platform/client level (not by MCP itself) and serves as a quality forcing function. It encourages data brokers to build pre-computed insight products rather than raw data access tools.
+
+See [Build & List Your Tool](/guides/build-tools#execution-limits--product-design) for detailed guidance on product architecture.
+</Warning>
 
 ### Economic Model
 
