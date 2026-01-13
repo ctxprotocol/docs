@@ -1,0 +1,263 @@
+---
+title: "Developer Grants"
+description: "$10,000 Grant Program — Build MCP tools, earn upfront grants + ongoing USDC revenue"
+---
+
+# 💰 Become a Data Broker
+
+**You're not just writing code. You're building a revenue stream.**
+
+Context Protocol is a decentralized marketplace where AI agents pay for data. We're the crypto-native rails that let developers act as **Data Brokers** — you build tools that LLMs lack, users pay per query, and you earn on every run.
+
+If you can find a way to make other people money, you get to make money alongside them.
+
+<CardGroup cols={2}>
+  <Card title="Apply Now" icon="rocket" href="https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform">
+    Submit your tool proposal
+  </Card>
+  <Card title="TypeScript SDK" icon="code" href="/sdk/reference">
+    Start building with Node.js
+  </Card>
+</CardGroup>
+
+---
+
+## 🎯 The Grant Pool
+
+We're allocating **$10,000 USD** to bootstrap the supply side of the Context Marketplace.
+
+Our goal: flood the registry with high-quality MCP servers that AI agents actually want to pay for.
+
+| Metric | Target |
+|--------|--------|
+| **Total Pool** | $10,000 USD |
+| **Grant Range** | $250 – $1,000 per tool |
+| **Expected Tools** | 15–40 new MCP servers |
+| **Payment** | USDC (Base network) |
+
+---
+
+## 🏆 Funding Tiers
+
+### 🦄 Tier S — $1,000 + Revenue Share
+
+**Complex integrations that unlock new capabilities.**
+
+These are tools that require significant engineering effort, novel data sources, or complex analysis pipelines.
+
+| Examples | Why It's Tier S |
+|----------|-----------------|
+| On-chain analytics (whale tracking) | Complex data pipelines |
+| AI-powered research (sentiment analysis) | Novel inference workloads |
+| Multi-protocol data aggregation | Cross-chain coordination |
+| Real-time market intelligence | High-frequency data streams |
+
+---
+
+### 🛠️ Tier A — $250–$500 + Revenue Share
+
+**High-utility data fetchers that agents query frequently.**
+
+Reliable, well-documented tools that solve common agent needs.
+
+| Examples | Why It's Tier A |
+|----------|-----------------|
+| Protocol data (Aave rates, Uniswap pools) | High query volume |
+| Market sentiment (Fear & Greed, social) | Frequently requested |
+| Gas estimators (multi-chain) | Essential for tx planning |
+| Price feeds (DexScreener, CoinGecko) | Core market data |
+
+---
+
+### 🚀 Tier B — Revenue Share Only
+
+**Simple wrappers and API adapters.**
+
+No upfront grant, but immediate listing on the marketplace. Perfect for quick wins.
+
+| Examples | Why It's Tier B |
+|----------|-----------------|
+| REST API wrappers | Minimal engineering |
+| Single-endpoint tools | Quick to build |
+| Basic data transformations | Low complexity |
+
+<Note>
+**All tiers earn revenue share.** Even Tier B tools start generating USDC the moment an agent queries them. You earn 90% of every query fee.
+</Note>
+
+---
+
+## 📋 Request for Builders (RFB)
+
+We're actively looking for tools in these categories. This isn't exhaustive — if you have a novel idea, pitch it!
+
+### 🌐 Network & Infrastructure
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| Multi-chain gas estimator | Real-time gas for ETH, Base, Arbitrum, Solana | A |
+| RPC health monitor | Latency and uptime across providers | A |
+| Block explorer data | Transaction details, contract verification | B |
+| Node statistics | Validator performance, staking APYs | A |
+
+### 📊 Market Data
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| Token prices (multi-source) | CoinGecko, DexScreener, Birdeye | A |
+| Volume & liquidity tracker | DEX volume by chain | A |
+| Funding rates (perps) | Hyperliquid, dYdX, GMX | A |
+| Whale wallet tracker | Large wallet movements | S |
+| Options flow analyzer | On-chain options data | S |
+
+### 🌍 Real World Data
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| Weather API | Global forecasts | B |
+| News aggregator | Filtered by topic/sentiment | A |
+| Sports scores & odds | Live game data | A |
+| Flight tracker | Real-time flight status | A |
+| Economic calendar | Fed meetings, earnings dates | A |
+
+### 💬 Social & Governance
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| Farcaster trends | Trending casts, user analytics | A |
+| Twitter/X sentiment | Crypto sentiment analysis | S |
+| DAO governance tracker | Active proposals across DAOs | A |
+| Discord activity | Server health metrics | A |
+| Telegram signal aggregator | Aggregate alpha channels | S |
+
+### 🔧 Utility & Compute
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| Math solver | Symbolic computation, LaTeX | B |
+| Web scraper | Clean extraction from URLs | A |
+| Search engine | Web search with snippets | A |
+| PDF analyzer | Extract data from documents | A |
+| Code execution | Sandboxed Python/JS runtime | S |
+
+---
+
+## 📝 How to Apply
+
+<Steps>
+  <Step title="Create Your Account">
+    Sign in at [ctxprotocol.com](https://ctxprotocol.com) to create your account. This generates your **embedded wallet** — the address where we'll send grant payments and revenue.
+    
+    <Tip>
+    Copy your signer wallet address from the user nav menu in the bottom left of the main chat app. You'll need it for the application form.
+    </Tip>
+  </Step>
+  <Step title="Submit Proposal">
+    Fill out our application form with:
+    - **Your wallet address** (from Step 1 — required for payment)
+    - Tool name and description
+    - Which tier you're targeting
+    - Technical approach (1-2 paragraphs)
+    - Your background (GitHub, portfolio)
+    
+    👉 [**Submit Proposal**](https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform)
+  </Step>
+  <Step title="Build & Deploy">
+    Once approved, build your MCP server using our SDK:
+    
+    ```bash
+    npm install @ctxprotocol/sdk @modelcontextprotocol/sdk
+    ```
+    
+    Follow the [Build Tools Guide](/guides/build-tools) for the complete pattern.
+  </Step>
+  <Step title="Register Your Tool">
+    Back on [ctxprotocol.com](https://ctxprotocol.com), navigate to the Builder Dashboard and register your tool:
+    - Paste your MCP endpoint URL
+    - Set your price per query
+    - Submit for verification
+  </Step>
+  <Step title="Get Paid">
+    Once verified, you're live on the marketplace!
+    - Agents discover and query your tool
+    - You earn 90% of every query fee in USDC
+    - Grant payment follows the schedule below
+  </Step>
+</Steps>
+
+---
+
+## 💸 Payment Terms
+
+<Warning>
+**Grant Payment Schedule (50/50 Split)**
+
+- **50% on verification** — Paid when your tool passes our quality check and goes live
+- **50% after 30 days** — Paid after 30 days of verified uptime and usage
+
+This ensures tools are maintained and actually serve the marketplace.
+</Warning>
+
+### Quality Requirements
+
+To receive grant payments, your tool must:
+
+| Requirement | Why |
+|-------------|-----|
+| ✅ Pass schema validation | `outputSchema` must match actual responses |
+| ✅ Sub-5s response time | Agents expect fast data |
+| ✅ 95%+ uptime (30 days) | Reliable for the second payment |
+| ✅ Handle errors gracefully | Return structured errors, not crashes |
+
+---
+
+## 🤝 Builder Support
+
+You're not alone. We're here to help you ship.
+
+<CardGroup cols={3}>
+  <Card title="Discord" icon="discord" href="https://discord.gg/ctxprotocol">
+    Ask questions, get feedback
+  </Card>
+  <Card title="Office Hours" icon="calendar" href="https://cal.com/ctxprotocol">
+    1:1 calls with the team
+  </Card>
+  <Card title="Examples" icon="github" href="https://github.com/ctxprotocol/sdk/tree/main/examples">
+    Reference implementations
+  </Card>
+</CardGroup>
+
+---
+
+## ❓ FAQ
+
+<AccordionGroup>
+  <Accordion title="How long does approval take?">
+    We review proposals within **48 hours**. Complex proposals may require a quick call.
+  </Accordion>
+  <Accordion title="Can I build multiple tools?">
+    Absolutely. Each tool is evaluated independently. Build a suite of related tools for bonus consideration.
+  </Accordion>
+  <Accordion title="What if my tool idea isn't on the RFB list?">
+    The RFB is a starting point, not a limit. If you have a novel idea that agents would pay for, pitch it. We love surprises.
+  </Accordion>
+  <Accordion title="Do I keep the revenue after the grant?">
+    Yes! The grant is a one-time bootstrap. You keep **90% of all query fees forever** — that's the whole point.
+  </Accordion>
+  <Accordion title="What chain is payment on?">
+    All payments (grants and revenue) are in **USDC on Base**. Low fees, instant settlement.
+  </Accordion>
+  <Accordion title="Can I use existing open-source code?">
+    Yes, as long as you comply with the license. Wrapping an existing API is fine — just make it useful for agents.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## 🚀 Ready to Build?
+
+The marketplace is hungry for data. AI agents are querying tools right now, and they'll pay for yours.
+
+<Card title="Apply Now" icon="rocket" href="https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform">
+  Submit your proposal and start earning
+</Card>

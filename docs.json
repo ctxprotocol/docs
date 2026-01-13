@@ -34,7 +34,8 @@
           {
             "group": "Marketplace",
             "pages": [
-              "guides/build-tools"
+              "guides/build-tools",
+              "grants"
             ]
           },
           {
