@@ -7,7 +7,7 @@ description: "Enable your MCP tools to request user actions: signatures, transac
 
 The **Handshake Architecture** enables MCP tools to request user interaction for actions that require explicit approval:
 
-- **Signature Requests** — EIP-712 typed data signing (Hyperliquid, Polymarket, dYdX)
+- **Signature Requests** — EIP-712 typed data signing (Hyperliquid, dYdX)
 - **Transaction Proposals** — Direct on-chain transactions (Uniswap, NFT mints)
 - **OAuth Requests** — External service authentication (Discord, Twitter)
 
@@ -188,7 +188,7 @@ def handle_place_order(args):
 
 ### Signature Request (EIP-712)
 
-Best for platforms with proxy wallets (Hyperliquid, Polymarket, dYdX).
+Best for platforms with proxy wallets that accept EIP-712 signatures directly (Hyperliquid, dYdX).
 
 ```typescript
 type SignatureRequest = {
@@ -453,7 +453,7 @@ The card displays:
     - Chain-agnostic (no network switching)
     - Faster (no block confirmation)
     
-    Most DeFi platforms (Hyperliquid, Polymarket, dYdX) use proxy wallets that accept signatures.
+    Many DeFi platforms (Hyperliquid, dYdX) use proxy wallets that accept signatures directly.
   </Accordion>
   
   <Accordion title="Validate inputs before requesting signature" icon="shield">
