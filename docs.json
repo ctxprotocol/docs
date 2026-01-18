@@ -35,6 +35,7 @@
             "group": "Marketplace",
             "pages": [
               "guides/build-tools",
+              "guides/context-injection",
               "guides/handshake-architecture",
               "grants"
             ]

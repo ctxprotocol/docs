@@ -173,62 +173,17 @@ app.use("/mcp", createContextMiddleware());
 
 ## Context Injection (User Data)
 
-For tools that need access to user-specific data (e.g., *"Analyze my positions"* or *"Check my balances"*), Context uses a **Context Injection** pattern.
+For tools that need access to user-specific data (e.g., *"Analyze my positions"* or *"Check my balances"*), Context uses a **Context Injection** pattern. The platform fetches user data client-side and injects it directly into your tool's arguments — your server never sees private keys or credentials.
 
-<Note>
-**Beyond Crypto**: While we currently focus on on-chain portfolio data, this system is designed to inject *any* type of user context (identity, preferences, etc.) in the future without exposing sensitive credentials.
-</Note>
+| Context Type | Description |
+|--------------|-------------|
+| `"hyperliquid"` | Hyperliquid perpetuals & spot positions |
+| `"polymarket"` | Polymarket prediction markets |
+| `"wallet"` | Generic EVM wallet balances |
 
-| Step | Who | Action |
-|------|-----|--------|
-| 1 | User | Links external wallet/account in Settings |
-| 2 | Context App | Checks tool's `_meta.contextRequirements` on the tool definition |
-| 3 | Context App | Fetches data from protocol APIs (client-side) |
-| 4 | Context App | Injects data as `portfolio` argument to tool |
-| 5 | MCP Tool | Receives ready-to-analyze data, returns insights |
-
-### Why This Matters
-
-- **No Auth Required**: Public data is fetched by the platform, so you don't need to handle API keys or user login.
-- **Security**: MCP servers never see private keys or credentials.
-- **Simplicity**: Tool developers receive structured data directly in tool arguments.
-
-### Currently Supported
-
-We are starting with high-value crypto data types:
-
-| Context Type | Description | Injected Data |
-|--------------|-------------|---------------|
-| `"hyperliquid"` | Hyperliquid perpetuals & spot | Positions, balances, account summary |
-| `"polymarket"` | Polymarket prediction markets | Positions, orders, market data |
-| `"wallet"` | Generic EVM wallet | Address, token balances for any chain |
-
-### Declaring Context Requirements
-
-If your tool needs user data, declare it using the `_meta.contextRequirements` field:
-
-```typescript
-{
-  name: "analyze_my_positions",
-  
-  // ✅ Use _meta for custom tool metadata (MCP spec)
-  _meta: {
-    contextRequirements: ["hyperliquid"]  // or "polymarket", "wallet"
-  },
-  
-  inputSchema: {
-    type: "object",
-    properties: {
-      portfolio: { type: "object" }
-    },
-    required: ["portfolio"]
-  }
-}
-```
-
-<Info>
-**Why `_meta`?** The MCP SDK strips non-standard fields from tools. The `_meta` field is part of the MCP specification for arbitrary tool metadata and is preserved through transport.
-</Info>
+<Card title="Context Injection Guide" icon="syringe" href="/guides/context-injection">
+  Full guide: declaring requirements, handling data, supported context types
+</Card>
 
 ---
 

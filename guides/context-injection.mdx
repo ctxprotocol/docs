@@ -1,0 +1,507 @@
+---
+title: "Context Injection"
+description: "Enable your MCP tools to receive user-specific data: portfolios, wallets, and account information"
+---
+
+## Overview
+
+The **Context Injection** pattern enables MCP tools to receive user-specific data without handling authentication or credentials:
+
+- **Portfolio Data** — Hyperliquid positions, balances, P&L
+- **Prediction Markets** — Polymarket positions and orders
+- **Wallet Data** — EVM addresses and token balances
+
+<Info>
+**Why "Context Injection"?** The platform fetches user data client-side and injects it directly into your tool's arguments. Your server never sees private keys or credentials — just structured data ready to analyze.
+</Info>
+
+---
+
+## When to Use Context Injection
+
+| Use Case | Context Type | Example Query |
+|----------|--------------|---------------|
+| Portfolio analysis | `"hyperliquid"` | "Analyze my Hyperliquid positions" |
+| Position tracking | `"polymarket"` | "How are my Polymarket bets performing?" |
+| Wallet insights | `"wallet"` | "What tokens do I hold on Base?" |
+
+<Tip>
+**User-specific vs. Public Data**: Use Context Injection when your tool needs to answer "my" questions. For public data (e.g., "What's the ETH price?"), you don't need context injection — just fetch it directly.
+</Tip>
+
+---
+
+## Quick Start (TypeScript)
+
+### 1. Declare Context Requirements
+
+Add `_meta.contextRequirements` to your tool definition:
+
+```typescript
+const TOOLS = [
+  {
+    name: "analyze_my_positions",
+    description: "Analyze user's Hyperliquid perpetual positions",
+    inputSchema: {
+      type: "object",
+      properties: {
+        portfolio: {
+          type: "object",
+          description: "User's Hyperliquid portfolio (injected by platform)",
+        },
+      },
+      required: ["portfolio"],
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        totalPnl: { type: "number" },
+        topPosition: { type: "string" },
+        riskScore: { type: "number" },
+      },
+    },
+    // 👇 This tells the platform to inject Hyperliquid data
+    _meta: {
+      contextRequirements: ["hyperliquid"],
+    },
+  },
+];
+```
+
+### 2. Handle the Injected Data
+
+The platform injects the data as the `portfolio` argument:
+
+```typescript
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === "analyze_my_positions") {
+    const { portfolio } = request.params.arguments;
+
+    // portfolio contains structured Hyperliquid data
+    const positions = portfolio.assetPositions || [];
+    const accountValue = portfolio.marginSummary?.accountValue || 0;
+
+    // Your analysis logic
+    const totalPnl = positions.reduce(
+      (sum, p) => sum + (p.position?.unrealizedPnl || 0),
+      0
+    );
+
+    const topPosition = positions.sort(
+      (a, b) => Math.abs(b.position?.szi || 0) - Math.abs(a.position?.szi || 0)
+    )[0];
+
+    return {
+      content: [{ type: "text", text: `Total PnL: \$${totalPnl.toFixed(2)}` }],
+      structuredContent: {
+        totalPnl,
+        topPosition: topPosition?.position?.coin || "None",
+        riskScore: calculateRiskScore(positions),
+      },
+    };
+  }
+});
+```
+
+---
+
+## Quick Start (Python)
+
+### 1. Declare Context Requirements
+
+```python
+from mcp.server import Server
+from mcp.types import Tool
+
+tools = [
+    Tool(
+        name="analyze_my_positions",
+        description="Analyze user's Hyperliquid perpetual positions",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "portfolio": {
+                    "type": "object",
+                    "description": "User's Hyperliquid portfolio (injected by platform)",
+                },
+            },
+            "required": ["portfolio"],
+        },
+        # 👇 This tells the platform to inject Hyperliquid data
+        _meta={
+            "contextRequirements": ["hyperliquid"],
+        },
+    ),
+]
+```
+
+### 2. Handle the Injected Data
+
+```python
+@server.call_tool()
+async def handle_tool(name: str, arguments: dict):
+    if name == "analyze_my_positions":
+        portfolio = arguments.get("portfolio", {})
+
+        positions = portfolio.get("assetPositions", [])
+        account_value = portfolio.get("marginSummary", {}).get("accountValue", 0)
+
+        total_pnl = sum(
+            p.get("position", {}).get("unrealizedPnl", 0)
+            for p in positions
+        )
+
+        return {
+            "content": [{"type": "text", "text": f"Total PnL: ${total_pnl:.2f}"}],
+            "structuredContent": {
+                "totalPnl": total_pnl,
+                "accountValue": float(account_value),
+                "positionCount": len(positions),
+            },
+        }
+```
+
+---
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  1. User: "Analyze my Hyperliquid positions"                        │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  2. Context App checks tool's _meta.contextRequirements             │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  3. App fetches user's Hyperliquid data (client-side, public API)   │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  4. App injects data as `portfolio` argument to your tool           │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  5. Your tool receives structured data, returns analysis            │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Supported Context Types
+
+### `"hyperliquid"` — Perpetuals & Spot
+
+Hyperliquid portfolio data for perpetual and spot positions.
+
+```typescript
+// Injected portfolio structure
+{
+  marginSummary: {
+    accountValue: string;      // Total account value in USD
+    totalMarginUsed: string;   // Margin currently in use
+    totalNtlPos: string;       // Total notional position size
+    totalRawUsd: string;       // Raw USD balance
+  };
+  assetPositions: Array<{
+    position: {
+      coin: string;            // e.g., "ETH", "BTC"
+      szi: string;             // Position size (signed)
+      entryPx: string;         // Entry price
+      positionValue: string;   // Current position value
+      unrealizedPnl: string;   // Unrealized P&L
+      leverage: {
+        type: string;          // "cross" or "isolated"
+        value: number;
+      };
+    };
+  }>;
+  crossMarginSummary: { ... };
+}
+```
+
+<Info>
+**Data Source**: Fetched from the public Hyperliquid Info API using the user's linked wallet address.
+</Info>
+
+### `"polymarket"` — Prediction Markets
+
+Polymarket positions, orders, and market data.
+
+```typescript
+// Injected portfolio structure
+{
+  positions: Array<{
+    market: string;            // Market question
+    outcome: string;           // "Yes" or "No"
+    size: number;              // Position size
+    avgPrice: number;          // Average entry price
+    currentPrice: number;      // Current market price
+    pnl: number;               // Profit/loss
+  }>;
+  openOrders: Array<{
+    market: string;
+    side: "buy" | "sell";
+    price: number;
+    size: number;
+  }>;
+  balance: number;             // Available USDC balance
+}
+```
+
+### `"wallet"` — Generic EVM Wallet
+
+Basic wallet data for any EVM-compatible chain.
+
+```typescript
+// Injected portfolio structure
+{
+  address: string;             // User's wallet address (0x...)
+  chainId: number;             // Current chain ID
+  balances: Array<{
+    token: string;             // Token symbol
+    address: string;           // Token contract address
+    balance: string;           // Balance in wei
+    decimals: number;
+    usdValue?: number;         // USD value if available
+  }>;
+  nativeBalance: string;       // ETH/native token balance in wei
+}
+```
+
+---
+
+## Multiple Context Types
+
+Your tool can request multiple context types:
+
+```typescript
+{
+  name: "cross_platform_analysis",
+  _meta: {
+    contextRequirements: ["hyperliquid", "wallet"]
+  },
+  inputSchema: {
+    type: "object",
+    properties: {
+      hyperliquidPortfolio: { type: "object" },
+      walletPortfolio: { type: "object" },
+    },
+  },
+}
+```
+
+<Warning>
+**Naming Convention**: When requesting multiple contexts, the platform injects each with a descriptive key (e.g., `hyperliquidPortfolio`, `walletPortfolio`). Check your tool's argument names match what you declare in `inputSchema`.
+</Warning>
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Validate the injected data" icon="shield">
+    The user might not have linked the required account, or they might have empty positions:
+
+    ```typescript
+    if (!portfolio || !portfolio.assetPositions) {
+      return {
+        content: [{ type: "text", text: "No Hyperliquid data available. Please link your wallet in Settings." }],
+        structuredContent: { error: "NO_DATA", message: "Portfolio not linked" },
+      };
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Handle empty portfolios gracefully" icon="inbox">
+    A linked wallet with no positions is valid — don't treat it as an error:
+
+    ```typescript
+    if (positions.length === 0) {
+      return {
+        content: [{ type: "text", text: "No open positions found." }],
+        structuredContent: { positions: [], summary: "No active positions" },
+      };
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Document the portfolio argument" icon="book">
+    Make it clear in your tool description that portfolio data is required:
+
+    ```typescript
+    description: "Analyze user's Hyperliquid positions. Requires linked Hyperliquid wallet."
+    ```
+  </Accordion>
+
+  <Accordion title="Use outputSchema for structured responses" icon="code">
+    Your analysis results should be machine-readable:
+
+    ```typescript
+    outputSchema: {
+      type: "object",
+      properties: {
+        totalPnl: { type: "number", description: "Total unrealized P&L in USD" },
+        riskLevel: { type: "string", enum: ["low", "medium", "high"] },
+        recommendations: { type: "array", items: { type: "string" } },
+      },
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Model
+
+<Info>
+**Zero Credential Exposure**: Your MCP server never sees private keys, API secrets, or wallet signatures. The platform fetches public data client-side and passes only the structured result to your tool.
+</Info>
+
+| Security Property | How It's Achieved |
+|-------------------|-------------------|
+| No private keys exposed | Platform fetches data client-side |
+| No API keys needed | Uses public APIs (Hyperliquid Info, etc.) |
+| User controls data sharing | User explicitly links accounts in Settings |
+| Read-only by default | Context injection is read-only; use [Handshakes](/guides/handshake-architecture) for write actions |
+
+---
+
+## Future Context Types
+
+<Note>
+**Beyond Crypto**: The Context Injection system is designed to support any type of user data. We're starting with high-value crypto data, but the architecture supports identity, preferences, and external service data.
+</Note>
+
+Planned context types (not yet available):
+
+| Context Type | Description |
+|--------------|-------------|
+| `"dydx"` | dYdX perpetual positions |
+| `"aave"` | Aave lending positions |
+| `"uniswap"` | Uniswap LP positions |
+| `"ens"` | ENS names and records |
+
+<Tip>
+**Want a specific context type?** [Open an issue](https://github.com/ctxprotocol/sdk/issues) describing your use case and the data you need.
+</Tip>
+
+---
+
+## Complete Example: Portfolio Analyzer
+
+```typescript
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { createContextMiddleware } from "@ctxprotocol/sdk";
+import express from "express";
+
+const app = express();
+app.use(express.json());
+app.use("/mcp", createContextMiddleware());
+
+const TOOLS = [
+  {
+    name: "analyze_portfolio_risk",
+    description: "Analyze risk metrics for user's Hyperliquid portfolio",
+    inputSchema: {
+      type: "object",
+      properties: {
+        portfolio: { type: "object" },
+        riskTolerance: {
+          type: "string",
+          enum: ["conservative", "moderate", "aggressive"],
+          default: "moderate",
+        },
+      },
+      required: ["portfolio"],
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        riskScore: { type: "number", minimum: 0, maximum: 100 },
+        leverageRatio: { type: "number" },
+        largestPosition: { type: "string" },
+        recommendations: { type: "array", items: { type: "string" } },
+      },
+    },
+    _meta: {
+      contextRequirements: ["hyperliquid"],
+    },
+  },
+];
+
+const server = new Server(
+  { name: "portfolio-analyzer", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === "analyze_portfolio_risk") {
+    const { portfolio, riskTolerance = "moderate" } = request.params.arguments;
+
+    if (!portfolio?.assetPositions) {
+      return {
+        content: [{ type: "text", text: "Please link your Hyperliquid wallet in Settings." }],
+        structuredContent: { error: "NO_PORTFOLIO" },
+      };
+    }
+
+    const positions = portfolio.assetPositions;
+    const accountValue = parseFloat(portfolio.marginSummary?.accountValue || "0");
+    
+    // Calculate metrics
+    const totalNotional = positions.reduce(
+      (sum, p) => sum + Math.abs(parseFloat(p.position?.positionValue || "0")),
+      0
+    );
+    const leverageRatio = accountValue > 0 ? totalNotional / accountValue : 0;
+    
+    const largestPosition = positions.sort(
+      (a, b) => 
+        Math.abs(parseFloat(b.position?.positionValue || "0")) -
+        Math.abs(parseFloat(a.position?.positionValue || "0"))
+    )[0];
+
+    // Risk scoring
+    let riskScore = 0;
+    if (leverageRatio > 5) riskScore += 40;
+    else if (leverageRatio > 2) riskScore += 20;
+    
+    if (positions.length > 10) riskScore += 20;
+    if (positions.some(p => parseFloat(p.position?.leverage?.value || 0) > 10)) riskScore += 30;
+
+    const recommendations = [];
+    if (leverageRatio > 3) recommendations.push("Consider reducing leverage");
+    if (positions.length > 8) recommendations.push("Portfolio may be over-diversified");
+
+    return {
+      content: [{
+        type: "text",
+        text: `Risk Score: ${riskScore}/100. Leverage: ${leverageRatio.toFixed(2)}x`,
+      }],
+      structuredContent: {
+        riskScore,
+        leverageRatio,
+        largestPosition: largestPosition?.position?.coin || "None",
+        recommendations,
+      },
+    };
+  }
+});
+
+app.listen(3000);
+```
+
+---
+
+## Related Guides
+
+<CardGroup cols={2}>
+  <Card title="Handshake Architecture" icon="handshake" href="/guides/handshake-architecture">
+    For write actions: signatures, transactions, OAuth
+  </Card>
+  <Card title="Build & List Your Tool" icon="hammer" href="/guides/build-tools">
+    Complete guide to building MCP tools
+  </Card>
+</CardGroup>
