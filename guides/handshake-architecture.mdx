@@ -484,3 +484,27 @@ The card displays:
 <Info>
 **No Private Keys**: The user's wallet signs the data client-side. Your tool never sees private keys — only the resulting signature.
 </Info>
+
+---
+
+## Platform Philosophy
+
+The Context marketplace supports authentication flows that are **generalizable** — where solving the problem once enables infinite integrations.
+
+| Flow Type | Support | Rationale |
+|-----------|---------|-----------|
+| **EIP-712 Signatures** | ✅ Full | Universal standard. Hyperliquid, dYdX, and many DeFi protocols accept signatures directly. One implementation, infinite platforms. |
+| **OAuth 2.0** | ✅ Full | Industry standard. Discord, Twitter, and thousands of services use OAuth. Standardized token exchange. |
+| **API Key Auth** | ❌ Redirect | Platform-specific. Each API has different auth schemes, key derivation, HMAC formats, and storage requirements. Not scalable. |
+
+<Note>
+**Why no API key support?** Platforms like Polymarket require API keys derived from wallet signatures *on their site*, with custom HMAC authentication for every request. This cannot be delegated through the handshake architecture.
+
+If your tool requires API keys, you have two options:
+1. **Provide read-only features** with a redirect link for write actions
+2. **Accept user-provided keys** as input parameters (user manages their own credentials)
+</Note>
+
+<Tip>
+**Want API key support?** We're monitoring demand. If you're building a tool that needs this pattern, [open an issue](https://github.com/ctxprotocol/sdk/issues) describing your use case.
+</Tip>
