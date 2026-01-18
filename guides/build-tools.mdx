@@ -417,6 +417,35 @@ app.listen(3000, () => {
 
 ---
 
+## Advanced: User Actions (Handshakes)
+
+Need your tool to execute transactions or get user signatures? Use the **Handshake Architecture**:
+
+```typescript
+import { createSignatureRequest, wrapHandshakeResponse } from "@ctxprotocol/sdk";
+
+// In your tool handler
+if (needsUserSignature) {
+  return wrapHandshakeResponse(
+    createSignatureRequest({
+      domain: { name: "MyProtocol", version: "1", chainId: 1 },
+      types: { Order: [{ name: "amount", type: "uint256" }] },
+      primaryType: "Order",
+      message: { amount: 1000 },
+      meta: { description: "Place order", protocol: "MyProtocol" },
+    })
+  );
+}
+```
+
+The Context app will show an approval card, the user signs, and the signature is returned to your tool.
+
+<Card title="Handshake Architecture Guide" icon="handshake" href="/guides/handshake-architecture">
+  Full guide: signatures, transactions, OAuth flows
+</Card>
+
+---
+
 ## Example Servers
 
 Check out these complete working examples:
@@ -428,7 +457,7 @@ Check out these complete working examples:
     Gas price API (3 tools)
   </Card>
   <Card title="Hyperliquid" icon="chart-line" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/hyperliquid-contributor">
-    DeFi analytics (16 tools)
+    DeFi analytics (16+ tools, includes handshake example)
   </Card>
   <Card title="Polymarket" icon="chart-pie" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor">
     Prediction market intelligence
@@ -441,6 +470,8 @@ Check out these complete working examples:
   <Card title="Hummingbot Market Intel" icon="python" href="https://github.com/ctxprotocol/sdk-python/tree/main/examples/server/hummingbot-contributor">
     Multi-exchange market data (6 tools) — prices, order books, funding rates, trade impact analysis
   </Card>
-</CardGroup><Tip>
+</CardGroup>
+
+<Tip>
 The Python example uses [FastMCP](https://gofastmcp.com) which auto-generates `outputSchema` from Pydantic models and includes `structuredContent` in responses automatically.
 </Tip>

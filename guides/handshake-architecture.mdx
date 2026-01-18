@@ -1,0 +1,486 @@
+---
+title: "Handshake Architecture"
+description: "Enable your MCP tools to request user actions: signatures, transactions, and OAuth"
+---
+
+## Overview
+
+The **Handshake Architecture** enables MCP tools to request user interaction for actions that require explicit approval:
+
+- **Signature Requests** — EIP-712 typed data signing (Hyperliquid, Polymarket, dYdX)
+- **Transaction Proposals** — Direct on-chain transactions (Uniswap, NFT mints)
+- **OAuth Requests** — External service authentication (Discord, Twitter)
+
+<Info>
+**Why "Handshake"?** The tool proposes an action, the user approves it, and the result is returned to the tool — a secure handshake between AI and human.
+</Info>
+
+---
+
+## When to Use Handshakes
+
+| Action Type | Use Case | Example |
+|-------------|----------|---------|
+| `signature_request` | Platforms with proxy wallets | Place order on Hyperliquid |
+| `transaction_proposal` | Direct on-chain actions | Swap on Uniswap, mint NFT |
+| `auth_required` | External service auth | Connect Discord bot |
+
+<Tip>
+**Prefer signatures over transactions** when possible. Signatures are gasless, don't require network switching, and work seamlessly with Privy embedded wallets.
+</Tip>
+
+---
+
+## Quick Start (TypeScript)
+
+### 1. Install the SDK
+
+```bash
+pnpm add @ctxprotocol/sdk
+```
+
+### 2. Import Handshake Helpers
+
+```typescript
+import {
+  createSignatureRequest,
+  wrapHandshakeResponse,
+} from "@ctxprotocol/sdk";
+```
+
+### 3. Return a Handshake from Your Tool
+
+```typescript
+// In your MCP tool handler
+async function handlePlaceOrder(args) {
+  const { coin, isBuy, size, price } = args;
+
+  // Build EIP-712 typed data for the order
+  const signatureRequest = createSignatureRequest({
+    domain: {
+      name: "HyperliquidSignTransaction",
+      version: "1",
+      chainId: 42161, // Arbitrum (informational only)
+    },
+    types: {
+      Order: [
+        { name: "asset", type: "uint32" },
+        { name: "isBuy", type: "bool" },
+        { name: "limitPx", type: "uint64" },
+        { name: "sz", type: "uint64" },
+      ],
+    },
+    primaryType: "Order",
+    message: {
+      asset: assetIndex,
+      isBuy,
+      limitPx: Math.round(price * 1e8),
+      sz: Math.round(size * 1e8),
+    },
+    meta: {
+      description: `${isBuy ? "Buy" : "Sell"} ${size} ${coin} at $${price}`,
+      protocol: "Hyperliquid",
+      action: isBuy ? "Buy Order" : "Sell Order",
+      tokenSymbol: coin,
+      tokenAmount: size.toString(),
+    },
+  });
+
+  // Wrap in MCP response format
+  return wrapHandshakeResponse(signatureRequest);
+}
+```
+
+---
+
+## Quick Start (Python)
+
+### 1. Install the SDK
+
+```bash
+pip install ctxprotocol
+```
+
+### 2. Import Handshake Helpers
+
+```python
+from ctxprotocol import (
+    create_signature_request,
+    wrap_handshake_response,
+)
+```
+
+### 3. Return a Handshake from Your Tool
+
+```python
+def handle_place_order(args):
+    coin = args["coin"]
+    is_buy = args["isBuy"]
+    size = args["size"]
+    price = args["price"]
+
+    signature_request = create_signature_request(
+        domain={
+            "name": "HyperliquidSignTransaction",
+            "version": "1",
+            "chainId": 42161,
+        },
+        types={
+            "Order": [
+                {"name": "asset", "type": "uint32"},
+                {"name": "isBuy", "type": "bool"},
+                {"name": "limitPx", "type": "uint64"},
+                {"name": "sz", "type": "uint64"},
+            ],
+        },
+        primary_type="Order",
+        message={
+            "asset": asset_index,
+            "isBuy": is_buy,
+            "limitPx": int(price * 1e8),
+            "sz": int(size * 1e8),
+        },
+        meta={
+            "description": f"{'Buy' if is_buy else 'Sell'} {size} {coin} at ${price}",
+            "protocol": "Hyperliquid",
+            "action": "Buy Order" if is_buy else "Sell Order",
+            "token_symbol": coin,
+            "token_amount": str(size),
+        },
+    )
+
+    return wrap_handshake_response(signature_request)
+```
+
+---
+
+## How It Works
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  1. User: "Buy 0.1 ETH at $3000 on Hyperliquid"                    │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  2. AI Agent calls your place_order tool                           │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  3. Your tool returns SignatureRequest in _meta.handshakeAction    │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  4. Context Platform intercepts, shows approval card to user       │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  5. User clicks "Sign" → wallet signs EIP-712 data (gasless!)      │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  6. Signature returned to your callback tool for order submission  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Action Types
+
+### Signature Request (EIP-712)
+
+Best for platforms with proxy wallets (Hyperliquid, Polymarket, dYdX).
+
+```typescript
+type SignatureRequest = {
+  _action: "signature_request";
+  domain: {
+    name: string;      // e.g., "Hyperliquid"
+    version: string;   // e.g., "1"
+    chainId: number;   // Informational only
+    verifyingContract?: `0x${string}`;
+  };
+  types: Record<string, Array<{ name: string; type: string }>>;
+  primaryType: string;
+  message: Record<string, unknown>;
+  meta?: {
+    description: string;
+    protocol?: string;
+    action?: string;
+    tokenSymbol?: string;
+    tokenAmount?: string;
+    warningLevel?: "info" | "caution" | "danger";
+  };
+  callbackToolName?: string;  // Tool to call with signature result
+};
+```
+
+<Info>
+**Gasless & Chain-Agnostic**: EIP-712 signatures don't require gas or network switching. The `chainId` in the domain is purely informational — signing works from any network.
+</Info>
+
+### Transaction Proposal
+
+For direct on-chain actions (Uniswap swaps, NFT mints, etc.).
+
+```typescript
+type TransactionProposal = {
+  _action: "transaction_proposal";
+  chainId: number;        // Required: target chain
+  to: `0x${string}`;      // Contract address
+  data: `0x${string}`;    // Encoded calldata
+  value?: string;         // Wei to send (default "0")
+  meta?: {
+    description: string;
+    protocol?: string;
+    estimatedGas?: string;
+    explorerUrl?: string;
+    warningLevel?: "info" | "caution" | "danger";
+  };
+};
+```
+
+<Warning>
+**Network Switching**: Transaction proposals may require the user to switch networks. Use signatures when possible for better UX.
+</Warning>
+
+### Auth Required (OAuth)
+
+For external service authentication.
+
+```typescript
+type AuthRequired = {
+  _action: "auth_required";
+  provider: string;       // e.g., "discord", "twitter"
+  authUrl: string;        // Your OAuth endpoint (MUST be HTTPS)
+  meta?: {
+    displayName?: string;
+    scopes?: string[];
+    description?: string;
+    iconUrl?: string;
+    expiresIn?: string;
+  };
+};
+```
+
+<Info>
+**Security**: The `authUrl` domain must match your tool's endpoint domain. Context appends the user's DID as `?context_did=...` for you to associate the auth with the user.
+</Info>
+
+---
+
+## Response Format
+
+Handshake actions must be placed in `structuredContent._meta.handshakeAction`:
+
+```typescript
+return {
+  content: [
+    { type: "text", text: "Handshake required: signature request" }
+  ],
+  structuredContent: {
+    _meta: {
+      handshakeAction: signatureRequest,  // 👈 Required location
+    },
+    status: "handshake_required",
+    message: "Please approve the order",
+  },
+};
+```
+
+<Warning>
+**Why `_meta`?** The MCP SDK strips unknown top-level fields. Placing the action in `_meta` ensures it's preserved and detected by the Context platform.
+</Warning>
+
+---
+
+## Helper Functions
+
+### TypeScript SDK
+
+```typescript
+import {
+  // Creators
+  createSignatureRequest,
+  createTransactionProposal,
+  createAuthRequired,
+  wrapHandshakeResponse,
+  
+  // Type guards
+  isHandshakeAction,
+  isSignatureRequest,
+  isTransactionProposal,
+  isAuthRequired,
+} from "@ctxprotocol/sdk";
+```
+
+### Python SDK
+
+```python
+from ctxprotocol import (
+    # Creators
+    create_signature_request,
+    create_transaction_proposal,
+    create_auth_required,
+    wrap_handshake_response,
+    
+    # Type guards
+    is_handshake_action,
+    is_signature_request,
+    is_transaction_proposal,
+    is_auth_required,
+)
+```
+
+---
+
+## Complete Example: Hyperliquid Order Tool
+
+```typescript
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import {
+  createSignatureRequest,
+  wrapHandshakeResponse,
+  createContextMiddleware,
+} from "@ctxprotocol/sdk";
+
+const TOOLS = [
+  {
+    name: "place_order",
+    description: "Place a perpetual order on Hyperliquid",
+    inputSchema: {
+      type: "object",
+      properties: {
+        coin: { type: "string", description: "e.g., ETH, BTC" },
+        isBuy: { type: "boolean" },
+        size: { type: "number" },
+        price: { type: "number" },
+      },
+      required: ["coin", "isBuy", "size", "price"],
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        status: { type: "string" },
+        message: { type: "string" },
+        _meta: { type: "object" },
+      },
+    },
+    _meta: {
+      contextRequirements: ["hyperliquid"],  // Inject user's portfolio
+    },
+  },
+];
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === "place_order") {
+    const { coin, isBuy, size, price } = request.params.arguments;
+    
+    // Get asset index from market metadata
+    const assetIndex = await getAssetIndex(coin);
+    
+    const signatureRequest = createSignatureRequest({
+      domain: {
+        name: "HyperliquidSignTransaction",
+        version: "1",
+        chainId: 42161,
+      },
+      types: {
+        Order: [
+          { name: "asset", type: "uint32" },
+          { name: "isBuy", type: "bool" },
+          { name: "limitPx", type: "uint64" },
+          { name: "sz", type: "uint64" },
+          { name: "reduceOnly", type: "bool" },
+        ],
+      },
+      primaryType: "Order",
+      message: {
+        asset: assetIndex,
+        isBuy,
+        limitPx: Math.round(price * 1e8),
+        sz: Math.round(size * 1e8),
+        reduceOnly: false,
+      },
+      meta: {
+        description: `${isBuy ? "Buy" : "Sell"} ${size} ${coin} at $${price}`,
+        protocol: "Hyperliquid",
+        action: isBuy ? "Long" : "Short",
+        tokenSymbol: coin,
+        tokenAmount: size.toString(),
+        warningLevel: size * price > 10000 ? "caution" : "info",
+      },
+      callbackToolName: "submit_signed_order",
+    });
+    
+    return wrapHandshakeResponse(signatureRequest);
+  }
+});
+```
+
+---
+
+## UI Preview
+
+When a handshake is detected, the Context app shows an approval card:
+
+<Frame>
+  <img src="/images/signature-request-card.png" alt="Signature Request Card" />
+</Frame>
+
+The card displays:
+- Protocol name and action type
+- Human-readable description
+- Token amount (if applicable)
+- Gas status (gasless for signatures)
+- Sign/Reject buttons
+
+---
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always include descriptive meta" icon="info">
+    The `meta` field powers the approval UI. Include:
+    - `description`: What the user is approving
+    - `protocol`: Which platform (builds trust)
+    - `tokenAmount` + `tokenSymbol`: For financial actions
+    - `warningLevel`: "caution" for large amounts, "danger" for irreversible actions
+  </Accordion>
+  
+  <Accordion title="Use signatures over transactions" icon="pen">
+    EIP-712 signatures are:
+    - Gasless (no ETH needed)
+    - Chain-agnostic (no network switching)
+    - Faster (no block confirmation)
+    
+    Most DeFi platforms (Hyperliquid, Polymarket, dYdX) use proxy wallets that accept signatures.
+  </Accordion>
+  
+  <Accordion title="Validate inputs before requesting signature" icon="shield">
+    Don't ask users to sign invalid orders. Validate:
+    - Asset exists on the platform
+    - Price is reasonable (not 100x above/below market)
+    - Size is within platform limits
+    - User has sufficient balance (if portfolio context available)
+  </Accordion>
+  
+  <Accordion title="Use callbackToolName for multi-step flows" icon="arrow-right">
+    For flows that need the signature result:
+    ```typescript
+    callbackToolName: "submit_signed_order"
+    ```
+    The platform will call this tool with `{ signature, originalParams }` after signing.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Security Considerations
+
+<Warning>
+**Domain Validation**: For `auth_required`, the `authUrl` domain must match your tool's endpoint domain. This prevents phishing attacks where a malicious tool redirects users to fake auth pages.
+</Warning>
+
+<Info>
+**No Private Keys**: The user's wallet signs the data client-side. Your tool never sees private keys — only the resulting signature.
+</Info>
