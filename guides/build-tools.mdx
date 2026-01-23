@@ -24,19 +24,9 @@ Want to earn revenue from your data? **Turn the insights people pay \$500/year f
 ### Two-Step Workflow
 
 <Steps>
-  <Step title="Analyze the API">
-    Use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to:
-    - Understand the API's capabilities
-    - Generate submission details for the marketplace form
-    - Identify the best tools to expose
-    
-    ```
-    Paste the mcp-server-analysis-prompt.md into your AI chat, then provide your API documentation or Context7 library ID.
-    ```
-  </Step>
-  
   <Step title="Build the MCP Server">
     Use the **[MCP Builder Template](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-builder-template.md)** as a system prompt to:
+    - Fetch API docs via Context7 and discover all endpoints
     - Design "giga-brained" intelligence tools (not just API passthroughs)
     - Generate complete schemas with `outputSchema`
     - Implement the full MCP server
@@ -44,6 +34,17 @@ Want to earn revenue from your data? **Turn the insights people pay \$500/year f
     ```
     Use the mcp-builder-template.md with Context7 for [your-api-library-id].
     Fetch the documentation and design tools that answer complex questions.
+    ```
+  </Step>
+  
+  <Step title="Generate Submission Details">
+    Once your server is built, use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to:
+    - Analyze your MCP server implementation
+    - Generate the perfect submission details for the marketplace form
+    - Get suggested name, description, category, and pricing
+    
+    ```
+    Paste the mcp-server-analysis-prompt.md into your AI chat, then provide your server.ts code or repository URL.
     ```
   </Step>
 </Steps>
