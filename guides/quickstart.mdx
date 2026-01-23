@@ -270,9 +270,22 @@ curl -X POST http://localhost:3000/mcp \
 
 You should get a response with your session ID.
 
+<Warning>
+**Important: You cannot test `tools/call` locally with curl.** The `createContextMiddleware()` requires a valid JWT from the Context Platform. When you call `tools/call` without this JWT, you'll get `{"error":"Unauthorized"}`. This is expected behavior — it means your security middleware is working correctly.
+
+To test your tools, you must:
+1. Deploy to a public HTTPS URL
+2. Register on the Context Marketplace
+3. Call your tool through the Context app
+</Warning>
+
 ---
 
 ## Step 4: Deploy to Railway
+
+<Warning>
+**HTTPS is required.** The Context Platform will only connect to HTTPS endpoints. Railway, Vercel, and similar platforms provide HTTPS automatically. If you're self-hosting, you'll need to set up HTTPS (e.g., with Caddy or nginx).
+</Warning>
 
 <Steps>
   <Step title="Push to GitHub">
@@ -372,7 +385,25 @@ curl https://YOUR-RAILWAY-URL.up.railway.app/health
 
 ## Troubleshooting
 
+<Info>
+For a complete list of common errors and solutions, see the [Troubleshooting Guide](/guides/troubleshooting).
+</Info>
+
 <AccordionGroup>
+  <Accordion title='{"error":"Unauthorized"} when calling tools' defaultOpen={true}>
+    **This is the most common error.** It means your security middleware is working correctly.
+    
+    The `createContextMiddleware()` verifies that requests come from the Context Platform with a valid JWT. Without this JWT, `tools/call` will always return Unauthorized.
+    
+    **Causes:**
+    - **Testing locally with curl** — You cannot test `tools/call` locally. Only `initialize` and `tools/list` work without auth.
+    - **HTTP instead of HTTPS** — Context Platform requires HTTPS. Deploy to Railway, Vercel, or use a service like Caddy for local HTTPS.
+    - **Not registered on marketplace** — Your tool must be registered at [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute) before the platform will send authenticated requests.
+    - **Wrong endpoint URL** — Double-check the URL you registered matches your deployed server.
+    
+    **Solution:** Deploy to HTTPS, register on the marketplace, then test through the Context app.
+  </Accordion>
+  
   <Accordion title="Server won't start">
     - Check Node.js version: `node --version` (must be 18+)
     - Ensure all dependencies installed: `pnpm install`
@@ -387,8 +418,8 @@ curl https://YOUR-RAILWAY-URL.up.railway.app/health
   
   <Accordion title="Tool not discovered on Context">
     - Verify your `/health` endpoint returns 200
-    - Test `/mcp` endpoint with curl locally
-    - Ensure HTTPS URL (not HTTP)
+    - Test `initialize` and `tools/list` with curl (these don't require auth)
+    - **Ensure HTTPS URL** — HTTP endpoints will not work
   </Accordion>
 </AccordionGroup>
 

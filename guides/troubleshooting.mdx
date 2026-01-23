@@ -1,0 +1,167 @@
+---
+title: "Troubleshooting"
+description: "Common errors and solutions when building MCP servers for the Context Marketplace"
+---
+
+## Common Errors
+
+### `{"error":"Unauthorized"}`
+
+**This is the most common error for new tool builders.**
+
+<Warning>
+The `createContextMiddleware()` from `@ctxprotocol/sdk` verifies that requests come from the Context Platform with a valid JWT. Without this JWT, any call to `tools/call` will return `{"error":"Unauthorized"}`.
+</Warning>
+
+#### Why This Happens
+
+| Cause | Explanation |
+|-------|-------------|
+| **Testing locally with curl** | You cannot test `tools/call` locally. The middleware requires a JWT that only the Context Platform provides. |
+| **HTTP instead of HTTPS** | Context Platform only connects to HTTPS endpoints. HTTP will silently fail. |
+| **Not registered on marketplace** | Until you register at [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute), the platform won't send requests to your server. |
+| **Wrong endpoint URL** | The URL you registered doesn't match your deployed server. |
+
+#### What You CAN Test Locally
+
+These MCP methods work without authentication:
+
+```bash
+# Initialize session (no auth required)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}'
+
+# List tools (no auth required)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -H "mcp-session-id: YOUR-SESSION-ID-FROM-INITIALIZE" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":2}'
+```
+
+#### What Requires the Context Platform
+
+```bash
+# tools/call - REQUIRES Context Platform JWT
+# This WILL return {"error":"Unauthorized"} when tested locally
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"your_tool"},"id":3}'
+```
+
+#### Solution
+
+1. **Deploy to HTTPS** — Use Railway, Vercel, or set up Caddy/nginx for HTTPS
+2. **Register on marketplace** — Go to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute)
+3. **Test through the Context app** — Ask the agent to use your tool
+
+---
+
+### Tool Not Discovered
+
+Your server is deployed but Context can't find your tools.
+
+#### Checklist
+
+- [ ] Health endpoint returns 200: `curl https://your-server.com/health`
+- [ ] `initialize` works: Test with curl (see above)
+- [ ] `tools/list` returns your tools: Test with curl after initialize
+- [ ] URL is HTTPS (not HTTP)
+- [ ] URL ends with `/mcp` (e.g., `https://your-server.com/mcp`)
+- [ ] Tools have `outputSchema` defined (required by Context)
+
+---
+
+### Server Won't Start
+
+#### Node.js Version
+
+```bash
+node --version  # Must be 18+
+```
+
+#### Missing Dependencies
+
+```bash
+pnpm install  # or npm install
+```
+
+#### TypeScript Errors
+
+```bash
+pnpm exec tsc --noEmit  # Check for type errors
+```
+
+#### Module System Mismatch
+
+Ensure your `package.json` has:
+
+```json
+{
+  "type": "module"
+}
+```
+
+---
+
+### Railway Deployment Fails
+
+1. Check Railway logs for specific errors
+2. Ensure `package.json` has `"type": "module"`
+3. Set start command to: `pnpm start` or `npm start`
+4. Verify `tsconfig.json` has correct module settings
+
+---
+
+### Response Schema Validation Fails
+
+If your tool responses don't match your `outputSchema`, users can dispute them.
+
+#### Common Causes
+
+```typescript
+// ❌ Schema says number, response is string
+outputSchema: { value: { type: "number" } }
+structuredContent: { value: "42" }  // String, not number!
+
+// ✅ Correct: Types match
+outputSchema: { value: { type: "number" } }
+structuredContent: { value: 42 }  // Number
+```
+
+#### Solution
+
+- Ensure all `structuredContent` fields match your `outputSchema` types exactly
+- Use TypeScript to catch type mismatches at compile time
+- Test your responses against the schema before deploying
+
+---
+
+## MCP Security Model Reference
+
+Understanding which methods require authentication:
+
+| MCP Method | Auth Required | Why |
+|------------|---------------|-----|
+| `initialize` | ❌ No | Session setup |
+| `tools/list` | ❌ No | Discovery — agents need to see your schemas |
+| `resources/list` | ❌ No | Discovery |
+| `prompts/list` | ❌ No | Discovery |
+| `tools/call` | ✅ **Yes** | **Execution — costs money, runs your code** |
+
+<Info>
+Discovery methods are intentionally open so AI agents can find your tools. Only execution (`tools/call`) requires payment verification through the Context Platform JWT.
+</Info>
+
+---
+
+## Still Stuck?
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/ctxprotocol/sdk/issues">
+    Report bugs or ask questions
+  </Card>
+  <Card title="Example Servers" icon="code" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server">
+    Working reference implementations
+  </Card>
+</CardGroup>
