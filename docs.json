@@ -34,6 +34,7 @@
           {
             "group": "Marketplace",
             "pages": [
+              "guides/quickstart",
               "guides/build-tools",
               "guides/context-injection",
               "guides/handshake-architecture",

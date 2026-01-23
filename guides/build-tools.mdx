@@ -3,9 +3,71 @@ title: "Build & List Your Tool"
 description: "Step-by-step guide to building an MCP server and listing it on the Context marketplace"
 ---
 
+<Info>
+**New to MCP?** Start with our [5-Minute Quickstart](/guides/quickstart) to build and deploy your first server, then come back here for advanced features.
+</Info>
+
 ## Overview
 
 Want to earn revenue from your data? **Turn the insights people pay \$500/year for into \$0.10/response revenue you keep.** Build an MCP server and register it as an **MCP Tool** on the Context marketplace.
+
+---
+
+## AI-Assisted Builder (TL;DR)
+
+**Have an API subscription you want to unbundle?** Use Cursor, Claude, or any AI coding agent to build your MCP server automatically.
+
+<Warning>
+**Prerequisite**: You need [Context7 MCP](https://github.com/upstash/context7) configured in your AI coding environment to fetch API documentation automatically.
+</Warning>
+
+### Two-Step Workflow
+
+<Steps>
+  <Step title="Analyze the API">
+    Use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to:
+    - Understand the API's capabilities
+    - Generate submission details for the marketplace form
+    - Identify the best tools to expose
+    
+    ```
+    Paste the mcp-server-analysis-prompt.md into your AI chat, then provide your API documentation or Context7 library ID.
+    ```
+  </Step>
+  
+  <Step title="Build the MCP Server">
+    Use the **[MCP Builder Template](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-builder-template.md)** as a system prompt to:
+    - Design "giga-brained" intelligence tools (not just API passthroughs)
+    - Generate complete schemas with `outputSchema`
+    - Implement the full MCP server
+    
+    ```
+    Use the mcp-builder-template.md with Context7 for [your-api-library-id].
+    Fetch the documentation and design tools that answer complex questions.
+    ```
+  </Step>
+</Steps>
+
+### Example Prompt for Cursor/Claude
+
+```
+I want to build an MCP server for the Context Marketplace using the CoinGecko API.
+
+1. Use context7 to fetch the CoinGecko API documentation
+2. Follow the mcp-builder-template.md workflow:
+   - PHASE 1: Discover all endpoints
+   - PHASE 2: Generate discovery questions (STOP for my review)
+   - PHASE 3: Design and implement tools after I approve
+
+Focus on "giga-brained" tools that combine multiple endpoints to answer
+questions users couldn't easily answer with raw API calls.
+```
+
+<Tip>
+The builder template includes checkpoints where the AI will stop and ask for your approval before proceeding. This ensures you get tools that match your vision.
+</Tip>
+
+---
 
 <Info>
 **Earnings Model**: You earn **90%** of every response fee. Set your price (e.g., \$0.01/response) and get paid in USDC instantly every time an Agent calls your tool.

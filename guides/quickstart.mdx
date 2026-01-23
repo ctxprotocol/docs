@@ -1,0 +1,411 @@
+---
+title: "5-Minute Quickstart"
+description: "Build and deploy your first MCP server for the Context Marketplace in 5 minutes"
+---
+
+## What You'll Build
+
+A simple MCP server with one tool that you can deploy and register on the Context Marketplace. No external API keys required.
+
+<Info>
+**Already have an API you want to unbundle?** Skip to the [AI-Assisted Builder](#ai-assisted-builder) section in the Build & List guide for a faster workflow using Cursor or Claude.
+</Info>
+
+---
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- **Node.js 18+** — Check with `node --version`
+- **pnpm** (recommended) — Install with `npm install -g pnpm`
+- **A code editor** — VS Code, Cursor, etc.
+
+---
+
+## Step 1: Create Your Project
+
+Open your terminal and run these commands:
+
+```bash
+# Create project directory
+mkdir my-first-mcp
+cd my-first-mcp
+
+# Initialize the project
+pnpm init
+
+# Install dependencies
+pnpm add @modelcontextprotocol/sdk @ctxprotocol/sdk express dotenv
+pnpm add -D typescript @types/node @types/express tsx
+```
+
+Create a `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "include": ["*.ts"]
+}
+```
+
+Update your `package.json` to add the start script:
+
+```json
+{
+  "name": "my-first-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server.ts",
+    "start": "tsx server.ts"
+  }
+}
+```
+
+---
+
+## Step 2: Write Your MCP Server
+
+Create `server.ts` with this complete working example:
+
+```typescript
+import "dotenv/config";
+import { randomUUID } from "node:crypto";
+import express, { type Request, type Response } from "express";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import {
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  isInitializeRequest,
+} from "@modelcontextprotocol/sdk/types.js";
+import { createContextMiddleware } from "@ctxprotocol/sdk";
+
+// ============================================================================
+// TOOL DEFINITIONS
+// ============================================================================
+
+const QUOTES = [
+  { quote: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+  { quote: "Innovation distinguishes between a leader and a follower.", author: "Steve Jobs" },
+  { quote: "Stay hungry, stay foolish.", author: "Steve Jobs" },
+  { quote: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+  { quote: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle" },
+  { quote: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
+  { quote: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
+  { quote: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
+];
+
+const TOOLS = [
+  {
+    name: "get_random_quote",
+    description: "Get a random inspirational quote. Perfect for motivation and daily inspiration.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+    // outputSchema is REQUIRED by Context for dispute resolution
+    outputSchema: {
+      type: "object" as const,
+      properties: {
+        quote: { type: "string", description: "The inspirational quote" },
+        author: { type: "string", description: "Who said it" },
+        fetchedAt: { type: "string", description: "ISO timestamp" },
+      },
+      required: ["quote", "author", "fetchedAt"],
+    },
+  },
+];
+
+// ============================================================================
+// MCP SERVER SETUP
+// ============================================================================
+
+const server = new Server(
+  { name: "my-first-mcp", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+// Handle tools/list - returns tool definitions
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: TOOLS,
+}));
+
+// Handle tools/call - executes tool and returns result
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name } = request.params;
+
+  if (name === "get_random_quote") {
+    const randomIndex = Math.floor(Math.random() * QUOTES.length);
+    const selected = QUOTES[randomIndex];
+    
+    const result = {
+      quote: selected.quote,
+      author: selected.author,
+      fetchedAt: new Date().toISOString(),
+    };
+
+    return {
+      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      structuredContent: result, // REQUIRED by Context
+    };
+  }
+
+  return {
+    content: [{ type: "text", text: `Unknown tool: ${name}` }],
+    isError: true,
+  };
+});
+
+// ============================================================================
+// EXPRESS SERVER
+// ============================================================================
+
+const app = express();
+app.use(express.json());
+
+// Session management
+const transports: Record<string, StreamableHTTPServerTransport> = {};
+
+// Security middleware (verifies requests from Context Platform)
+const verifyContextAuth = createContextMiddleware();
+
+// Health check endpoint (no auth required)
+app.get("/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok", server: "my-first-mcp", version: "1.0.0" });
+});
+
+// MCP endpoint with security middleware
+app.post("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
+  let transport: StreamableHTTPServerTransport;
+
+  if (sessionId && transports[sessionId]) {
+    transport = transports[sessionId];
+  } else if (!sessionId && isInitializeRequest(req.body)) {
+    transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+      onsessioninitialized: (id) => {
+        transports[id] = transport;
+      },
+    });
+    await server.connect(transport);
+  } else {
+    res.status(400).json({ error: "Invalid session" });
+    return;
+  }
+
+  await transport.handleRequest(req, res, req.body);
+});
+
+app.get("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
+  const sessionId = req.headers["mcp-session-id"] as string;
+  const transport = transports[sessionId];
+  if (transport) {
+    await transport.handleRequest(req, res);
+  } else {
+    res.status(400).json({ error: "Invalid session" });
+  }
+});
+
+// Start server
+const PORT = Number(process.env.PORT || 3000);
+app.listen(PORT, () => {
+  console.log(`🚀 My First MCP Server running on http://localhost:${PORT}`);
+  console.log(`📡 MCP endpoint: http://localhost:${PORT}/mcp`);
+  console.log(`💚 Health check: http://localhost:${PORT}/health`);
+});
+```
+
+---
+
+## Step 3: Test Locally
+
+Start your server:
+
+```bash
+pnpm dev
+```
+
+You should see:
+
+```
+🚀 My First MCP Server running on http://localhost:3000
+📡 MCP endpoint: http://localhost:3000/mcp
+💚 Health check: http://localhost:3000/health
+```
+
+Test the health endpoint:
+
+```bash
+curl http://localhost:3000/health
+```
+
+Test tool discovery (this works without auth):
+
+```bash
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": { "name": "test", "version": "1.0.0" }
+    },
+    "id": 1
+  }'
+```
+
+You should get a response with your session ID.
+
+---
+
+## Step 4: Deploy to Railway
+
+<Steps>
+  <Step title="Push to GitHub">
+    Create a new repository and push your code:
+    
+    ```bash
+    git init
+    git add .
+    git commit -m "Initial commit"
+    gh repo create my-first-mcp --public --push
+    ```
+  </Step>
+  
+  <Step title="Deploy on Railway">
+    1. Go to [railway.app](https://railway.app) and sign in with GitHub
+    2. Click **"New Project"** → **"Deploy from GitHub repo"**
+    3. Select your `my-first-mcp` repository
+    4. Railway auto-detects Node.js and deploys
+  </Step>
+  
+  <Step title="Configure Start Command">
+    In Railway dashboard:
+    1. Go to your service **Settings**
+    2. Set **Start Command** to: `pnpm start`
+    3. Railway will redeploy automatically
+  </Step>
+  
+  <Step title="Get Your Public URL">
+    1. Go to **Settings** → **Networking**
+    2. Click **"Generate Domain"**
+    3. Copy your URL (e.g., `https://my-first-mcp-production.up.railway.app`)
+  </Step>
+</Steps>
+
+Test your deployed server:
+
+```bash
+curl https://YOUR-RAILWAY-URL.up.railway.app/health
+```
+
+---
+
+## Step 5: Register on Context Marketplace
+
+<Steps>
+  <Step title="Go to Contribute Page">
+    Navigate to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute)
+  </Step>
+  
+  <Step title="Fill in the Form">
+    | Field | Value |
+    |-------|-------|
+    | **Name** | My First MCP (or your preferred name) |
+    | **Description** | Random inspirational quotes for motivation and daily inspiration. |
+    | **Category** | Utility |
+    | **Price** | $0.00 (start free to test) |
+    | **Endpoint** | `https://YOUR-RAILWAY-URL.up.railway.app/mcp` |
+  </Step>
+  
+  <Step title="Auto-Discovery">
+    Click submit. Context will call your `/mcp` endpoint to discover your tools via `listTools()`.
+  </Step>
+  
+  <Step title="Stake USDC">
+    All tools require a minimum $10 USDC stake. This is fully refundable with a 7-day withdrawal delay.
+  </Step>
+</Steps>
+
+---
+
+## Step 6: Verify It Works
+
+1. Go to [ctxprotocol.com](https://ctxprotocol.com)
+2. In the chat, ask: *"Get me an inspirational quote"*
+3. The agent should discover and use your tool!
+
+---
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="Add Real Data" icon="database" href="/guides/build-tools">
+    Connect to external APIs and build valuable tools
+  </Card>
+  <Card title="AI-Assisted Builder" icon="wand-magic-sparkles" href="/guides/build-tools#ai-assisted-builder">
+    Use Cursor or Claude to build complex MCP servers from API docs
+  </Card>
+  <Card title="Context Injection" icon="user" href="/guides/context-injection">
+    Access user portfolio data in your tools
+  </Card>
+  <Card title="Handshake Architecture" icon="handshake" href="/guides/handshake-architecture">
+    Enable signatures, transactions, and OAuth
+  </Card>
+</CardGroup>
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Server won't start">
+    - Check Node.js version: `node --version` (must be 18+)
+    - Ensure all dependencies installed: `pnpm install`
+    - Check for TypeScript errors: `pnpm exec tsc --noEmit`
+  </Accordion>
+  
+  <Accordion title="Railway deployment fails">
+    - Ensure `package.json` has `"type": "module"`
+    - Check Railway logs for specific errors
+    - Verify start command is `pnpm start`
+  </Accordion>
+  
+  <Accordion title="Tool not discovered on Context">
+    - Verify your `/health` endpoint returns 200
+    - Test `/mcp` endpoint with curl locally
+    - Ensure HTTPS URL (not HTTP)
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Complete Project Structure
+
+Your project should look like this:
+
+```
+my-first-mcp/
+├── package.json
+├── tsconfig.json
+├── server.ts
+└── node_modules/
+```
+
+<Tip>
+**Ready for more?** Check out the [complete server examples](https://github.com/ctxprotocol/sdk/tree/main/examples/server) for production patterns including error handling, caching, and multiple tools.
+</Tip>
