@@ -73,9 +73,11 @@ Update your `package.json` to add the start script:
 
 ---
 
-## Step 2: Write Your MCP Server
+## Step 2: Write Your MCP Server (Without Security)
 
-Create `server.ts` with this complete working example:
+We'll build the server **without the security middleware first** so you can test everything locally. You'll add security before deploying.
+
+Create `server.ts`:
 
 ```typescript
 import "dotenv/config";
@@ -88,7 +90,6 @@ import {
   CallToolRequestSchema,
   isInitializeRequest,
 } from "@modelcontextprotocol/sdk/types.js";
-import { createContextMiddleware } from "@ctxprotocol/sdk";
 
 // ============================================================================
 // TOOL DEFINITIONS
@@ -168,7 +169,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 // ============================================================================
-// EXPRESS SERVER
+// EXPRESS SERVER (no security middleware yet - for local testing)
 // ============================================================================
 
 const app = express();
@@ -177,16 +178,13 @@ app.use(express.json());
 // Session management
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 
-// Security middleware (verifies requests from Context Platform)
-const verifyContextAuth = createContextMiddleware();
-
-// Health check endpoint (no auth required)
+// Health check endpoint
 app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok", server: "my-first-mcp", version: "1.0.0" });
 });
 
-// MCP endpoint with security middleware
-app.post("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
+// MCP endpoint (no auth - we'll add it before deploying)
+app.post("/mcp", async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   let transport: StreamableHTTPServerTransport;
 
@@ -208,7 +206,7 @@ app.post("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
   await transport.handleRequest(req, res, req.body);
 });
 
-app.get("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
+app.get("/mcp", async (req: Request, res: Response) => {
   const sessionId = req.headers["mcp-session-id"] as string;
   const transport = transports[sessionId];
   if (transport) {
@@ -245,13 +243,13 @@ You should see:
 💚 Health check: http://localhost:3000/health
 ```
 
-Test the health endpoint:
+**Test the health endpoint:**
 
 ```bash
 curl http://localhost:3000/health
 ```
 
-Test tool discovery (this works without auth):
+**Test initialize (start a session):**
 
 ```bash
 curl -X POST http://localhost:3000/mcp \
@@ -268,20 +266,63 @@ curl -X POST http://localhost:3000/mcp \
   }'
 ```
 
-You should get a response with your session ID.
+Copy the `sessionId` from the response.
 
-<Warning>
-**Important: You cannot test `tools/call` locally with curl.** The `createContextMiddleware()` requires a valid JWT from the Context Platform. When you call `tools/call` without this JWT, you'll get `{"error":"Unauthorized"}`. This is expected behavior — it means your security middleware is working correctly.
+**Test tools/call (execute your tool):**
 
-To test your tools, you must:
-1. Deploy to a public HTTPS URL
-2. Register on the Context Marketplace
-3. Call your tool through the Context app
-</Warning>
+```bash
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -H "mcp-session-id: YOUR-SESSION-ID" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "get_random_quote",
+      "arguments": {}
+    },
+    "id": 2
+  }'
+```
+
+You should get a random quote back. Your tool works locally.
 
 ---
 
-## Step 4: Deploy to Railway
+## Step 4: Add Security Middleware
+
+Before deploying, you **must** add the Context security middleware. This ensures only paid requests from the Context Platform can execute your tools.
+
+Update your `server.ts`:
+
+```typescript
+// Add this import at the top
+import { createContextMiddleware } from "@ctxprotocol/sdk";
+
+// Add this after the transports declaration
+const verifyContextAuth = createContextMiddleware();
+
+// Update your MCP endpoints to use the middleware:
+app.post("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
+  // ... rest of handler stays the same
+});
+
+app.get("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
+  // ... rest of handler stays the same
+});
+```
+
+<Warning>
+**Don't skip this step!** Without the middleware, anyone can call your tools for free. The middleware verifies that requests come from the Context Platform with valid payment.
+</Warning>
+
+<Tip>
+After adding the middleware, `tools/call` will return `{"error":"Unauthorized"}` when tested locally. This is expected — it means security is working. You can always comment out `verifyContextAuth` temporarily for local testing.
+</Tip>
+
+---
+
+## Step 5: Deploy to Railway
 
 <Warning>
 **HTTPS is required.** The Context Platform will only connect to HTTPS endpoints. Railway, Vercel, and similar platforms provide HTTPS automatically. If you're self-hosting, you'll need to set up HTTPS (e.g., with Caddy or nginx).
@@ -328,7 +369,7 @@ curl https://YOUR-RAILWAY-URL.up.railway.app/health
 
 ---
 
-## Step 5: Register on Context Marketplace
+## Step 6: Register on Context Marketplace
 
 <Steps>
   <Step title="Go to Contribute Page">
@@ -356,7 +397,7 @@ curl https://YOUR-RAILWAY-URL.up.railway.app/health
 
 ---
 
-## Step 6: Verify It Works
+## Step 7: Verify It Works
 
 1. Go to [ctxprotocol.com](https://ctxprotocol.com)
 2. In the chat, ask: *"Get me an inspirational quote"*
@@ -390,18 +431,19 @@ For a complete list of common errors and solutions, see the [Troubleshooting Gui
 </Info>
 
 <AccordionGroup>
-  <Accordion title='{"error":"Unauthorized"} when calling tools' defaultOpen={true}>
-    **This is the most common error.** It means your security middleware is working correctly.
+  <Accordion title='{"error":"Unauthorized"} when calling tools'>
+    **This means your security middleware is working correctly.**
     
-    The `createContextMiddleware()` verifies that requests come from the Context Platform with a valid JWT. Without this JWT, `tools/call` will always return Unauthorized.
+    After adding `createContextMiddleware()` (Step 4), local `tools/call` requests will return Unauthorized because they don't have a valid JWT from the Context Platform.
     
-    **Causes:**
-    - **Testing locally with curl** — You cannot test `tools/call` locally. Only `initialize` and `tools/list` work without auth.
-    - **HTTP instead of HTTPS** — Context Platform requires HTTPS. Deploy to Railway, Vercel, or use a service like Caddy for local HTTPS.
-    - **Not registered on marketplace** — Your tool must be registered at [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute) before the platform will send authenticated requests.
-    - **Wrong endpoint URL** — Double-check the URL you registered matches your deployed server.
+    **If testing locally:**
+    - Temporarily comment out `verifyContextAuth` in your endpoint handlers
+    - Or test before adding the middleware (Step 3)
     
-    **Solution:** Deploy to HTTPS, register on the marketplace, then test through the Context app.
+    **If deployed and registered but still getting Unauthorized:**
+    - Ensure your endpoint is HTTPS (not HTTP)
+    - Verify the URL you registered matches your deployed server exactly
+    - Check that your tool is actually registered at [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute)
   </Accordion>
   
   <Accordion title="Server won't start">
