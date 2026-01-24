@@ -405,6 +405,35 @@ curl https://YOUR-RAILWAY-URL.up.railway.app/health
 
 ---
 
+## Updating Your Tool
+
+When you add new endpoints or modify your MCP server, you need to refresh the tool listing on Context.
+
+<Steps>
+  <Step title="Deploy Your Changes">
+    Push your updated code to your deployment (Railway, VPS, etc.)
+  </Step>
+  
+  <Step title="Refresh Skills">
+    1. Go to [ctxprotocol.com](https://ctxprotocol.com)
+    2. Navigate to your **Developer Tools** page (My Tools)
+    3. Find your tool and click **"Refresh Skills"**
+    4. Context will re-call `listTools()` to discover your new/updated tools
+  </Step>
+  
+  <Step title="Update Description (Optional)">
+    If you've added significant new functionality:
+    1. Use the [MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md) to generate an updated description
+    2. Edit your tool's description in the Developer Tools page
+  </Step>
+</Steps>
+
+<Warning>
+**Common mistake:** Deploying new endpoints but forgetting to click "Refresh Skills". Your new tools won't appear in the marketplace until you refresh.
+</Warning>
+
+---
+
 ## What's Next?
 
 <CardGroup cols={2}>

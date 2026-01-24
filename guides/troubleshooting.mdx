@@ -80,6 +80,25 @@ Your server is deployed but Context can't find your tools.
 
 ---
 
+### New/Updated Tools Not Appearing
+
+You deployed new endpoints but they're not showing up in the marketplace.
+
+**This is the most common oversight after updating your MCP server.**
+
+#### Solution
+
+1. Go to [ctxprotocol.com](https://www.ctxprotocol.com/developer/tools) → **Developer Tools** (My Tools)
+2. Find your tool and click **"Refresh Skills"**
+3. Context will re-call `listTools()` to discover your changes
+
+#### Also Consider
+
+- **Update your description** — If you added significant new functionality, use the [MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md) to generate an updated description
+- **Verify deployment** — Make sure your new code is actually deployed (check health endpoint, test `tools/list` via curl)
+
+---
+
 ### Server Won't Start
 
 #### Node.js Version

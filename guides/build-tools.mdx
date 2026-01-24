@@ -275,6 +275,34 @@ Your MCP Tool is now instantly available on the decentralized marketplace. Users
 
 ---
 
+## Updating Your Tool
+
+When you add new endpoints, modify schemas, or change your tool's functionality:
+
+<Steps>
+  <Step title="Deploy Changes">
+    Push your updated code to your server/hosting
+  </Step>
+  
+  <Step title="Refresh Skills on Context">
+    1. Go to [ctxprotocol.com](https://www.ctxprotocol.com/developer/tools) → **Developer Tools** (My Tools)
+    2. Find your tool and click **"Refresh Skills"**
+    3. Context re-calls `listTools()` to discover changes
+  </Step>
+  
+  <Step title="Update Description (if needed)">
+    If you've added significant new tools, update your description:
+    - Use the [MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md) to generate a new description
+    - Edit your tool in the Developer Tools page
+  </Step>
+</Steps>
+
+<Warning>
+**Don't forget to Refresh Skills!** Deploying new code doesn't automatically update the marketplace listing. You must click "Refresh Skills" for Context to re-discover your tools.
+</Warning>
+
+---
+
 ## Schema Accuracy & Dispute Resolution
 
 <Warning>
