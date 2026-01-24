@@ -361,6 +361,15 @@ except ContextError as e:
 
 If you're building an MCP server, verify incoming requests using `ctxprotocol`.
 
+<Info>
+**Free vs Paid Security Requirements:**
+
+| Tool Type | Security Middleware | Rationale |
+|-----------|---------------------|-----------|
+| **Free Tools ($0.00)** | **Optional** | Great for distribution and adoption |
+| **Paid Tools ($0.01+)** | **Mandatory** | We cannot route payments to insecure endpoints |
+</Info>
+
 ### Option 1: FastMCP (Recommended)
 
 [FastMCP](https://gofastmcp.com) is the fastest way to build MCP servers. Use `ctxprotocol` middleware:

@@ -371,7 +371,16 @@ try {
 
 ## Securing Your Tool (MCP Contributors)
 
-If you're building an MCP server, verify incoming requests are legitimate:
+If you're building an MCP server, verify incoming requests are legitimate.
+
+<Info>
+**Free vs Paid Security Requirements:**
+
+| Tool Type | Security Middleware | Rationale |
+|-----------|---------------------|-----------|
+| **Free Tools ($0.00)** | **Optional** | Great for distribution and adoption |
+| **Paid Tools ($0.01+)** | **Mandatory** | We cannot route payments to insecure endpoints |
+</Info>
 
 ### Quick Implementation
 

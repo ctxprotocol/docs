@@ -140,11 +140,22 @@ app.use("/mcp", createContextMiddleware());
 
 // ...
 
-// Why this middleware is critical:
+// Why this middleware matters:
 // 1. Verifies that requests are signed by the Context Platform (preventing free-riding)
 // 2. Injects user context (if requested)
 // 3. Handles payment verification automatically
 ```
+
+<Info>
+**Free vs Paid Security Requirements:**
+
+| Tool Type | Security Middleware | Rationale |
+|-----------|---------------------|-----------|
+| **Free Tools ($0.00)** | **Optional** | Great for distribution and adoption — anyone can call your endpoint |
+| **Paid Tools ($0.01+)** | **Mandatory** | We cannot route payments to insecure endpoints |
+
+If you're building a free tool, you can skip the middleware entirely. However, if you ever want to charge for your tool, you'll need to add it.
+</Info>
 
 ### MCP Security Model
 
@@ -234,6 +245,12 @@ Choose your fee per response:
 <Note>
 This fee is paid **once per chat turn**. The Agent can call your skills up to 100 times within that single paid turn via `callMcpSkill()`.
 </Note>
+
+<Warning>
+**Security requirement depends on price:**
+- **Free tools**: Security middleware is **optional** — your endpoint works without JWT verification
+- **Paid tools**: Security middleware is **mandatory** — see [Secure Your Endpoint](#secure-your-endpoint)
+</Warning>
 
 ---
 

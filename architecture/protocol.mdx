@@ -134,7 +134,18 @@ All tools (including free) require a minimum stake, enforced on-chain.
 
 We use **Asymmetric Request Signing (RS256)** to secure the marketplace. This is not just "auth" — it's the foundation of a financial protocol.
 
-### Why This Matters
+### Free vs Paid Requirements
+
+| Tool Type | Security Middleware | Rationale |
+|-----------|---------------------|-----------|
+| **Free Tools ($0.00)** | **Optional** | Great for distribution and adoption |
+| **Paid Tools ($0.01+)** | **Mandatory** | We cannot route payments to insecure endpoints |
+
+<Info>
+If you're building a free tool, you can skip security middleware entirely. But for paid tools, the middleware ensures that only legitimate, paid requests from the Context platform can execute your code.
+</Info>
+
+### Why This Matters (for Paid Tools)
 
 | Approach | Result |
 |----------|--------|
