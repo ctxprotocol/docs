@@ -407,20 +407,28 @@ The timeout isn't a bug — it's a feature that forces data brokers to build **a
     **Implementation**: Heavy queries run offline via cron, results served instantly via MCP
   </Accordion>
   
-  <Accordion title="Tier 3: Async Jobs (future)" icon="clock">
-    For heavy analysis that can't be pre-computed:
-    - User submits query → gets job ID
-    - Polls for results (or webhook callback)
-    - Results stored for later retrieval
+  <Accordion title="What if my analysis takes longer than 60 seconds?" icon="clock">
+    **If your computation can't complete in 60 seconds, you need to pre-compute it.**
     
-    **Implementation**: 
+    This is by design. The timeout forces you to build a **data product**, not raw data access:
+    
+    | Instead of... | Build this... |
+    |---------------|---------------|
+    | "Scan all whale wallets" (10 min) | "Pre-computed whale alerts" (instant) |
+    | "Analyze 4 years of NFT data" (30 min) | "Daily top-mover rankings" (instant) |
+    | "Run complex ML model" (5 min) | "Pre-scored predictions updated hourly" (instant) |
+    
+    **The pattern**: Run your heavy analysis offline (cron jobs, scheduled tasks), store the results in your own database, and serve them instantly through your MCP tool.
+    
     ```typescript
-    // Submit job
-    { name: "submit_analysis_job", returns: { jobId: "abc123", estimatedTime: "5 min" } }
+    // ❌ BAD: Long-running analysis at request time
+    { name: "analyze_all_wallets", returns: "timeout after 60s" }
     
-    // Get results
-    { name: "get_job_results", args: { jobId: "abc123" } }
+    // ✅ GOOD: Pre-computed results served instantly
+    { name: "get_smart_money_wallets", returns: "instant response from your DB" }
     ```
+    
+    This is exactly how Bloomberg, Nansen, and Arkham work — the value is in the **curation and pre-computation**, not raw data access.
   </Accordion>
 </AccordionGroup>
 
