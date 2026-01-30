@@ -182,6 +182,171 @@ Discovery methods are intentionally open so AI agents can find your tools. Only 
 
 ---
 
+## Using Developer Mode for Debugging
+
+When your tool is registered on the marketplace but not returning expected results, **Developer Mode** provides detailed execution logs to help diagnose issues.
+
+### Enabling Developer Mode
+
+1. Go to **Settings** in the Context app
+2. Scroll to **Developer Settings**
+3. Enable **Developer Mode**
+
+### What Developer Mode Shows
+
+When enabled, a **Developer Logs** card appears at the bottom of AI responses. Click to expand and see:
+
+- **Initial Code**: The TypeScript code the AI generated to call your tool
+- **Execution Trace**: All attempts, including errors and retries
+- **Final Code**: The code after any self-healing fixes (if different from initial)
+- **Tool Call History**: Every call made to your tool with arguments and results
+- **Final Execution Result**: The data or error returned
+
+### Copying Logs for Debugging
+
+Click **"Copy All"** to copy the complete debug log. You can then:
+
+1. Paste the logs into an AI coding assistant (Claude, GPT-4, etc.)
+2. Ask it to analyze why your MCP server isn't returning expected results
+3. The AI can suggest specific fixes based on the execution trace
+
+### Common Issues Found via Developer Logs
+
+<AccordionGroup>
+  <Accordion title="Input Schema Problems">
+    **Symptom**: Wrong or missing arguments in tool calls
+    
+    **Check**: Look at the "Tool Call History" section to see what arguments were passed
+    
+    **Fix**: Ensure your `inputSchema` has:
+    - Clear `description` fields for each parameter
+    - `default` or `examples` values for better AI understanding
+    - Correct `type` definitions (string, number, boolean, etc.)
+    
+    ```typescript
+    inputSchema: {
+      type: "object",
+      properties: {
+        symbol: {
+          type: "string",
+          description: "Trading symbol (e.g., 'BTC', 'ETH')",
+          examples: ["BTC", "ETH", "SOL"]
+        },
+        timeframe: {
+          type: "string",
+          description: "Time period for data",
+          default: "24h",
+          enum: ["1h", "24h", "7d", "30d"]
+        }
+      },
+      required: ["symbol"]
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Output Schema Mismatches">
+    **Symptom**: "Suspicious null values" in execution trace, data completeness checks failing
+    
+    **Check**: Compare your `outputSchema` with the actual result in "Final Execution Result"
+    
+    **Fix**: Your `structuredContent` must exactly match your declared `outputSchema`:
+    
+    ```typescript
+    // ❌ Schema/response mismatch
+    outputSchema: {
+      price: { type: "number" },
+      change: { type: "number" }
+    }
+    // Response returns: { price: "1234.56", change: null }
+    
+    // ✅ Correct: Types and structure match
+    outputSchema: {
+      price: { type: "number" },
+      change: { type: "number", nullable: true }
+    }
+    // Response returns: { price: 1234.56, change: -2.5 }
+    ```
+  </Accordion>
+
+  <Accordion title="Missing structuredContent">
+    **Symptom**: AI can't parse your response, retries multiple times
+    
+    **Check**: Look at the raw result in "Tool Call History" — is it structured data or just text?
+    
+    **Fix**: Always return `structuredContent` with your tool results:
+    
+    ```typescript
+    return {
+      content: [{ type: "text", text: JSON.stringify(data) }],
+      // Required for Context marketplace
+      structuredContent: data,
+      _meta: {
+        outputSchema: yourOutputSchema
+      }
+    };
+    ```
+  </Accordion>
+
+  <Accordion title="Poor Tool Descriptions">
+    **Symptom**: AI picks the wrong tool or passes incorrect arguments
+    
+    **Check**: Review the initial code — is the AI using your tool correctly?
+    
+    **Fix**: Write clear, specific tool descriptions:
+    
+    ```typescript
+    // ❌ Vague description
+    description: "Gets market data"
+    
+    // ✅ Specific description
+    description: "Fetches real-time cryptocurrency price, 24h volume, and price change for a given trading symbol. Returns data from top exchanges. Use this when the user asks about current prices, market cap, or trading volume."
+    ```
+  </Accordion>
+
+  <Accordion title="Error Handling Issues">
+    **Symptom**: Generic errors in execution trace, no useful error messages
+    
+    **Check**: Look at the "error" field in failed attempts
+    
+    **Fix**: Return meaningful errors that help diagnose the issue:
+    
+    ```typescript
+    // ❌ Generic error
+    throw new Error("Failed");
+    
+    // ✅ Helpful error
+    return {
+      content: [{ type: "text", text: "Error: Invalid symbol" }],
+      structuredContent: {
+        error: "INVALID_SYMBOL",
+        message: "Symbol 'XYZ' is not supported. Valid symbols: BTC, ETH, SOL",
+        validSymbols: ["BTC", "ETH", "SOL"]
+      },
+      isError: true
+    };
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Self-Healing and Retries
+
+The Context agent has a self-healing mechanism that automatically retries when:
+
+1. **Runtime errors**: Code crashes → AI generates fix → retry
+2. **Suspicious nulls**: Code runs but returns null where data should exist → AI reflects → retry
+3. **Incomplete data**: Results don't fully answer the question → AI fetches more → retry
+
+If you see multiple attempts in the execution trace, it usually means:
+- Your tool returned unexpected data format
+- The AI had to adjust how it processes your response
+- There may be schema or description improvements you can make
+
+<Tip>
+**Pro Tip**: Copy the Developer Logs, paste them into Claude or another AI assistant along with this troubleshooting page, and ask: "Based on these execution logs, why is my MCP tool not returning the expected results? What should I fix in my server?"
+</Tip>
+
+---
+
 ## Still Stuck?
 
 <CardGroup cols={2}>
