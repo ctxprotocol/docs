@@ -334,11 +334,29 @@ Note: We're not funding weather APIs (free everywhere), basic flight tracking (F
   <Step title="Register Your Tool">
     Go to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute) to register your tool:
     - Paste your MCP endpoint URL
-    - Set your price per query
+    - Use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to generate your submission name, description, and category
+    - **Set your price to \$0** for initial testing (you can change it after we review)
     - Add stake to activate your tool
+  </Step>
+  <Step title="Debug & Refine">
+    Before requesting review, test your tool thoroughly:
+    - Enable **Developer Mode** in Settings > Developer Settings
+    - Query your tool and check the Developer Logs for errors
+    - Click **Copy All** on the logs and paste into an AI assistant to diagnose issues
+    
+    See the full [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for detailed instructions.
+  </Step>
+  <Step title="Request Review">
+    Once your tool is working correctly, email **grants@ctxprotocol.com** with:
+    - Your tool name and endpoint URL
+    - 3-5 robust test questions that thoroughly exercise your tool's capabilities
+    - Expected responses for each question (so we know what "correct" looks like)
+    
+    We'll test your tool and verify it meets our quality standards before activating grant payments.
   </Step>
   <Step title="Get Paid">
     Once verified, you're live on the marketplace!
+    - Update your price from \$0 to your desired query fee
     - Agents discover and query your tool
     - You earn 90% of every query fee in USDC
     - Grant payment follows the schedule below
