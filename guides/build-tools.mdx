@@ -148,54 +148,44 @@ app.use("/mcp", createContextMiddleware());
 
 ### Returning Images from Tools
 
-If your tool generates charts, heatmaps, screenshots, or other visual content, Context Protocol will automatically extract and render images when you follow these conventions.
+If your tool generates charts, heatmaps, screenshots, or other visual content, **you are responsible for hosting the images** and returning URLs that the AI can reference.
 
-<Info>
-**Why this matters**: Images returned in JSON are normally displayed as raw text or markdown links. Context Protocol extracts image data and renders actual `<img>` elements in the chat UI for a better user experience.
-</Info>
+<Warning>
+**Do not return base64-encoded images** in your tool responses. Large base64 strings bloat the response, slow down processing, and may hit token limits. Instead, host your images and return URLs.
+</Warning>
 
-#### Recommended: Base64 in structuredContent
+#### Recommended: Return Image URLs
 
 ```typescript
 return {
   content: [
-    { type: "text", text: "Analysis complete." },
-    { 
-      type: "image", 
-      data: base64EncodedImage,  // No data: prefix
-      mimeType: "image/png" 
-    }
+    { type: "text", text: "Analysis complete. Here's the chart:" }
   ],
   structuredContent: {
     summary: "Market analysis shows bullish signals...",
-    // Use these field patterns for automatic extraction:
-    chart_base64: base64EncodedImage,
-    chart_mime: "image/png",
-    chart_alt: "ETH price chart with support levels"
+    // Host your images and return URLs
+    chart_url: "https://your-cdn.com/charts/eth-analysis-12345.png",
+    chart_alt: "ETH price chart with support levels marked"
   }
 };
 ```
 
-#### Field Naming Conventions
+#### Why You Should Host Images
 
-Context Protocol's image extractor looks for these field patterns:
+1. **No database bloat** — URLs are small strings; base64 images are 100x larger
+2. **Faster responses** — No large payloads to transfer
+3. **Standard web pattern** — This is how Slack, Discord, and every major chat platform works
+4. **You control caching** — Set your own CDN caching policies
+5. **You control availability** — Your images, your infrastructure, your reliability
 
-| Pattern | Example Field Names |
-|---------|---------------------|
-| `*_base64` | `image_base64`, `heatmap_base64`, `chart_base64` |
-| `*_image_base64` | `heatmap_image_base64`, `screenshot_image_base64` |
-| `*_url` (with image context) | `image_url`, `chart_url`, `render_url` |
-| `*_mime` or `*_mimetype` | `image_mime`, `chart_mime` |
-| `*_alt` | `image_alt`, `chart_alt` |
+#### Image Hosting Options
 
-#### Image Best Practices
-
-1. **Prefer base64 over URLs** — More reliable, no CSP issues, no external dependencies
-2. **Keep images under 500KB** — Large images slow down responses and may hit token limits
-3. **Always include MIME type** — Required for proper rendering (`image/png`, `image/jpeg`, `image/webp`, `image/gif`)
-4. **Provide alt text** — Accessibility requirement and helpful for users
-5. **Use PNG for charts/graphs** — Lossless compression preserves data visualization clarity
-6. **Use JPEG for photos** — Better compression for photographic content
+| Option | Best For |
+|--------|----------|
+| **Your existing CDN** | If you already have infrastructure |
+| **Cloud storage** (S3, GCS, Azure Blob) | Pre-signed URLs for generated content |
+| **Vercel Blob / Cloudflare R2** | Simple, cheap storage for generated images |
+| **Imgix / Cloudinary** | Image transformation and optimization |
 
 #### Output Schema for Image Tools
 
@@ -207,23 +197,23 @@ Context Protocol's image extractor looks for these field patterns:
       "type": "string",
       "description": "Text summary of the analysis"
     },
-    "image_base64": {
+    "chart_url": {
       "type": "string",
-      "description": "Base64-encoded image data (without data: prefix)"
+      "format": "uri",
+      "description": "URL to the hosted chart image"
     },
-    "image_mime": {
-      "type": "string",
-      "enum": ["image/png", "image/jpeg", "image/webp", "image/gif"],
-      "description": "MIME type of the image"
-    },
-    "image_alt": {
+    "chart_alt": {
       "type": "string",
       "description": "Accessible description of the image"
     }
   },
-  "required": ["summary", "image_base64", "image_mime"]
+  "required": ["summary", "chart_url"]
 }
 ```
+
+<Tip>
+The AI will include your image URL in its response, and users can click to view. For the best experience, use publicly accessible URLs (no auth required) with reasonable cache headers.
+</Tip>
 
 <Info>
 **Free vs Paid Security Requirements:**
