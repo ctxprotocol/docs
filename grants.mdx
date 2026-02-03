@@ -28,6 +28,19 @@ Context Protocol is a decentralized marketplace where AI agents pay for data. Bu
 **💡 Finding Unbundling Opportunities:** Use [Grok](https://grok.com) to search Twitter for users discussing premium subscriptions. Look for both frustrated users trying to cancel ("not worth it", "only use one feature") AND evangelists explaining exactly why they pay ("worth every penny because", "can't get this data anywhere else"). Both signals reveal the core value users extract from subscriptions giving you a roadmap for what to reverse engineer as a \$0.10/response MCP tool.
 </Tip>
 
+<Warning>
+**🚫 What We Don't Fund**
+
+We reject proposals that:
+
+- **Return raw data without curation**: Public APIs are fine as data sources, but we're not paying for JSON wrappers. Add the analysis, labeling, scoring, or synthesis that makes the data actionable. That's what premium subscriptions charge for.
+- **Chase dead or saturated markets**: Meme coin tooling, yield aggregators, and rug checkers had their moment. The alpha is gone.
+- **Compete with dominant free alternatives**: If Semantic Scholar, Etherscan, or Google News already does it for free, your tool needs a 10x differentiated angle.
+- **Lack evidence of an expensive subscription**: "This would be useful" isn't enough. Show us the \$500/year subscription people are actually paying for.
+
+**The bar:** Can you find real Twitter threads of people complaining about paying for this specific data? If not, don't apply.
+</Warning>
+
 ---
 
 ## 🎯 The Grant Pool
@@ -60,19 +73,19 @@ We don't pay for raw data dumps. We pay for **answers**.
 
 ---
 
-### 🦄 Tier S — \$1,000 + Revenue Share
+### 🦄 Tier S: \$1,000 + Revenue Share
 
 **High-value tools that replace expensive subscriptions.**
 
 These unlock data people currently pay \$500–\$20,000/year for. Complex pipelines, novel analysis, or hard-to-access sources.
 
-### 🛠️ Tier A — \$250–\$500 + Revenue Share
+### 🛠️ Tier A: \$250-\$500 + Revenue Share
 
 **High-utility tools agents query frequently.**
 
 Reliable, well-documented tools that solve common needs. Think "best-in-class API wrapper with smart curation."
 
-### 🚀 Tier B — Revenue Share Only
+### 🚀 Tier B: Revenue Share Only
 
 **Simple wrappers and adapters.**
 
@@ -84,9 +97,42 @@ No upfront grant, but immediate listing. Start earning from day one.
 
 ---
 
+## 🔍 How to Find Unbundling Opportunities
+
+Before pitching, do this research. Here's a real example of how to identify a fundable tool:
+
+### Example: Finding a SensorTower Unbundling Opportunity
+
+**Step 1: Search for frustrated paying users**
+
+Go to [Grok](https://grok.com) and search Twitter:
+- `"SensorTower" "pay" OR "subscription" OR "expensive"`
+- `"app analytics" "not worth" OR "canceled" OR "only need"`
+
+**Step 2: Find the specific pain point**
+
+You might find tweets like:
+> *"I pay \$400/month for SensorTower just to check competitor download estimates before investor calls. Everything else in the dashboard I never touch."*
+
+> *"SensorTower is worth it for the App Store keyword rankings alone. Rest is noise."*
+
+**Step 3: Isolate the \$0.10 query**
+
+From this research, you'd identify: **"App download estimates by bundle ID"** is the core value. Build a tool that delivers just that. The specific data point people are paying \$5K/year to access occasionally.
+
+**Step 4: Pitch with evidence**
+
+Your proposal should say: *"SensorTower charges \$5K/year. Users on Twitter report paying primarily for download estimates. Here's my tool that delivers that specific data point for \$0.10/query. Here are 3 tweets proving demand."*
+
+<Info>
+**This is the bar.** Every idea below has been evaluated against this standard. If you're pitching something not on this list, show us you've done this research.
+</Info>
+
+---
+
 ## 📋 Request for Builders (RFB)
 
-We're actively funding tools across these verticals. This isn't exhaustive if you have a novel idea, pitch it.
+We're actively funding tools across these verticals. These ideas target **specific features of expensive subscriptions**, not commodity data. If you have a novel idea with evidence of an expensive paywall, pitch it.
 
 ---
 
@@ -107,35 +153,37 @@ We're actively funding tools across these verticals. This isn't exhaustive if yo
 
 ### 📈 Financial Markets & Research
 
-*Replaces: Bloomberg (\$24K/yr), FactSet, Capital IQ, Koyfin*
+*Replaces: Bloomberg (\$24K/yr), FactSet (\$12K/yr), Capital IQ (\$20K/yr)*
+
+Bloomberg's value is **parsed, structured financial data with analysis**, not raw filings you can get from EDGAR for free. Build tools that do the heavy lifting of extraction and interpretation.
 
 | Tool Idea | Description | Tier |
 |-----------|-------------|------|
-| **SEC Filing Parser** | Turn 10-K/10-Q into structured JSON with key metrics | **S** |
-| **Earnings Call Analyzer** | Extract quotes, sentiment, guidance changes from transcripts | **S** |
-| **Insider Trading Tracker** | Real-time Form 4 filings who's buying/selling | **A** |
-| **Institutional Holdings** | 13F filings what are hedge funds holding? | **A** |
-| **IPO/SPAC Calendar** | Upcoming listings with filing details and analysis | **A** |
-| **Economic Calendar** | Fed meetings, earnings dates, macro events | **A** |
+| **SEC Filing Parser** | Turn 10-K/10-Q into structured JSON with key metrics, risk factors, and YoY changes | **S** |
+| **Earnings Call Analyzer** | Extract management quotes, sentiment shifts, guidance changes from transcripts | **S** |
+| **Insider Trading Tracker** | Real-time Form 4 filings with context: who's buying/selling and historical patterns | **A** |
+| **Institutional Holdings** | 13F filings parsed: what are hedge funds accumulating? Position changes quarter-over-quarter | **A** |
+| **IPO Pipeline Analyzer** | Upcoming listings with S-1 analysis, pricing expectations, comparable valuations | **A** |
 
 ---
 
 ### ⚡ Crypto & DeFi
 
-*Replaces: Nansen (\$2.5K/yr), Arkham, Dune Analytics, DeFiLlama Pro*
+*Replaces: Nansen (\$2.5K/yr), Arkham (\$1.5K/yr)*
+
+Nansen's value isn't rug checking or gas prices. It's **wallet labeling, smart money identification, and entity clustering**. That's what people pay \$2.5K/year for. Build tools that deliver those specific insights.
 
 | Tool Idea | Description | Tier |
 |-----------|-------------|------|
-| **Wallet Profiler** | Total P&L, biggest wins, current positions, activity patterns | **S** |
-| **Token Launch Scanner** | Deployer history, holder distribution, liquidity locks, social links | **S** |
-| **Whale Watcher** | Real-time alerts on large wallet movements with context | **S** |
-| **Honeypot Detector** | Simulate buy/sell to verify if token is tradeable | **A** |
-| **Smart Contract Auditor** | Static analysis + deployer reputation → 0-100 safety score | **S** |
-| **Yield Aggregator** | Best APY across Aave, Compound, Morpho for any asset | **A** |
-| **Funding Rate Scanner** | Compare perp funding across Hyperliquid, dYdX, Binance | **A** |
-| **Bridge Router** | Cheapest route to move assets between chains | **A** |
-| **Gas Oracle** | Optimal time to execute transactions in next 24h | **A** |
-| **MEV Protection Check** | Will this transaction get sandwiched? | **S** |
+| **Wallet Profiler** | Total P&L, biggest wins, current positions, activity patterns (the core Nansen feature) | **S** |
+| **Smart Money Tracker** | Who are the wallets with consistent alpha? What are they accumulating right now? | **S** |
+| **Entity Clustering** | Which wallets belong to the same entity? Surface connected wallets from on-chain patterns | **S** |
+| **Whale Alert with Context** | Not just "big transfer". Labeled entities, historical context, likely intent | **S** |
+| **Wallet Attribution** | Label unknown wallets: Is this a CEX? A fund? A known trader? Cross-reference patterns | **S** |
+
+<Note>
+**What we're NOT funding in crypto:** Honeypot detectors, gas oracles, yield aggregators, bridge routers, funding rate scanners. These are already solved by free tools (DeFiLlama, CoinGecko, exchange APIs) with no premium tier worth unbundling. The \$2.5K/year Nansen subscription exists because of *wallet intelligence*. That's where the value is.
+</Note>
 
 ---
 
@@ -168,15 +216,14 @@ We're actively funding tools across these verticals. This isn't exhaustive if yo
 
 ### 👨‍💻 Developer Tools
 
-*Replaces: Snyk (\$500/yr), paid GitHub insights, enterprise monitoring*
+*Replaces: Snyk (\$500/yr), Sonatype (\$1K/yr), enterprise security scanning*
 
 | Tool Idea | Description | Tier |
 |-----------|-------------|------|
-| **Dependency Vulnerability Scanner** | Is this npm/pip/cargo package compromised? CVE check | **S** |
-| **GitHub Repo Analyzer** | Code quality, bus factor, activity patterns, license risks | **A** |
-| **NPM Package Intel** | Downloads, bundle size, alternatives, deprecation warnings | **A** |
-| **API Documentation Search** | Structured search across official docs for any SDK | **A** |
-| **Error Message Resolver** | Find solutions for specific error messages across Stack Overflow | **B** |
+| **Dependency Vulnerability Scanner** | Deep CVE analysis with exploit likelihood scoring (what Snyk charges \$500/yr for) | **S** |
+| **Supply Chain Risk Analyzer** | Package author history, maintainer changes, typosquat detection, dependency tree risks | **S** |
+| **GitHub Repo Analyzer** | Code quality, bus factor, activity patterns, license risks, contributor reputation | **A** |
+| **License Compliance Checker** | Scan dependencies for GPL/copyleft licenses that could affect your commercial use | **A** |
 
 ---
 
@@ -210,42 +257,45 @@ We're actively funding tools across these verticals. This isn't exhaustive if yo
 
 ### 🎬 Media & Entertainment
 
-*Replaces: Chartmetric, Social Blade Pro, influencer analytics platforms*
+*Replaces: Chartmetric (\$5K/yr), influencer analytics platforms (\$2K/yr)*
+
+Note: Social Blade has a free tier for basic YouTube stats. We fund tools that go deeper: authenticity scoring, cross-platform analysis, and data Social Blade doesn't surface.
 
 | Tool Idea | Description | Tier |
 |-----------|-------------|------|
-| **YouTube Channel Analyzer** | Growth rate, engagement patterns, content analysis | **A** |
-| **Podcast Analytics** | Estimated downloads, listener demographics, trends | **S** |
-| **Influencer Authenticity** | Fake follower detection, real engagement rates | **S** |
-| **Music Chart Tracker** | Spotify/Apple Music positions, streams, playlist adds | **A** |
-| **Box Office Data** | Movie performance, theater counts, revenue estimates | **A** |
+| **Influencer Authenticity Scorer** | Fake follower detection, engagement authenticity, audience quality (what brands pay \$2K/yr to verify) | **S** |
+| **Podcast Analytics** | Estimated downloads, listener demographics, sponsor history (data locked behind Chartmetric) | **S** |
+| **Creator Brand Safety** | Scan creator history for controversial content, brand risks, audience sentiment | **A** |
+| **Music Rights Lookup** | Who owns this track? Licensing complexity score, sync history | **A** |
 
 ---
 
 ### 🔬 Academic & Research
 
-*Replaces: Expensive journal access, research databases*
+*Replaces: Web of Science (\$5K/yr), Scopus, specialized research databases*
+
+Note: Semantic Scholar and Google Scholar are free. We're not funding basic paper search. We fund tools that deliver **analysis and synthesis** that researchers currently pay for.
 
 | Tool Idea | Description | Tier |
 |-----------|-------------|------|
-| **Paper Finder** | Semantic search across arXiv, PubMed, Semantic Scholar | **A** |
-| **Citation Network** | Who cited this paper? Related work? Impact metrics | **A** |
-| **Grant Database** | Find funding opportunities matching research criteria | **A** |
-| **Clinical Trial Search** | Match patient criteria to active trials | **A** |
+| **Research Landscape Mapper** | Given a topic, map the key papers, authors, institutions, and emerging trends. Synthesis, not search | **S** |
+| **Grant Opportunity Matcher** | Find funding opportunities matching research criteria across NSF, NIH, private foundations | **A** |
+| **Clinical Trial Matcher** | Match patient criteria to active trials with eligibility analysis | **A** |
+| **Patent-to-Paper Linker** | Connect academic research to commercial patents. Who's commercializing what? | **A** |
 
 ---
 
 ### 🌍 Real World Data & Utilities
 
-*General-purpose tools that make agents useful in the physical world*
+*Tools that aggregate paid data sources or deliver analysis beyond free alternatives*
+
+Note: We're not funding weather APIs (free everywhere), basic flight tracking (FlightAware free tier), or news aggregation (Google News exists). We fund tools that deliver **unique aggregation or analysis**.
 
 | Tool Idea | Description | Tier |
 |-----------|-------------|------|
-| **Universal Package Tracker** | Track any shipment across all carriers | **A** |
-| **Flight Status** | Real-time flight tracking with delays and gates | **A** |
-| **Weather Forecast** | Detailed forecasts for any location | **B** |
-| **Domain Availability** | Check domain + social handles + trademark in one call | **A** |
-| **News Aggregator** | Filtered news by topic with source and sentiment | **A** |
+| **Universal Package Tracker** | Track any shipment across all carriers with unified status and delivery predictions | **A** |
+| **Domain + Brand Availability** | Check domain, social handles, AND trademark conflicts in one call. Saves hours of manual research | **A** |
+| **Business Entity Verification** | Verify business registration, good standing, and officer information across state databases | **A** |
 
 ---
 
@@ -302,8 +352,8 @@ We're actively funding tools across these verticals. This isn't exhaustive if yo
 <Warning>
 **Grant Payment Schedule (50/50 Split)**
 
-- **50% on verification** — Paid when your tool passes our quality check and goes live
-- **50% after 30 days** — Paid after 30 days of verified uptime and usage
+- **50% on verification**: Paid when your tool passes our quality check and goes live
+- **50% after 30 days**: Paid after 30 days of verified uptime and usage
 
 This ensures tools are maintained and actually serve the marketplace.
 </Warning>
@@ -346,7 +396,7 @@ You're not alone. We're here to help you ship.
     Absolutely. Each tool is evaluated independently. Build a suite of related tools for bonus consideration.
   </Accordion>
   <Accordion title="What if my tool idea isn't on the RFB list?">
-    The RFB is a starting point, not a limit. If you have a novel idea that agents would pay for, pitch it. We love surprises.
+    The RFB is a starting point, not a limit. If you have evidence of an expensive subscription your tool unbundles, pitch it. But show your research (see "How to Find Unbundling Opportunities" above).
   </Accordion>
   <Accordion title="Do I keep the revenue after the grant?">
     Yes! The grant is a one-time bootstrap. You keep **90% of all query fees forever** that's the whole point.
