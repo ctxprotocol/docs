@@ -146,6 +146,85 @@ app.use("/mcp", createContextMiddleware());
 // 3. Handles payment verification automatically
 ```
 
+### Returning Images from Tools
+
+If your tool generates charts, heatmaps, screenshots, or other visual content, Context Protocol will automatically extract and render images when you follow these conventions.
+
+<Info>
+**Why this matters**: Images returned in JSON are normally displayed as raw text or markdown links. Context Protocol extracts image data and renders actual `<img>` elements in the chat UI for a better user experience.
+</Info>
+
+#### Recommended: Base64 in structuredContent
+
+```typescript
+return {
+  content: [
+    { type: "text", text: "Analysis complete." },
+    { 
+      type: "image", 
+      data: base64EncodedImage,  // No data: prefix
+      mimeType: "image/png" 
+    }
+  ],
+  structuredContent: {
+    summary: "Market analysis shows bullish signals...",
+    // Use these field patterns for automatic extraction:
+    chart_base64: base64EncodedImage,
+    chart_mime: "image/png",
+    chart_alt: "ETH price chart with support levels"
+  }
+};
+```
+
+#### Field Naming Conventions
+
+Context Protocol's image extractor looks for these field patterns:
+
+| Pattern | Example Field Names |
+|---------|---------------------|
+| `*_base64` | `image_base64`, `heatmap_base64`, `chart_base64` |
+| `*_image_base64` | `heatmap_image_base64`, `screenshot_image_base64` |
+| `*_url` (with image context) | `image_url`, `chart_url`, `render_url` |
+| `*_mime` or `*_mimetype` | `image_mime`, `chart_mime` |
+| `*_alt` | `image_alt`, `chart_alt` |
+
+#### Image Best Practices
+
+1. **Prefer base64 over URLs** — More reliable, no CSP issues, no external dependencies
+2. **Keep images under 500KB** — Large images slow down responses and may hit token limits
+3. **Always include MIME type** — Required for proper rendering (`image/png`, `image/jpeg`, `image/webp`, `image/gif`)
+4. **Provide alt text** — Accessibility requirement and helpful for users
+5. **Use PNG for charts/graphs** — Lossless compression preserves data visualization clarity
+6. **Use JPEG for photos** — Better compression for photographic content
+
+#### Output Schema for Image Tools
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "Text summary of the analysis"
+    },
+    "image_base64": {
+      "type": "string",
+      "description": "Base64-encoded image data (without data: prefix)"
+    },
+    "image_mime": {
+      "type": "string",
+      "enum": ["image/png", "image/jpeg", "image/webp", "image/gif"],
+      "description": "MIME type of the image"
+    },
+    "image_alt": {
+      "type": "string",
+      "description": "Accessible description of the image"
+    }
+  },
+  "required": ["summary", "image_base64", "image_mime"]
+}
+```
+
 <Info>
 **Free vs Paid Security Requirements:**
 
