@@ -5,7 +5,29 @@ description: "How to build autonomous AI agents using the Discovery → Schema �
 
 ## Overview
 
-The most powerful way to use the Context SDK is to **let your LLM do the driving**. Instead of hardcoding tool calls, follow the **Discovery → Schema → Execution** loop.
+The most powerful way to use the Context SDK is to **let your LLM do the driving**. There are two approaches:
+
+### Option 1: Query API (Recommended)
+
+The simplest path — let Context's server handle everything:
+
+<CodeGroup>
+```typescript TypeScript
+const answer = await client.query.run("What are the top whale movements on Base?");
+console.log(answer.response);  // AI-synthesized answer, tools handled server-side
+```
+
+```python Python
+answer = await client.query.run("What are the top whale movements on Base?")
+print(answer.response)  # AI-synthesized answer, tools handled server-side
+```
+</CodeGroup>
+
+The server discovers tools, executes the full agentic pipeline (up to 100 MCP calls per tool), handles retries and completeness checks, and returns a curated answer — all for one flat fee. See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
+
+### Option 2: Build Your Own Loop
+
+If you want full control over tool selection, argument construction, and result synthesis, follow the **Discovery → Schema → Execution** loop below.
 
 <Info>
 This pattern enables your agent to find and use tools it has **never seen before** — true autonomous capability discovery at runtime.

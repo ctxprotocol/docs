@@ -43,7 +43,7 @@ description: "The Monetization Layer for MCP — Connect Users, Builders, and De
 
 | Role | What You Use |
 |------|--------------|
-| **AI Agent Developer** | `@ctxprotocol/sdk` (TypeScript) or `ctxprotocol` (Python) — Query marketplace, execute tools, handle payments |
+| **AI Agent Developer** | `@ctxprotocol/sdk` (TypeScript) or `ctxprotocol` (Python) — Execute tools (pay-per-request) or ask questions (pay-per-response) |
 | **Tool Contributor (Data Broker)** | `@modelcontextprotocol/sdk` + `@ctxprotocol/sdk` — Standard MCP server + security middleware |
 
 <Info>
@@ -51,7 +51,7 @@ description: "The Monetization Layer for MCP — Connect Users, Builders, and De
 
 **For Tool Contributors:** You need **both** SDKs:
 - `@modelcontextprotocol/sdk` — Build your MCP server (tools, schemas, handlers)
-- `@ctxprotocol/sdk` — Secure your endpoint with `createContextMiddleware()` to verify payments
+- `@ctxprotocol/sdk` — Secure your endpoint with `createContextMiddleware()` to verify requests
 </Info>
 
 ---
@@ -87,7 +87,7 @@ Monetize your data **without building a frontend**. Turn the insights people pay
 |---------|-------------|
 | **Build Once, Sell Everywhere** | Create a standard MCP Server |
 | **Zero UI Required** | You provide the API; our Agent provides the interface |
-| **Instant Revenue** | Set a price (e.g., \$0.01/response). Get paid in USDC instantly every time an Agent calls your tool |
+| **Instant Revenue** | Set a price (e.g., \$0.01/response). Get paid in USDC on Base every time an Agent successfully uses your tool |
 
 ---
 
