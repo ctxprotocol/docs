@@ -100,18 +100,29 @@ When a user asks a complex question (e.g., *"Is it profitable to arb Uniswap vs 
 
 ## The Protocol (Settlement)
 
-All value flows through `ContextRouter.sol` on Base using **deferred settlement**.
+All value flows through `ContextRouter.sol` on Base, with settlement timing depending on mode:
+
+- **Query mode (`/api/v1/query`)** uses deferred settlement after the response is delivered.
+- **Execute mode (`/api/v1/tools/execute`)** currently settles before the MCP call (single-call pay-per-request flow).
 
 ### How Settlement Works
 
-1. User sets a **spending cap** (ERC-20 allowance on ContextRouter) — this is a one-time setup
+For **Query mode**:
+
+1. User sets a **spending cap** (ERC-20 allowance on ContextRouter) — one-time setup
 2. Before execution, the server performs a **read-only pre-flight check** (balance + allowance) — no gas cost
 3. Tools execute and the AI response is streamed to the user
 4. **After the response is fully delivered**, the server settles payment in the background via the operator wallet
 5. If settlement fails, it is retried automatically (up to 5 attempts with exponential backoff)
 
+For **Execute mode**:
+
+1. User spending cap is checked
+2. Payment is executed
+3. MCP tool call runs once and returns raw output
+
 <Info>
-**Key benefit:** Users never wait for on-chain transactions. They get their response immediately, and settlement happens asynchronously. Tool fees are waived if execution fails — users only pay for successful results.
+**Key benefit (Query mode):** Users never wait for on-chain transactions. They get their response immediately, and settlement happens asynchronously. Tool fees are waived if execution fails — users only pay for successful results.
 </Info>
 
 ### Payment Distribution
@@ -246,10 +257,10 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 
 The SDKs offer two distinct payment models, reflecting Context's dual role as both an API marketplace and a response marketplace:
 
-| Mode | Endpoint | Payment | What You Get |
-|------|----------|---------|--------------|
-| **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Pay-per-request | Raw data from a single tool call |
-| **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | AI-synthesized answer from the full agentic pipeline |
+| Mode | Endpoint | Payment Model | Settlement Timing | What You Get |
+|------|----------|---------------|-------------------|--------------|
+| **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Pay-per-request | Pre-execution (single-call flow) | Raw data from a single tool call |
+| **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | AI-synthesized answer from the full agentic pipeline |
 
 **Execute** is for precision — you call a specific tool with specific arguments and get raw data back. One call, one payment, one result. Good for building custom pipelines.
 

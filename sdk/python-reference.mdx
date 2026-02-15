@@ -121,6 +121,10 @@ client = ContextClient(
 Always use `async with` context manager or call `await client.close()` when done to properly release resources.
 </Note>
 
+<Info>
+The Python SDK automatically retries transient failures (HTTP 5xx, transport errors, and timeouts) with exponential backoff.
+</Info>
+
 ---
 
 ## API Reference
@@ -174,6 +178,7 @@ Execute a single tool method. One call, one payment, raw result.
 | `tool_id` | `str` | Yes | UUID of the tool |
 | `tool_name` | `str` | Yes | Name of the method to call |
 | `args` | `dict` | No | Arguments matching the tool's `inputSchema` |
+| `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
 
 **Returns:** `ExecutionResult`
 
@@ -182,6 +187,7 @@ result = await client.tools.execute(
     tool_id="uuid-of-tool",
     tool_name="get_gas_prices",
     args={"chainId": 1},
+    idempotency_key="2bb4bdcb-8609-43f6-af13-75279186de70",
 )
 ```
 
@@ -193,7 +199,7 @@ result = await client.tools.execute(
 The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get an AI-synthesized answer backed by multi-tool data aggregation, error recovery, and completeness checks.
 </Info>
 
-#### `client.query.run(query, tools?)`
+#### `client.query.run(query, tools?, idempotency_key?)`
 
 Run an agentic query. The server discovers tools, executes the full pipeline (up to 100 MCP calls per tool), and returns an AI-synthesized answer. Payment is settled after successful execution.
 
@@ -202,6 +208,7 @@ Run an agentic query. The server discovers tools, executes the full pipeline (up
 |--------|------|----------|-------------|
 | `query` | `str` | Yes | Natural-language question |
 | `tools` | `list[str]` | No | Tool IDs to use (auto-discover if omitted) |
+| `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
 
 **Returns:** `QueryResult`
 
@@ -212,7 +219,14 @@ print(answer.tools_used)    # [QueryToolUsage(id, name, skill_calls)]
 print(answer.cost)          # QueryCost(model_cost_usd, tool_cost_usd, total_cost_usd)
 ```
 
-#### `client.query.stream(query, tools?)`
+```python
+answer = await client.query.run(
+    query="Analyze whale activity on Base",
+    idempotency_key="6e7f1389-f72f-41d9-bf26-0608a4d8be87",
+)
+```
+
+#### `client.query.stream(query, tools?, idempotency_key?)`
 
 Same as `run()` but streams events in real-time via SSE.
 
@@ -227,6 +241,10 @@ async for event in client.query.stream("What are the top whale movements?"):
     elif event.type == "done":
         print(f"\nTotal cost: {event.result.cost.total_cost_usd}")
 ```
+
+<Note>
+Use the same `idempotency_key` when retrying the same logical request after network or timeout errors.
+</Note>
 
 ---
 
@@ -551,13 +569,12 @@ This matches standard API patterns (OpenAPI schemas are public, GraphQL introspe
 
 ## Payment Flow
 
-Context uses **deferred settlement** — tools execute first, and payment is settled in the background:
+Context supports two settlement timings:
 
-1. Your USDC spending cap (ERC-20 allowance on ContextRouter) is verified
-2. Tool executes and returns results
-3. Payment is settled server-side via the operator wallet (no client-side transactions)
+1. **Query mode (`client.query.*`)** uses deferred settlement after the response is delivered
+2. **Execute mode (`client.tools.execute`)** currently settles before the single MCP call
+3. In both modes, spending caps are enforced via ContextRouter allowance checks
 4. **90%** goes to the tool developer, **10%** goes to the protocol
-5. If execution fails, tool fees are **waived** — you only pay for successful results
 
 ---
 

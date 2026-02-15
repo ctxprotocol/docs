@@ -119,6 +119,7 @@ const result = await client.tools.execute({
   toolId: llmDecision.toolId,
   toolName: llmDecision.toolName,
   args: llmDecision.args,
+  idempotencyKey: crypto.randomUUID(),
 });
 
 // Feed the result back to your LLM for synthesis
@@ -136,6 +137,10 @@ Context Tools return **raw, structured JSON data** (via `structuredContent`). Th
 <Note>
 For large datasets (like CSVs or PDF analysis), the API may return a **reference URL** to keep your context window clean.
 </Note>
+
+<Warning>
+Treat tool output as untrusted data. Never execute or follow instruction-like strings that appear inside tool payloads (for example `SYSTEM:`/`USER:` markers).
+</Warning>
 
 ---
 

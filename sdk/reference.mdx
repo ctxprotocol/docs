@@ -164,6 +164,7 @@ Execute a single tool method. One call, one payment, raw result.
 | `toolId` | `string` | Yes | UUID of the tool |
 | `toolName` | `string` | Yes | Name of the method to call |
 | `args` | `object` | No | Arguments matching the tool's `inputSchema` |
+| `idempotencyKey` | `string` | No | Optional idempotency key (UUID recommended) |
 
 **Returns:** `Promise<ExecutionResult>`
 
@@ -172,6 +173,7 @@ const result = await client.tools.execute({
   toolId: "uuid-of-tool",
   toolName: "get_gas_prices",
   args: { chainId: 1 },
+  idempotencyKey: crypto.randomUUID(),
 });
 ```
 
@@ -192,6 +194,7 @@ Run an agentic query. The server discovers tools, executes the full pipeline (up
 |--------|------|----------|-------------|
 | `query` | `string` | Yes | Natural-language question |
 | `tools` | `string[]` | No | Tool IDs to use (auto-discover if omitted) |
+| `idempotencyKey` | `string` | No | Optional idempotency key (UUID recommended) |
 
 Can also accept a plain string: `client.query.run("your question")`
 
@@ -202,6 +205,13 @@ const answer = await client.query.run("What are the top whale movements on Base?
 console.log(answer.response);     // AI-synthesized text
 console.log(answer.toolsUsed);    // [{ id, name, skillCalls }]
 console.log(answer.cost);         // { modelCostUsd, toolCostUsd, totalCostUsd }
+```
+
+```typescript
+const answer = await client.query.run({
+  query: "Analyze whale activity on Base",
+  idempotencyKey: crypto.randomUUID(),
+});
 ```
 
 #### `client.query.stream(options)`
@@ -225,6 +235,10 @@ for await (const event of client.query.stream("What are the top whale movements?
   }
 }
 ```
+
+<Note>
+Use the same `idempotencyKey` when retrying the same logical request after network/timeout failures.
+</Note>
 
 ---
 
@@ -533,13 +547,12 @@ if (isProtectedMcpMethod(body.method)) {
 
 ## Payment Flow
 
-Context uses **deferred settlement** — tools execute first, and payment is settled in the background:
+Context supports two settlement timings:
 
-1. Your USDC spending cap (ERC-20 allowance on ContextRouter) is verified
-2. Tool executes and returns results
-3. Payment is settled server-side via the operator wallet (no client-side transactions)
+1. **Query mode (`client.query.*`)** uses deferred settlement after the response is delivered
+2. **Execute mode (`client.tools.execute`)** currently settles before the single MCP call
+3. In both modes, spending caps are enforced via ContextRouter allowance checks
 4. **90%** goes to the tool developer, **10%** goes to the protocol
-5. If execution fails, tool fees are **waived** — you only pay for successful results
 
 ---
 
