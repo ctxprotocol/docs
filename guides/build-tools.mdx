@@ -124,6 +124,32 @@ return {
 };
 ```
 
+### Design Outputs for Context Windows
+
+Context’s query pipeline uses model-aware data budgets when preparing tool output for synthesis. To maximize answer quality:
+
+<Info>
+**Best practices for `structuredContent`:**
+
+- Return **structured objects** (not one giant serialized string blob)
+- Keep **textual analysis/news** in dedicated string fields (these are prioritized first)
+- Keep **large time-series arrays** in separate keys from analysis text
+- Include a compact `summary` object alongside deep raw data when possible
+- Aim for payloads under **~500K chars** for full visibility across all supported models
+</Info>
+
+```typescript
+// ✅ Good: separated and prioritizable
+return {
+  summary: { direction: "outflow", confidence: 0.82 },
+  news: "ETF outflows accelerated this week due to ...",
+  chart: { timestamps: [...], values: [...] },
+};
+
+// ❌ Bad: giant opaque blob (hard to prioritize/truncate safely)
+return JSON.stringify(allData);
+```
+
 ### Secure Your Endpoint
 
 Add Context's middleware to verify that requests are legitimate:

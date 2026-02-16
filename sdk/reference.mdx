@@ -187,13 +187,16 @@ The Query API is Context's **response marketplace** — instead of buying raw AP
 
 #### `client.query.run(options)`
 
-Run an agentic query. The server discovers tools, executes the full pipeline (up to 100 MCP calls per tool), and returns an AI-synthesized answer. Payment is settled after successful execution.
+Run an agentic query. The server discovers tools, executes the full pipeline (up to 100 MCP calls per tool), applies model-aware mediator/data budgeting, and returns an AI-synthesized answer. Payment is settled after successful execution.
 
 **Parameters:**
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
 | `query` | `string` | Yes | Natural-language question |
 | `tools` | `string[]` | No | Tool IDs to use (auto-discover if omitted) |
+| `modelId` | `string` | No | Model ID to use for planning/synthesis (e.g. `kimi-model-thinking`, `glm-model`) |
+| `includeData` | `boolean` | No | Include execution data inline in the response |
+| `includeDataUrl` | `boolean` | No | Persist execution data to blob and return a URL |
 | `idempotencyKey` | `string` | No | Optional idempotency key (UUID recommended) |
 
 Can also accept a plain string: `client.query.run("your question")`
@@ -210,9 +213,18 @@ console.log(answer.cost);         // { modelCostUsd, toolCostUsd, totalCostUsd }
 ```typescript
 const answer = await client.query.run({
   query: "Analyze whale activity on Base",
+  modelId: "glm-model",
+  includeData: true,
+  includeDataUrl: true,
   idempotencyKey: crypto.randomUUID(),
 });
 ```
+
+<Note>
+`modelId` lets headless users choose the orchestration/synthesis model explicitly. If omitted, the API uses its default model.
+
+Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, `claude-sonnet-model`, `claude-opus-model`.
+</Note>
 
 #### `client.query.stream(options)`
 
@@ -324,6 +336,8 @@ interface QueryResult {
   toolsUsed: QueryToolUsage[];         // [{ id, name, skillCalls }]
   cost: QueryCost;                     // { modelCostUsd, toolCostUsd, totalCostUsd }
   durationMs: number;
+  data?: unknown;                      // Optional execution data (includeData=true)
+  dataUrl?: string;                    // Optional blob URL (includeDataUrl=true)
 }
 ```
 

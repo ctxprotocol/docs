@@ -199,15 +199,18 @@ result = await client.tools.execute(
 The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get an AI-synthesized answer backed by multi-tool data aggregation, error recovery, and completeness checks.
 </Info>
 
-#### `client.query.run(query, tools?, idempotency_key?)`
+#### `client.query.run(query, tools?, model_id?, include_data?, include_data_url?, idempotency_key?)`
 
-Run an agentic query. The server discovers tools, executes the full pipeline (up to 100 MCP calls per tool), and returns an AI-synthesized answer. Payment is settled after successful execution.
+Run an agentic query. The server discovers tools, executes the full pipeline (up to 100 MCP calls per tool), applies model-aware mediator/data budgeting, and returns an AI-synthesized answer. Payment is settled after successful execution.
 
 **Parameters:**
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
 | `query` | `str` | Yes | Natural-language question |
 | `tools` | `list[str]` | No | Tool IDs to use (auto-discover if omitted) |
+| `model_id` | `str` | No | Model ID to use for planning/synthesis (e.g. `kimi-model-thinking`, `glm-model`) |
+| `include_data` | `bool` | No | Include execution data inline in the response |
+| `include_data_url` | `bool` | No | Persist execution data to blob and return a URL |
 | `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
 
 **Returns:** `QueryResult`
@@ -222,11 +225,20 @@ print(answer.cost)          # QueryCost(model_cost_usd, tool_cost_usd, total_cos
 ```python
 answer = await client.query.run(
     query="Analyze whale activity on Base",
+    model_id="glm-model",
+    include_data=True,
+    include_data_url=True,
     idempotency_key="6e7f1389-f72f-41d9-bf26-0608a4d8be87",
 )
 ```
 
-#### `client.query.stream(query, tools?, idempotency_key?)`
+<Note>
+`model_id` lets headless users choose the orchestration/synthesis model explicitly. If omitted, the API uses its default model.
+
+Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, `claude-sonnet-model`, `claude-opus-model`.
+</Note>
+
+#### `client.query.stream(query, tools?, model_id?, include_data?, include_data_url?, idempotency_key?)`
 
 Same as `run()` but streams events in real-time via SSE.
 
@@ -327,6 +339,8 @@ class QueryResult(BaseModel):
     tools_used: list[QueryToolUsage]     # [{ id, name, skill_calls }]
     cost: QueryCost                      # { model_cost_usd, tool_cost_usd, total_cost_usd }
     duration_ms: int
+    data: Any | None                     # Optional execution data (include_data=True)
+    data_url: str | None                 # Optional blob URL (include_data_url=True)
 ```
 
 ---
