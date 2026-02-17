@@ -162,6 +162,18 @@ Context's agentic pipeline uses a **planning LLM** that reads your `outputSchema
 
 The #1 cause of these retries? **Property name mismatches** between what the LLM generates and what your tool actually returns.
 
+<Note>
+Self-healing retries target likely code/data-shape issues. Infrastructure failures (rate limits, auth failures, upstream timeouts) are treated as non-healable for that turn, so the platform does not keep rewriting code when the root cause is upstream.
+</Note>
+
+<Note>
+If your tool explicitly reports plan/tier capability limits (for example, "long/short ratio unavailable on current tier"), the platform treats that as a constraint signal and avoids repeated same-tool completeness rewrites. It will return best-effort output plus limitations instead of looping.
+</Note>
+
+<Tip>
+Expose capability flags in `structuredContent` (for example, `supportsLongShortThresholdCheck: false`) and include a human-readable `limitations` field. This helps the verifier distinguish true parsing bugs from plan constraints.
+</Tip>
+
 <Warning>
 **The planning LLM defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the LLM will generate `data.exchangeName` when your API returns `data.exchange_name` — triggering a retry every time.
 </Warning>
@@ -495,6 +507,8 @@ structuredContent: { temperature: 72 }  // Valid
 ### Where the Timeout Comes From
 
 The timeout is enforced by the **platform infrastructure** (and in standard MCP setups like Claude Desktop, by the LLM client itself). When your tool is called, the system waits for a response — if it doesn't arrive in ~60 seconds, execution fails.
+
+When a timeout is hit, the runtime now propagates cancellation to in-flight MCP calls to avoid post-timeout "zombie" traffic. Tool authors should still return explicit failure/degraded states quickly so agents can recover gracefully.
 
 <Note>
 This isn't an MCP protocol limitation — SSE connections can stay open indefinitely. The timeout exists at the application layer (LLM clients, API gateways, platform infrastructure) and serves as a **quality forcing function**.

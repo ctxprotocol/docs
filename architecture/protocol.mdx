@@ -241,6 +241,14 @@ Every `callMcpSkill({ toolId, toolName, args })` increments an internal counter.
 See [Build & List Your Tool](/guides/build-tools#execution-limits--product-design) for detailed guidance on product architecture.
 </Warning>
 
+### Runtime Cancellation and Retry Semantics
+
+- Query execution timeouts now propagate cancellation to in-flight MCP calls, so requests do not continue burning API quota after the turn has timed out.
+- Infrastructure-style failures (for example: `429`, auth failures, upstream timeout/unavailable responses) are treated as non-healable for that turn and skip code-rewrite self-healing loops.
+- Self-healing retries are still used for likely code/data-shape issues (property mismatch, parsing errors), where retries can improve outcomes.
+- If completeness checks indicate a capability/tier constraint (for example: required metric is unavailable on the current plan), the platform avoids repeated same-tool rewrite loops and returns best-effort output with limitations.
+- Reflection retries are conservative for isolated nulls: a single non-critical null field (especially when outputs include capability-limit signals) does not trigger repeated code rewrites.
+
 ### Economic Model
 
 | Scenario | Behavior |
@@ -264,7 +272,7 @@ The SDKs offer two distinct payment models, reflecting Context's dual role as bo
 
 **Execute** is for precision — you call a specific tool with specific arguments and get raw data back. One call, one payment, one result. Good for building custom pipelines.
 
-**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per tool), self-healing retries, completeness checks, and AI synthesis. One flat fee, curated answer. This is the same agentic pipeline that powers the client app.
+**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per tool), targeted self-healing retries, completeness checks, and AI synthesis. One flat fee, curated answer. This is the same agentic pipeline that powers the client app.
 
 <Info>
 **Why offer both?** Different consumers have different needs. An agent building a custom trading strategy wants raw data and full control (Execute). An agent answering user questions wants curated intelligence without managing orchestration (Query). Context serves both.</Info>
