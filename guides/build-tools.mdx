@@ -150,6 +150,63 @@ return {
 return JSON.stringify(allData);
 ```
 
+### Write Detailed Output Schemas (Critical for Performance)
+
+Your `outputSchema` is the **single most impactful thing** you can do to reduce latency and cost for users. Here's why:
+
+Context's agentic pipeline uses a **planning LLM** that reads your `outputSchema` to generate code that processes your tool's response. If your schema is vague, the LLM has to *guess* property names — and it will guess wrong. This triggers an automatic **self-healing retry loop** that:
+
+- Adds **~30-60 seconds** of latency per retry
+- Costs **~$0.02 extra** in model inference per retry
+- Wastes retry budget (capped at 8 total iterations)
+
+The #1 cause of these retries? **Property name mismatches** between what the LLM generates and what your tool actually returns.
+
+<Warning>
+**The planning LLM defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the LLM will generate `data.exchangeName` when your API returns `data.exchange_name` — triggering a retry every time.
+</Warning>
+
+```typescript
+// ❌ Bad: Vague schema — LLM must guess property names
+outputSchema: {
+  type: "object",
+  properties: {
+    data: { type: "array" }  // What's in the array? LLM will guess wrong.
+  }
+}
+
+// ✅ Good: Detailed schema with exact property names and descriptions
+outputSchema: {
+  type: "object",
+  properties: {
+    data: {
+      type: "array",
+      description: "Array of exchange balance objects, one per exchange",
+      items: {
+        type: "object",
+        properties: {
+          exchange_name: { type: "string", description: "Exchange name (e.g. 'Binance')" },
+          total_balance: { type: "number", description: "Total balance in the queried coin" },
+          balance_change_1d: { type: "number", description: "Balance change in last 24 hours" },
+          balance_change_percent_1d: { type: "number", description: "Percent change in last 24 hours" },
+        }
+      }
+    },
+    fetchedAt: { type: "string", description: "ISO 8601 timestamp" }
+  }
+}
+```
+
+<Info>
+**Output schema checklist:**
+
+- Document **every property name** in the response, especially if they're `snake_case`
+- Include **`items.properties`** for arrays — don't just say `{ type: "array" }`
+- Add **descriptions** that explain what values mean (units, ranges, interpretation)
+- If the response is an **object** (not an array), say so — `{ type: "object" }` not `{ type: "array" }`
+- Document **wrapper properties** your handler adds (e.g., `fetchedAt`, `count`, `symbol`)
+</Info>
+
 ### Secure Your Endpoint
 
 Add Context's middleware to verify that requests are legitimate:
