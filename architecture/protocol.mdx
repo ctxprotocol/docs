@@ -251,6 +251,7 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 - Tool contributors can publish pacing hints in `_meta.rateLimit` / `_meta.rateLimitHints` (`maxRequestsPerMinute`, `cooldownMs`, `maxConcurrency`, `supportsBulk`, `recommendedBatchTools`, `notes`), which are surfaced to planning prompts.
 - Runtime pacing now combines declared hints with adaptive feedback: on rate-limit/timeout/abort signals it increases cooldowns, and after stable successes it gradually relaxes back toward declared baselines.
 - Example implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
+- Implementation guide: [Rate-Limit Metadata](/guides/rate-limit-metadata).
 
 ### Economic Model
 

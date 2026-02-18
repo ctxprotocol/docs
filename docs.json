@@ -36,6 +36,7 @@
             "pages": [
               "guides/quickstart",
               "guides/build-tools",
+              "guides/rate-limit-metadata",
               "guides/troubleshooting",
               "guides/context-injection",
               "guides/handshake-architecture",
