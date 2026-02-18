@@ -174,6 +174,33 @@ If your tool explicitly reports plan/tier capability limits (for example, "long/
 Expose capability flags in `structuredContent` (for example, `supportsLongShortThresholdCheck: false`) and include a human-readable `limitations` field. This helps the verifier distinguish true parsing bugs from plan constraints.
 </Tip>
 
+<Tip>
+For third-party APIs with strict quotas, publish pacing hints in tool metadata so the planner and runtime can coordinate:
+
+```typescript
+const TOOLS = [{
+  name: "get_portfolio_snapshot",
+  description: "Fetch portfolio snapshot",
+  _meta: {
+    rateLimit: {
+      maxRequestsPerMinute: 30,
+      cooldownMs: 2000,
+      maxConcurrency: 1,
+      supportsBulk: true,
+      recommendedBatchTools: ["get_portfolio_snapshot"],
+      notes: "Hobby tier: avoid per-asset fan-out loops.",
+    },
+  },
+  inputSchema: { /* ... */ },
+  outputSchema: { /* ... */ },
+}];
+```
+
+These hints are advisory for planning and also consumed by runtime pacing logic.
+
+Reference implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
+</Tip>
+
 <Warning>
 **The planning LLM defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the LLM will generate `data.exchangeName` when your API returns `data.exchange_name` — triggering a retry every time.
 </Warning>

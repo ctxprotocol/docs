@@ -316,6 +316,7 @@ class McpTool(BaseModel):
     description: str
     input_schema: dict[str, Any] | None  # JSON Schema for arguments
     output_schema: dict[str, Any] | None  # JSON Schema for response
+    meta: dict[str, Any] | None  # alias: "_meta" (context + pacing metadata)
 ```
 
 ---
@@ -369,6 +370,14 @@ TOOLS = [{
     "description": "Analyze your positions with personalized insights",
     "_meta": {
         "contextRequirements": ["hyperliquid"],
+        "rateLimit": {
+            "maxRequestsPerMinute": 30,
+            "cooldownMs": 2000,
+            "maxConcurrency": 1,
+            "supportsBulk": True,
+            "recommendedBatchTools": ["get_portfolio_snapshot"],
+            "notes": "Hobby tier: prefer snapshot endpoints over loops.",
+        },
     },
     "inputSchema": {
         "type": "object",
@@ -382,6 +391,10 @@ TOOLS = [{
     },
 }]
 ```
+
+<Info>
+Python reference implementation: [Hummingbot contributor server](https://github.com/ctxprotocol/sdk-python/tree/main/examples/server/hummingbot-contributor).
+</Info>
 
 ---
 

@@ -248,6 +248,9 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 - Self-healing retries are still used for likely code/data-shape issues (property mismatch, parsing errors), where retries can improve outcomes.
 - If completeness checks indicate a capability/tier constraint (for example: required metric is unavailable on the current plan), the platform avoids repeated same-tool rewrite loops and returns best-effort output with limitations.
 - Reflection retries are conservative for isolated nulls: a single non-critical null field (especially when outputs include capability-limit signals) does not trigger repeated code rewrites.
+- Tool contributors can publish pacing hints in `_meta.rateLimit` / `_meta.rateLimitHints` (`maxRequestsPerMinute`, `cooldownMs`, `maxConcurrency`, `supportsBulk`, `recommendedBatchTools`, `notes`), which are surfaced to planning prompts.
+- Runtime pacing now combines declared hints with adaptive feedback: on rate-limit/timeout/abort signals it increases cooldowns, and after stable successes it gradually relaxes back toward declared baselines.
+- Example implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
 
 ### Economic Model
 
