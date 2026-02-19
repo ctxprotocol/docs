@@ -215,7 +215,7 @@ For tools that need access to user-specific data (e.g., *"Analyze my positions"*
 | `"polymarket"` | Polymarket prediction markets |
 | `"wallet"` | Generic EVM wallet balances |
 
-<Card title="Context Injection Guide" icon="syringe" href="/guides/context-injection">
+<Card title="Context Injection Guide" icon="syringe" href="/guides/tool-metadata#context-injection">
   Full guide: declaring requirements, handling data, supported context types
 </Card>
 
@@ -251,7 +251,7 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 - Tool contributors can publish pacing hints in `_meta.rateLimit` / `_meta.rateLimitHints` (`maxRequestsPerMinute`, `cooldownMs`, `maxConcurrency`, `supportsBulk`, `recommendedBatchTools`, `notes`), which are surfaced to planning prompts.
 - Runtime pacing now combines declared hints with adaptive feedback: on rate-limit/timeout/abort signals it increases cooldowns, and after stable successes it gradually relaxes back toward declared baselines.
 - Example implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
-- Implementation guide: [Rate-Limit Metadata](/guides/rate-limit-metadata).
+- Implementation guide: [Tool Metadata](/guides/tool-metadata#rate-limit-hints).
 
 ### Economic Model
 
