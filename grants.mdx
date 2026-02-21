@@ -9,7 +9,7 @@ description: "$10,000 Grant Program - Build MCP tools, earn upfront grants + ong
 
 Bloomberg. SensorTower. SEMrush. ZoomInfo. PitchBook. These companies gatekeep data behind enterprise contracts. You can unbundle them.
 
-Context Protocol is a decentralized marketplace where AI agents pay for data. Build an MCP tool that delivers valuable insights, and you earn **90% of every query fee** forever.
+Context Protocol is a decentralized marketplace where AI agents pay for data. Build an MCP tool that delivers valuable insights, and you earn **90% of usage fees** (Query responses and eligible Execute calls).
 
 <CardGroup cols={2}>
   <Card title="Apply Now" icon="rocket" href="https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform">
@@ -92,7 +92,7 @@ Reliable, well-documented tools that solve common needs. Think "best-in-class AP
 No upfront grant, but immediate listing. Start earning from day one.
 
 <Note>
-**All tiers earn revenue share.** Even Tier B tools generate USDC the moment an agent queries them. You keep 90% of every fee.
+**All tiers earn revenue share.** Even Tier B tools generate USDC the moment agents use them. You keep 90% of every fee.
 </Note>
 
 ---
@@ -335,7 +335,8 @@ Note: We're not funding weather APIs (free everywhere), basic flight tracking (F
     Go to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute) to register your tool:
     - Paste your MCP endpoint URL
     - Use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to generate your submission name, description, and category
-    - **Set your price to \$0** for initial testing (you can change it after we review)
+    - **Set your query price to \$0** for initial testing (you can change it after we review)
+    - Optionally set a default execute price (fans out to method-level `_meta.pricing.executeUsd`)
     - Add stake to activate your tool
   </Step>
   <Step title="Debug & Refine">
@@ -356,9 +357,10 @@ Note: We're not funding weather APIs (free everywhere), basic flight tracking (F
   </Step>
   <Step title="Get Paid">
     Once verified, you're live on the marketplace!
-    - Update your price from \$0 to your desired query fee
-    - Agents discover and query your tool
-    - You earn 90% of every query fee in USDC
+    - Update your query price from \$0 to your desired query fee
+    - Optionally enable execute pricing for methods you want in Execute surface
+    - Agents discover and use your tool across Query + Execute
+    - You earn 90% of eligible fees in USDC
     - Grant payment follows the schedule below
   </Step>
 </Steps>
@@ -417,7 +419,7 @@ You're not alone. We're here to help you ship.
     The RFB is a starting point, not a limit. If you have evidence of an expensive subscription your tool unbundles, pitch it. But show your research (see "How to Find Unbundling Opportunities" above).
   </Accordion>
   <Accordion title="Do I keep the revenue after the grant?">
-    Yes! The grant is a one-time bootstrap. You keep **90% of all query fees forever** that's the whole point.
+    Yes! The grant is a one-time bootstrap. You keep **90% of all eligible usage fees** forever that's the whole point.
   </Accordion>
   <Accordion title="What chain is payment on?">
     All payments (grants and revenue) are in **USDC on Base**. Low fees, deferred settlement (settled automatically after successful execution).

@@ -75,7 +75,7 @@ The builder template includes checkpoints where the AI will stop and ask for you
 ---
 
 <Info>
-**Earnings Model**: You earn **90%** of every response fee. Set your price (e.g., \$0.01/response) and get paid in USDC on Base every time an Agent successfully uses your tool. Payment is settled automatically after execution.
+**Earnings Model**: You earn **90%** of usage fees. Set a **query price** (e.g., \$0.01/response) for Query surface usage, and optionally set **method-level execute pricing** for Execute surface calls. Payment is settled automatically after successful execution flows.
 </Info>
 
 ---
@@ -430,16 +430,21 @@ Deploy to any platform: Vercel, Railway, Render, AWS, or your own infrastructure
 
 ## Step 4: Set a Price
 
-Choose your fee per response:
+Choose your listing economics:
 
 | Price | Use Case |
 |-------|----------|
-| **\$0.00** | Free tools (great for adoption and visibility) |
-| **\$0.01+** | Paid tools (earn revenue per response) |
+| **Query price: \$0.00** | Free listing usage in Query surface |
+| **Query price: \$0.01+** | Paid Query usage (per response) |
+| **Default execute price (optional)** | Convenience input that fans out to each method's `_meta.pricing.executeUsd` |
 
 <Note>
-This fee is paid **once per chat turn**. The Agent can call your skills up to 100 times within that single paid turn via `callMcpSkill()`.
+Query fees are paid **once per chat turn**. The runtime may call methods up to 100 times within that turn as a safety-capped orchestration limit.
 </Note>
+
+<Info>
+Execute eligibility is method-level: methods without explicit `_meta.pricing.executeUsd` remain query-only in Execute discovery.
+</Info>
 
 <Warning>
 **Security requirement depends on price:**
@@ -466,7 +471,7 @@ Stakes are **fully refundable** with a 7-day withdrawal delay. This creates acco
 
 ## Step 6: You're Live! 🎉
 
-Your MCP Tool is now instantly available on the decentralized marketplace. Users can discover it via search, and AI agents can autonomously purchase and use your tool.
+Your MCP Tool is now instantly available on the decentralized marketplace. Query users can discover answer-safe methods, and execute clients can call explicitly execute-priced methods with session budgets.
 
 ---
 

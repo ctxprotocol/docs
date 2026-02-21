@@ -59,14 +59,18 @@ Before using the API, complete setup at [ctxprotocol.com](https://ctxprotocol.co
 
 The SDK offers two payment models to serve different use cases:
 
-| Mode | Method | Payment Model | Use Case |
-|------|--------|---------------|----------|
-| **Execute** | `client.tools.execute()` | Pay-per-request | Simple data fetches, predictable costs, building custom pipelines |
-| **Query** | `client.query.run()` | Pay-per-response | Complex questions, multi-tool synthesis, curated intelligence |
+| Mode | Method | Payment Model | Settlement Shape | Use Case |
+|------|--------|---------------|------------------|----------|
+| **Execute** | `client.tools.execute()` | Per execute call | Session accrual + deferred batch flush | Deterministic pipelines, raw outputs, explicit spend envelopes |
+| **Query** | `client.query.run()` | Pay-per-response | Deferred post-response | Complex questions, multi-tool synthesis, curated intelligence |
 
 <Info>
-**Which should I use?** Use **Query** when you want a curated answer to a complex question — the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per tool), self-healing retries, and AI synthesis for one flat fee. Use **Execute** when you want raw data from a specific tool with full control over the pipeline.
+**Which should I use?** Use **Query** when you want a curated answer — Context is the librarian and handles answer-safe discovery/orchestration (up to 100 MCP calls per query turn). Use **Execute** when your app/agent is the librarian and you want explicit method pricing with session-budgeted spend control.
 </Info>
+
+<Note>
+Mixed listings are first-class: one listing can expose methods to both surfaces. Methods without explicit execute pricing remain query-only until pricing metadata is added.
+</Note>
 
 ## Quick Start
 
@@ -76,18 +80,27 @@ from ctxprotocol import ContextClient
 
 async def main():
     async with ContextClient(api_key="sk_live_...") as client:
-        # Pay-per-response: Ask a question, get a curated answer
+        # Query surface (pay-per-response)
         answer = await client.query.run("What are the top whale movements on Base?")
         print(answer.response)
 
-        # Pay-per-request: Execute a specific tool for raw data
-        tools = await client.discovery.search("gas prices")
+        # Execute surface (explicit execute pricing + session budget)
+        tools = await client.discovery.search(
+            "gas prices",
+            mode="execute",
+            surface="execute",
+            require_execute_pricing=True,
+        )
+        session = await client.tools.start_session(max_spend_usd="1.00")
+        method = tools[0].mcp_tools[0]
         result = await client.tools.execute(
             tool_id=tools[0].id,
-            tool_name=tools[0].mcp_tools[0].name,
+            tool_name=method.name,
             args={"chainId": 1},
+            session_id=session.session.session_id,
         )
         print(result.result)
+        print(result.session)  # method_price, spent, remaining, max_spend, ...
 
 asyncio.run(main())
 ```
@@ -133,23 +146,36 @@ The Python SDK automatically retries transient failures (HTTP 5xx, transport err
 
 #### `client.discovery.search(query, limit?)`
 
-Search for tools matching a query string.
+Search for tools matching a query string, with optional surface-aware filters.
 
 **Parameters:**
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | `str` | Yes | Search query |
 | `limit` | `int` | No | Maximum results to return (1-50) |
+| `mode` | `"query" \| "execute"` | No | Discovery mode with billing semantics |
+| `surface` | `"answer" \| "execute" \| "both"` | No | Method surface filter |
+| `query_eligible` | `bool` | No | Require methods marked query eligible |
+| `require_execute_pricing` | `bool` | No | Require explicit method execute pricing |
+| `exclude_latency_classes` | `list["instant" \| "fast" \| "slow" \| "streaming"]` | No | Exclude by latency class |
+| `exclude_slow` | `bool` | No | Convenience filter for query mode |
 
 **Returns:** `list[Tool]`
 
 ```python
 tools = await client.discovery.search("ethereum gas", limit=10)
+
+execute_tools = await client.discovery.search(
+    "ethereum gas",
+    mode="execute",
+    surface="execute",
+    require_execute_pricing=True,
+)
 ```
 
 ---
 
-#### `client.discovery.get_featured(limit?)`
+#### `client.discovery.get_featured(limit?, ...)`
 
 Get featured/popular tools.
 
@@ -157,20 +183,29 @@ Get featured/popular tools.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `limit` | `int` | No | Maximum results to return |
+| `mode` | `"query" \| "execute"` | No | Optional discovery mode |
+| `surface` | `"answer" \| "execute" \| "both"` | No | Optional method surface filter |
+| `query_eligible` | `bool` | No | Optional query-safe filter |
+| `require_execute_pricing` | `bool` | No | Optional execute-price filter |
 
 **Returns:** `list[Tool]`
 
 ```python
 featured = await client.discovery.get_featured(limit=5)
+featured_execute = await client.discovery.get_featured(
+    limit=5,
+    mode="execute",
+    require_execute_pricing=True,
+)
 ```
 
 ---
 
-### Tools (Pay-Per-Request)
+### Tools (Execute Surface)
 
 #### `client.tools.execute(tool_id, tool_name, args?)`
 
-Execute a single tool method. One call, one payment, raw result.
+Execute a single tool method. Execute calls can run inside a session budget (`max_spend_usd`) for deferred batch settlement.
 
 **Parameters:**
 | Option | Type | Required | Description |
@@ -179,16 +214,54 @@ Execute a single tool method. One call, one payment, raw result.
 | `tool_name` | `str` | Yes | Name of the method to call |
 | `args` | `dict` | No | Arguments matching the tool's `inputSchema` |
 | `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
+| `mode` | `"execute"` | No | Explicit mode label (defaults to `"execute"`) |
+| `session_id` | `str` | No | Execute session ID to accrue spend against |
+| `max_spend_usd` | `str` | No | Optional inline session budget (if no `session_id`) |
+| `close_session` | `bool` | No | Request session closure after this call settles |
 
 **Returns:** `ExecutionResult`
 
 ```python
+session = await client.tools.start_session(max_spend_usd="2.50")
+
 result = await client.tools.execute(
     tool_id="uuid-of-tool",
     tool_name="get_gas_prices",
     args={"chainId": 1},
     idempotency_key="2bb4bdcb-8609-43f6-af13-75279186de70",
+    session_id=session.session.session_id,
 )
+print(result.method.execute_price_usd)  # explicit method price
+print(result.session)  # method_price, spent, remaining, max_spend, ...
+```
+
+#### `client.tools.start_session(max_spend_usd)`
+
+Start an execute session budget envelope.
+
+```python
+started = await client.tools.start_session(max_spend_usd="5.00")
+print(started.session.session_id)
+print(started.session.max_spend)
+```
+
+#### `client.tools.get_session(session_id)`
+
+Fetch current execute session status/spend.
+
+```python
+status = await client.tools.get_session("sess_123")
+print(status.session.status)  # open | closed | expired
+print(status.session.spent)
+```
+
+#### `client.tools.close_session(session_id)`
+
+Close an execute session and trigger final flush behavior.
+
+```python
+closed = await client.tools.close_session("sess_123")
+print(closed.session.status)  # closed
 ```
 
 ---
@@ -201,7 +274,7 @@ The Query API is Context's **response marketplace** — instead of buying raw AP
 
 #### `client.query.run(query, tools?, model_id?, include_data?, include_data_url?, idempotency_key?)`
 
-Run an agentic query. The server discovers tools, executes the full pipeline (up to 100 MCP calls per tool), applies model-aware mediator/data budgeting, and returns an AI-synthesized answer. Payment is settled after successful execution.
+Run an agentic query. The server discovers answer-safe tools, executes the full pipeline (up to 100 MCP calls per query turn as a runtime safety cap), applies model-aware mediator/data budgeting, and returns an AI-synthesized answer. Query billing remains pay-per-response with deferred settlement.
 
 **Parameters:**
 | Option | Type | Required | Description |
@@ -300,7 +373,7 @@ class Tool(BaseModel):
     id: str
     name: str
     description: str
-    price: str
+    price: str  # listing-level query price metadata
     category: str | None
     is_verified: bool | None
     mcp_tools: list[McpTool] | None
@@ -316,18 +389,40 @@ class McpTool(BaseModel):
     description: str
     input_schema: dict[str, Any] | None  # JSON Schema for arguments
     output_schema: dict[str, Any] | None  # JSON Schema for response
-    meta: dict[str, Any] | None  # alias: "_meta" (context + pacing metadata)
+    meta: dict[str, Any] | None  # alias: "_meta" (surface/eligibility/pricing/context)
+    execute_eligible: bool | None
+    execute_price_usd: str | None
 ```
 
 ---
 
-### ExecutionResult (Pay-Per-Request)
+### ExecutionResult (Execute Surface)
 
 ```python
 class ExecutionResult(BaseModel):
+    mode: Literal["execute"]
     result: Any
     tool: ToolInfo  # { id: str, name: str }
+    method: ExecuteMethodInfo  # { name: str, execute_price_usd: str }
+    session: ExecuteSessionSpend
     duration_ms: int
+```
+
+### ExecuteSessionSpend
+
+```python
+class ExecuteSessionSpend(BaseModel):
+    mode: Literal["execute"] = "execute"
+    session_id: str | None
+    method_price: str
+    spent: str
+    remaining: str | None
+    max_spend: str | None
+    status: Literal["open", "closed", "expired"] | None
+    expires_at: str | None
+    close_requested: bool | None
+    pending_accrued_count: int | None
+    pending_accrued_usd: str | None
 ```
 
 ---
@@ -603,7 +698,7 @@ This matches standard API patterns (OpenAPI schemas are public, GraphQL introspe
 Context supports two settlement timings:
 
 1. **Query mode (`client.query.*`)** uses deferred settlement after the response is delivered
-2. **Execute mode (`client.tools.execute`)** currently settles before the single MCP call
+2. **Execute mode (`client.tools.execute`)** accrues per-call method spend into execute sessions and flushes in deferred batches
 3. In both modes, spending caps are enforced via ContextRouter allowance checks
 4. **90%** goes to the tool developer, **10%** goes to the protocol
 

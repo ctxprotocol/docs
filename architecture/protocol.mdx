@@ -1,16 +1,16 @@
 ---
 title: "Protocol Architecture"
-description: "How the settlement layer, read-only safety, and staking system work together"
+description: "How the dual-surface marketplace, settlement layer, and safety model work together"
 ---
 
 ## Overview
 
-Context is built on a **Code Execution paradigm**. Instead of rigid "tool calling" schemas, the Agent writes and executes TypeScript code to interact with the world.
+Context is built on a **code-execution paradigm**. Instead of rigid "tool calling" schemas, the runtime can plan and execute tool interactions using typed MCP metadata, then settle economics according to the active surface.
 
 The architecture consists of four layers:
 
 1. **The Marketplace** — Supply of tools from developers
-2. **The Agent** — Demand from users executing queries
+2. **The Agent** — Demand from users and developers across Query + Execute surfaces
 3. **The Protocol** — Settlement layer on Base
 4. **Context Injection** — User data for personalized tools
 
@@ -18,21 +18,22 @@ The architecture consists of four layers:
 
 ## The Marketplace (Supply)
 
-Developers register **Tools** (the paid product) powered by standard Model Context Protocol servers. Just paste your endpoint URL and we auto-discover your skills via `listTools()`.
+Developers register **Tools** (the marketplace listing) powered by standard Model Context Protocol servers. Paste your endpoint URL and Context auto-discovers methods via `tools/list`.
 
 ### Terminology
 
 | Term | Definition |
 |------|------------|
-| **Tool** | The paid marketplace listing (what users see in the sidebar) |
-| **Skill** | The execution function (can be called multiple times per tool payment) |
+| **Tool** | The marketplace listing (what users see in discovery/search) |
+| **Method** | A concrete MCP method (`tools/call`) exposed under a listing |
+| **Surface** | Where a method is eligible: `answer`, `execute`, or `both` |
 
 ### How It Works
 
 1. You build an MCP server exposing your data/APIs
-2. You register it as an "MCP Tool" on Context with a price (e.g., \$0.01/query)
-3. When users query the AI, it discovers and calls your skills via `callMcpSkill()`
-4. You get paid in USDC on Base via deferred settlement (after successful execution)
+2. You register it as an MCP listing with a query price and optional method-level execute pricing metadata
+3. Query runtime selects answer-safe methods; Execute runtime selects explicitly priced execute methods
+4. You get paid in USDC on Base through deferred settlement flows (query turns and execute-session batches)
 
 ---
 
@@ -98,12 +99,22 @@ When a user asks a complex question (e.g., *"Is it profitable to arb Uniswap vs 
 
 ---
 
+## The Librarian Model (Canonical)
+
+Context runs one marketplace with two distinct surfaces:
+
+- **User A (Query):** Context is the librarian. You ask a question and pay once for a curated response.
+- **User B (Execute):** Your app/agent is the librarian. You select methods directly and pay per execute call within a session budget.
+- **Both in one app:** SDK clients can invoke both models side-by-side.
+
+---
+
 ## The Protocol (Settlement)
 
-All value flows through `ContextRouter.sol` on Base, with settlement timing depending on mode:
+All value flows through `ContextRouter.sol` on Base, with surface-specific settlement semantics:
 
-- **Query mode (`/api/v1/query`)** uses deferred settlement after the response is delivered.
-- **Execute mode (`/api/v1/tools/execute`)** currently settles before the MCP call (single-call pay-per-request flow).
+- **Query mode (`/api/v1/query`)** keeps deferred settlement after the response is delivered.
+- **Execute mode (`/api/v1/tools/execute`)** uses execute sessions (`maxSpendUsd`) with deferred batch settlement flushes.
 
 ### How Settlement Works
 
@@ -117,12 +128,14 @@ For **Query mode**:
 
 For **Execute mode**:
 
-1. User spending cap is checked
-2. Payment is executed
-3. MCP tool call runs once and returns raw output
+1. User spending cap (allowance) is checked as the long-lived global ceiling
+2. Client starts an execute session with `maxSpendUsd` (short-lived run budget)
+3. Each execute call accrues method-level price (`_meta.pricing.executeUsd`) into session spend
+4. Session spend is flushed to pending settlement in deferred batches (threshold/TTL/close)
+5. Session responses expose `methodPrice`, `spent`, `remaining`, and `maxSpend`
 
 <Info>
-**Key benefit (Query mode):** Users never wait for on-chain transactions. They get their response immediately, and settlement happens asynchronously. Tool fees are waived if execution fails — users only pay for successful results.
+**Key benefit:** Both surfaces avoid blocking users on on-chain settlement. Query responses and execute results return first, then settlement is handled asynchronously. Failed executions do not silently overcharge successful-call economics.
 </Info>
 
 ### Payment Distribution
@@ -132,7 +145,7 @@ For **Execute mode**:
 | Tool Developer | 90% |
 | Protocol Treasury | 10% |
 
-When multiple tools are used, payments are **batched into a single transaction**.
+When multiple tools are used, settlements can be **batched** (query turn batches and execute-session batches).
 
 ---
 
@@ -229,11 +242,11 @@ Each tool invocation runs inside a **sandboxed code-execution environment**.
 
 | Limit | Value | Purpose |
 |-------|-------|---------|
-| Max calls per turn | 100 | Prevent runaway loops |
+| Max calls per query turn | 100 | Prevent runaway loops in Query runtime |
 | VM timeout | 5000ms | Code execution limit |
 | **MCP execution timeout** | **~60 seconds** | Encourages pre-computed products |
 
-Every `callMcpSkill({ toolId, toolName, args })` increments an internal counter. Once `executionCount >= 100`, the platform throws an error for that turn.
+Every query-turn MCP call increments an internal counter. Once `executionCount >= 100`, the platform throws an error for that query turn.
 
 <Warning>
 **The ~60 second timeout is intentional.** This limit is enforced at the platform/client level (not by MCP itself) and serves as a quality forcing function. It encourages data brokers to build pre-computed insight products rather than raw data access tools.
@@ -258,25 +271,25 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 | Scenario | Behavior |
 |----------|----------|
 | Free tools (\$0.00) | Can be used immediately without payment |
-| Paid tools | Require a spending cap (ERC-20 allowance on ContextRouter) |
-| Multiple paid tools | Single batched settlement transaction |
-| Execution fails | Tool fees are **waived** — only model cost is settled (convenience tier) |
+| Query surface | Pay-per-response, answer-safe method gating, deferred settlement |
+| Execute surface | Per-call method pricing inside execute sessions, deferred batch settlement |
+| Unpriced execute methods | Query-only until execute pricing metadata is set |
 | Settlement fails | Retried automatically (up to 5 attempts), then platform absorbs |
 
 ---
 
 ## SDK Payment Modes
 
-The SDKs offer two distinct payment models, reflecting Context's dual role as both an API marketplace and a response marketplace:
+The SDKs expose two distinct surfaces, reflecting Context's dual role as both a response marketplace and an execution marketplace:
 
 | Mode | Endpoint | Payment Model | Settlement Timing | What You Get |
 |------|----------|---------------|-------------------|--------------|
-| **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Pay-per-request | Pre-execution (single-call flow) | Raw data from a single tool call |
+| **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Per execute call | Execute session accrual + deferred batch flush | Raw data + explicit spend envelope |
 | **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | AI-synthesized answer from the full agentic pipeline |
 
-**Execute** is for precision — you call a specific tool with specific arguments and get raw data back. One call, one payment, one result. Good for building custom pipelines.
+**Execute** is for precision — you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.
 
-**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per tool), targeted self-healing retries, completeness checks, and AI synthesis. One flat fee, curated answer. This is the same agentic pipeline that powers the client app.
+**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per query turn), targeted self-healing retries, completeness checks, and AI synthesis. One flat fee, curated answer. This is the same agentic pipeline that powers the client app.
 
 <Info>
 **Why offer both?** Different consumers have different needs. An agent building a custom trading strategy wants raw data and full control (Execute). An agent answering user questions wants curated intelligence without managing orchestration (Query). Context serves both.</Info>
