@@ -31,7 +31,7 @@ Developers register **Tools** (the marketplace listing) powered by standard Mode
 ### How It Works
 
 1. You build an MCP server exposing your data/APIs
-2. You register it as an MCP listing with a query price and optional method-level execute pricing metadata
+2. You register it as an MCP listing with a listing response price and optional method-level execute pricing metadata
 3. Query runtime selects answer-safe methods; Execute runtime selects explicitly priced execute methods
 4. You get paid in USDC on Base through deferred settlement flows (query turns and execute-session batches)
 
@@ -107,6 +107,11 @@ Context runs one marketplace with two distinct surfaces:
 - **User B (Execute):** Your app/agent is the librarian. You select methods directly and pay per execute call within a session budget.
 - **Both in one app:** SDK clients can invoke both models side-by-side.
 
+<Note>
+Compatibility: some API/SDK fields still use legacy names like `pricePerQuery`. In this rollout, Query billing semantics are listing-level **per response turn**.
+A future major release can add response-named aliases (for example, `pricePerResponse`) before deprecating legacy names.
+</Note>
+
 ---
 
 ## The Protocol (Settlement)
@@ -156,7 +161,7 @@ All tools (including free) require a minimum stake, enforced on-chain.
 | Tool Type | Minimum Stake |
 |-----------|---------------|
 | Free Tools | \$10 USDC |
-| Paid Tools | \$10 USDC or 100× query price (whichever is higher) |
+| Paid Tools | \$10 USDC or 100× listing response price (whichever is higher) |
 
 ### Stake Properties
 
@@ -242,11 +247,11 @@ Each tool invocation runs inside a **sandboxed code-execution environment**.
 
 | Limit | Value | Purpose |
 |-------|-------|---------|
-| Max calls per query turn | 100 | Prevent runaway loops in Query runtime |
+| Max calls per response turn | 100 | Prevent runaway loops in Query runtime |
 | VM timeout | 5000ms | Code execution limit |
 | **MCP execution timeout** | **~60 seconds** | Encourages pre-computed products |
 
-Every query-turn MCP call increments an internal counter. Once `executionCount >= 100`, the platform throws an error for that query turn.
+Every response-turn MCP call increments an internal counter. Once `executionCount >= 100`, the platform throws an error for that turn.
 
 <Warning>
 **The ~60 second timeout is intentional.** This limit is enforced at the platform/client level (not by MCP itself) and serves as a quality forcing function. It encourages data brokers to build pre-computed insight products rather than raw data access tools.
@@ -289,7 +294,7 @@ The SDKs expose two distinct surfaces, reflecting Context's dual role as both a 
 
 **Execute** is for precision — you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.
 
-**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per query turn), targeted self-healing retries, completeness checks, and AI synthesis. One flat fee, curated answer. This is the same agentic pipeline that powers the client app.
+**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per response turn), targeted self-healing retries, completeness checks, and AI synthesis. One flat fee, curated answer. This is the same agentic pipeline that powers the client app.
 
 <Info>
 **Why offer both?** Different consumers have different needs. An agent building a custom trading strategy wants raw data and full control (Execute). An agent answering user questions wants curated intelligence without managing orchestration (Query). Context serves both.</Info>

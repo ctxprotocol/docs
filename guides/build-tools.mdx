@@ -75,7 +75,7 @@ The builder template includes checkpoints where the AI will stop and ask for you
 ---
 
 <Info>
-**Earnings Model**: You earn **90%** of usage fees. Set a **query price** (e.g., \$0.01/response) for Query surface usage, and optionally set **method-level execute pricing** for Execute surface calls. Payment is settled automatically after successful execution flows.
+**Earnings Model**: You earn **90%** of usage fees. Set a **listing response price** (for example, \$0.01/response) for Query surface usage, and optionally set **method-level execute pricing** for Execute surface calls. Payment is settled automatically after successful execution flows.
 </Info>
 
 ---
@@ -434,8 +434,8 @@ Choose your listing economics:
 
 | Price | Use Case |
 |-------|----------|
-| **Query price: \$0.00** | Free listing usage in Query surface |
-| **Query price: \$0.01+** | Paid Query usage (per response) |
+| **Listing response price: \$0.00** | Free listing usage in Query surface |
+| **Listing response price: \$0.01+** | Paid Query usage (per response turn) |
 | **Default execute price (optional)** | Convenience input that fans out to each method's `_meta.pricing.executeUsd` |
 
 <Note>
@@ -445,6 +445,15 @@ Query fees are paid **once per chat turn**. The runtime may call methods up to 1
 <Info>
 Execute eligibility is method-level: methods without explicit `_meta.pricing.executeUsd` remain query-only in Execute discovery.
 </Info>
+
+<Tip>
+Execute pricing is usually much lower than listing response pricing because it is charged per method call. A common starting point is approximately **1/100 of your listing response price**.
+</Tip>
+
+<Note>
+Compatibility: SDK/API payloads still expose legacy field names like `price` / `pricePerQuery` for now. Their billing meaning in Query mode is listing-level **price per response turn**.
+A future major release can introduce response-named aliases (for example, `pricePerResponse`) before deprecating legacy names.
+</Note>
 
 <Warning>
 **Security requirement depends on price:**
