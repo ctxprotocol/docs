@@ -141,7 +141,34 @@ From this research, you'd identify: **"App download estimates by bundle ID"** is
 Your proposal should say: *"SensorTower charges \$5K/year. Users on Twitter report paying primarily for download estimates. Here's my tool that delivers that specific data point for \$0.10/response. Here are 3 tweets proving demand."*
 
 <Info>
-**This is the bar.** Every idea below has been evaluated against this standard. If you're pitching something not on this list, show us you've done this research.
+**This is the bar for Query-mode tools.** Every idea in the curated intelligence section has been evaluated against this standard.
+</Info>
+
+### Example: Finding an Execute-Mode Normalization Opportunity
+
+**Step 1: Search for frustrated developers**
+
+Go to [Grok](https://grok.com) and search Twitter, GitHub issues, or Reddit:
+- `"different schema" "exchange" OR "API" site:github.com`
+- `"normalize" "crypto" "API" "pain" OR "nightmare" OR "inconsistent"`
+
+**Step 2: Find the integration pain**
+
+You might find posts like:
+> *"Spent 3 days just getting Binance, Coinbase, and Kraken order book data into the same format. Every exchange returns depth differently."*
+
+> *"Why does every SEC filing parser return a completely different JSON structure? I just want balance sheet data in a consistent schema."*
+
+**Step 3: Isolate the \$0.001 method**
+
+From this research, you'd identify: **"normalized order book data across exchanges"** is the value. Build a tool where `get_orderbook("BTC/USDT", "binance")` and `get_orderbook("BTC/USDT", "kraken")` return the exact same typed schema. The developer pays fractions of a cent per call instead of building and maintaining the normalization themselves.
+
+**Step 4: Pitch with evidence**
+
+Your proposal should say: *"Developers integrating multiple exchange APIs spend days normalizing schemas. Here are 3 GitHub issues/tweets showing the pain. My tool provides unified typed data across 10 exchanges at \$0.001/call. Here's the schema."*
+
+<Info>
+**This is the bar for Execute-mode tools.** Show us the fragmented API landscape and the developers struggling with it.
 </Info>
 
 ---
@@ -314,6 +341,63 @@ Note: We're not funding weather APIs (free everywhere), basic flight tracking (F
 | **Universal Package Tracker** | Track any shipment across all carriers with unified status and delivery predictions | **A** |
 | **Domain + Brand Availability** | Check domain, social handles, AND trademark conflicts in one call. Saves hours of manual research | **A** |
 | **Business Entity Verification** | Verify business registration, good standing, and officer information across state databases | **A** |
+
+---
+
+## 🔌 Request for Builders: Execute Mode Infrastructure
+
+The ideas above are primarily **Query mode** tools — curated intelligence that replaces expensive subscriptions. But there's an equally valuable category of tools designed for **Execute mode**: normalized data infrastructure that eliminates the pain of integrating fragmented APIs.
+
+Execute-mode tools serve SDK developers whose agents iterate over structured data at ~$0.001/call. The value isn't in the analysis — it's in the **normalization, consistency, and reliability** of the data across multiple sources.
+
+<Info>
+**The evidence bar for Execute mode is different.** Instead of "show us the expensive subscription," show us the **fragmented API landscape** — the 5 different exchanges with 5 different schemas that developers currently integrate and maintain separately. If an agent builder would rather pay $0.001/call than spend a week normalizing data from multiple sources, that's a fundable tool.
+</Info>
+
+### ⚡ Crypto & DeFi Infrastructure
+
+*Replaces: integrating Binance + Coinbase + Kraken + OKX + Bybit APIs individually*
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| **Cross-Exchange Price Feed** | Unified `{ exchange, pair, price, volume, timestamp }` schema across 10+ exchanges. One method, consistent types | **S** |
+| **Order Book Aggregator** | Normalized depth data across exchanges — same schema whether it's Binance or Kraken | **A** |
+| **Multi-Chain Transaction Normalizer** | Unified transaction format across EVM chains (Ethereum, Base, Arbitrum, Polygon). Same schema, different chains | **S** |
+| **DeFi Position Normalizer** | Yield positions, LP data, and staking across Aave, Compound, Lido, etc. in a consistent format | **S** |
+| **Funding Rate Feed** | Perpetual funding rates across all major perp exchanges, normalized and comparable | **A** |
+
+### 📈 Financial Data Infrastructure
+
+*Replaces: integrating EDGAR + international filings + FRED + BLS separately*
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| **Multi-Source Financial Statements** | Balance sheet, income statement, cash flow in a consistent schema — whether the source is SEC, SEDAR, or Companies House | **S** |
+| **Economic Indicator Feed** | Normalized macro data (GDP, CPI, unemployment, rates) across FRED, BLS, ECB, and BOJ. One schema, global coverage | **S** |
+| **Corporate Events Feed** | Earnings dates, dividend announcements, splits, M&A — normalized across multiple data sources into a single event schema | **A** |
+
+### 🏢 Business & Competitive Intelligence Infrastructure
+
+*Replaces: integrating LinkedIn + Crunchbase + BuiltWith + SimilarWeb separately*
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| **Multi-Source Company Data** | Company metadata (size, funding, industry, tech stack) normalized across Crunchbase, PitchBook, LinkedIn, BuiltWith into one typed schema | **S** |
+| **Job Market Feed** | Job postings normalized across Indeed, LinkedIn, Greenhouse, Lever — consistent `{ company, role, level, location, salary_range }` per listing | **A** |
+| **Domain Intelligence Feed** | DNS records, SSL certs, WHOIS, tech stack, traffic estimates — all from one method with a consistent schema per domain | **A** |
+
+### 🛒 E-commerce & Pricing Infrastructure
+
+*Replaces: integrating Amazon + Walmart + Target + Shopify APIs separately*
+
+| Tool Idea | Description | Tier |
+|-----------|-------------|------|
+| **Multi-Retailer Price Feed** | Product pricing across Amazon, Walmart, Target in a unified `{ retailer, product, price, availability, timestamp }` schema | **S** |
+| **Review Aggregation Feed** | Product reviews normalized across retailers — same sentiment schema whether it's Amazon or Best Buy | **A** |
+
+<Note>
+**Execute-mode tools can also serve Query mode.** If you set `surface: "both"` and `queryEligible: true` in your `_meta`, the Context app can use your normalized data as a source for curated responses too. Build for Execute, unlock both revenue streams with one line of config. See [Choosing a Mode](/guides/tool-metadata#choosing-a-mode).
+</Note>
 
 ---
 
