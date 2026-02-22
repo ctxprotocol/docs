@@ -78,18 +78,20 @@ Monetize your data **without building a frontend**. Turn the insights people pay
 
 Build your own agents using the Context Protocol as your **infrastructure layer**.
 
+Every API you integrate means reading docs, managing auth keys, handling rate limits, parsing a unique response schema, and maintaining it when they change. Multiply that by 5 data sources and you've lost a week before writing any business logic.
+
 <Steps>
-  <Step title="Stop Integrating APIs">
-    Instead of integrating CoinGecko, Tavily, and Weather APIs separately, just install `@ctxprotocol/sdk` (TypeScript) or `ctxprotocol` (Python).
+  <Step title="One SDK, Hundreds of APIs">
+    Instead of integrating CoinGecko, Tavily, and Weather APIs separately, just install `@ctxprotocol/sdk` (TypeScript) or `ctxprotocol` (Python). One auth token, one interface, consistent typed schemas.
   </Step>
   <Step title="Dynamic Discovery">
-    Your agent can search our marketplace at runtime: `client.discovery.search("gas prices")`.
+    Your agent can search the marketplace at runtime: `client.discovery.search("gas prices")`. It finds tools it didn't know existed and uses them without human intervention.
   </Step>
   <Step title="Schema Inspection">
-    The API exposes full Input/Output schemas, allowing your LLM to self-construct arguments and execute tools it has never seen before.
+    Every tool exposes full Input/Output schemas. Your LLM can self-construct arguments and execute tools it has never seen before — no hardcoded integrations.
   </Step>
-  <Step title="Zero-Ops">
-    We host the connections. You just send JSON and get results.
+  <Step title="Session Budgets, Not Blank Checks">
+    Give your agent a spending limit (`maxSpendUsd: "2.00"`) and let it explore. You control exactly how much it can spend per session.
   </Step>
 </Steps>
 

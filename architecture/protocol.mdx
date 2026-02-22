@@ -7,12 +7,13 @@ description: "How the marketplace, settlement layer, and safety model work toget
 
 Context is built on a **code-execution paradigm**. Instead of rigid "tool calling" schemas, the runtime can plan and execute tool interactions using typed MCP metadata, then settle economics according to the active mode (Query or Execute).
 
-The architecture consists of four layers:
+The architecture consists of five layers:
 
 1. **The Marketplace** — Supply of tools from developers
 2. **The Agent** — Demand from users and developers via Query + Execute modes
-3. **The Protocol** — Settlement layer on Base
-4. **Context Injection** — User data for personalized tools
+3. **The Handshake Layer** — Secure user-approval flow for signatures, transactions, and OAuth ([guide](/guides/handshake-architecture))
+4. **The Protocol** — Settlement layer on Base
+5. **Context Injection** — User data for personalized tools
 
 ---
 
