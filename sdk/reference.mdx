@@ -51,28 +51,6 @@ Before using the API, complete setup at [ctxprotocol.com](https://ctxprotocol.co
 
 ---
 
-## Two SDK Modes
-
-The SDK offers two payment models to serve different use cases:
-
-| Mode | Method | Payment Model | Settlement Shape | Use Case |
-|------|--------|---------------|------------------|----------|
-| **Execute** | `client.tools.execute()` | Per execute call | Session accrual + deferred batch flush | Deterministic pipelines, raw outputs, explicit spend envelopes |
-| **Query** | `client.query.run()` | Pay-per-response | Deferred post-response | Complex questions, multi-tool synthesis, curated intelligence |
-
-<Info>
-**Which should I use?** Use **Query** when you want a curated answer — Context is the librarian and handles answer-safe tool discovery/orchestration (up to 100 MCP calls per response turn). Use **Execute** when your app/agent is the librarian and you want explicit method pricing + session-budgeted spend control.
-</Info>
-
-<Note>
-Mixed listings are first-class: one listing can expose methods to both surfaces. Methods without explicit execute pricing remain discoverable for Query but are excluded from strict Execute discovery when `requireExecutePricing=true`.
-</Note>
-
-<Note>
-Compatibility: payload fields like `price` and `pricePerQuery` are kept for backward compatibility. In Query mode, they represent listing-level **price per response turn**.
-A future major release can add response-named aliases (for example, `pricePerResponse`) before deprecating legacy names.
-</Note>
-
 ## Quick Start
 
 ```typescript
@@ -82,11 +60,37 @@ const client = new ContextClient({
   apiKey: "sk_live_...",
 });
 
-// Query surface (pay-per-response)
 const answer = await client.query.run("What are the top whale movements on Base?");
 console.log(answer.response);
+```
 
-// Execute surface (explicit execute pricing + session budget)
+<Info>
+**Want per-call pricing and spending limits?** The SDK also supports [Execute mode](#tools-execute-mode) for direct method calls inside session budgets. See [Two SDK Modes](#two-sdk-modes) below.
+</Info>
+
+---
+
+## Two SDK Modes
+
+The SDK offers two payment models:
+
+| Mode | Method | Payment Model | Use Case |
+|------|--------|---------------|----------|
+| **Query** | `client.query.run()` | Pay-per-response | Complex questions, multi-tool synthesis, curated intelligence |
+| **Execute** | `client.tools.execute()` | Per call (with spending limit) | Deterministic pipelines, raw outputs, explicit cost control |
+
+<Info>
+**You have access to both modes — pick the one that fits your use case.**
+
+- Use **Query** (`client.query.run()`) when you want a curated answer — Context is the librarian and handles discovery/orchestration (up to 100 MCP calls per response turn). Pay-per-response (~$0.10).
+- Use **Execute** (`client.tools.execute()`) when your app/agent is the librarian and you want per-call pricing with spending limits (~$0.001/call).
+
+Most developers start with Query and add Execute later for specific pipelines that need raw data or explicit cost control. You can use both in the same application.
+</Info>
+
+### Execute Quick Start
+
+```typescript
 const executeTools = await client.discovery.search({
   query: "gas prices",
   mode: "execute",
@@ -107,6 +111,15 @@ const result = await client.tools.execute({
 console.log(result.result);
 console.log(result.session); // methodPrice, spent, remaining, maxSpend, status...
 ```
+
+<Note>
+Mixed listings are first-class: one listing can expose methods to both modes. Methods without explicit execute pricing remain discoverable for Query but are excluded from Execute discovery when `requireExecutePricing=true`.
+</Note>
+
+<Note>
+Compatibility: payload fields like `price` and `pricePerQuery` are kept for backward compatibility. In Query mode, they represent listing-level **price per response turn**.
+A future major release can add response-named aliases (for example, `pricePerResponse`) before deprecating legacy names.
+</Note>
 
 ---
 
@@ -141,7 +154,7 @@ const client = new ContextClient({
 #### `client.discovery.search(query, limit?)`
 #### `client.discovery.search(options)`
 
-Search for tools matching a query string, or pass an options object for surface-aware filtering.
+Search for tools matching a query string, or pass an options object for mode-aware filtering.
 
 **Parameters (string signature):**
 | Parameter | Type | Required | Description |
@@ -155,7 +168,7 @@ Search for tools matching a query string, or pass an options object for surface-
 | `query` | `string` | No | Search query (empty for featured-style searches) |
 | `limit` | `number` | No | Maximum results to return |
 | `mode` | `"query" \| "execute"` | No | Discovery mode with billing semantics |
-| `surface` | `"answer" \| "execute" \| "both"` | No | Method surface filter |
+| `surface` | `"answer" \| "execute" \| "both"` | No | Method mode filter |
 | `queryEligible` | `boolean` | No | Require methods that are query-safe |
 | `requireExecutePricing` | `boolean` | No | Require explicit method execute pricing |
 | `excludeLatencyClasses` | `("instant" \| "fast" \| "slow" \| "streaming")[]` | No | Exclude by latency class |
@@ -184,7 +197,7 @@ Get featured/popular tools.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `limit` | `number` | No | Maximum results to return |
-| `options` | `Omit<SearchOptions, "query" \| "limit">` | No | Optional mode/surface filters |
+| `options` | `Omit<SearchOptions, "query" \| "limit">` | No | Optional mode filters |
 
 **Returns:** `Promise<Tool[]>`
 
@@ -198,11 +211,11 @@ const featuredExecute = await client.discovery.getFeatured(5, {
 
 ---
 
-### Tools (Execute Surface)
+### Tools (Execute Mode)
 
 #### `client.tools.execute(options)`
 
-Execute a single tool method. Execute calls can run inside a session budget (`maxSpendUsd`) for deferred batch settlement.
+Execute a single tool method. Execute calls can run inside a session budget (`maxSpendUsd`) with automatic payment after delivery.
 
 **Parameters:**
 | Option | Type | Required | Description |
@@ -272,7 +285,7 @@ The Query API is Context's **response marketplace** — instead of buying raw AP
 
 #### `client.query.run(options)`
 
-Run an agentic query. The server discovers answer-safe tools, executes the full pipeline (up to 100 MCP calls per response turn as a runtime safety cap), applies model-aware mediator/data budgeting, and returns an AI-synthesized answer. Query billing remains pay-per-response with deferred settlement.
+Run an agentic query. The server discovers query-eligible tools, executes the full pipeline (up to 100 MCP calls per response turn as a runtime safety cap), applies model-aware mediator/data budgeting, and returns an AI-synthesized answer. Query billing is pay-per-response with automatic payment after delivery.
 
 **Parameters:**
 | Option | Type | Required | Description |
@@ -398,7 +411,7 @@ interface McpTool {
   description: string;
   inputSchema?: Record<string, unknown>;   // JSON Schema for arguments
   outputSchema?: Record<string, unknown>;  // JSON Schema for response
-  _meta?: McpToolMeta;                     // surface/eligibility/pricing/context metadata
+  _meta?: McpToolMeta;                     // mode/eligibility/pricing/context metadata
   executeEligible?: boolean;               // derived discovery field
   executePriceUsd?: string | null;         // explicit execute price visibility
 }
@@ -430,7 +443,7 @@ interface McpToolMeta {
 
 ---
 
-### ExecutionResult (Execute Surface)
+### ExecutionResult (Execute Mode)
 
 ```typescript
 interface ExecutionResult<T = unknown> {
@@ -715,7 +728,7 @@ if (isProtectedMcpMethod(body.method)) {
 Context supports two settlement timings:
 
 1. **Query mode (`client.query.*`)** uses deferred settlement after the response is delivered
-2. **Execute mode (`client.tools.execute`)** accrues per-call method spend into execute sessions and flushes in deferred batches
+2. **Execute mode (`client.tools.execute`)** accrues per-call method spend into execute sessions with automatic batch payment
 3. In both modes, spending caps are enforced via ContextRouter allowance checks
 4. **90%** goes to the tool developer, **10%** goes to the protocol
 

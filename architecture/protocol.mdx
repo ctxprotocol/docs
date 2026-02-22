@@ -1,16 +1,16 @@
 ---
 title: "Protocol Architecture"
-description: "How the dual-surface marketplace, settlement layer, and safety model work together"
+description: "How the marketplace, settlement layer, and safety model work together"
 ---
 
 ## Overview
 
-Context is built on a **code-execution paradigm**. Instead of rigid "tool calling" schemas, the runtime can plan and execute tool interactions using typed MCP metadata, then settle economics according to the active surface.
+Context is built on a **code-execution paradigm**. Instead of rigid "tool calling" schemas, the runtime can plan and execute tool interactions using typed MCP metadata, then settle economics according to the active mode (Query or Execute).
 
 The architecture consists of four layers:
 
 1. **The Marketplace** — Supply of tools from developers
-2. **The Agent** — Demand from users and developers across Query + Execute surfaces
+2. **The Agent** — Demand from users and developers via Query + Execute modes
 3. **The Protocol** — Settlement layer on Base
 4. **Context Injection** — User data for personalized tools
 
@@ -26,13 +26,13 @@ Developers register **Tools** (the marketplace listing) powered by standard Mode
 |------|------------|
 | **Tool** | The marketplace listing (what users see in discovery/search) |
 | **Method** | A concrete MCP method (`tools/call`) exposed under a listing |
-| **Surface** | Where a method is eligible: `answer`, `execute`, or `both` |
+| **Mode** | Where a method is eligible: `answer`, `execute`, or `both` (set via `_meta.surface`) |
 
 ### How It Works
 
 1. You build an MCP server exposing your data/APIs
 2. You register it as an MCP listing with a listing response price and optional method-level execute pricing metadata
-3. Query runtime selects answer-safe methods; Execute runtime selects explicitly priced execute methods
+3. Query runtime selects query-eligible methods; Execute runtime selects methods with explicit per-call pricing
 4. You get paid in USDC on Base through deferred settlement flows (query turns and execute-session batches)
 
 ---
@@ -101,7 +101,7 @@ When a user asks a complex question (e.g., *"Is it profitable to arb Uniswap vs 
 
 ## The Librarian Model (Canonical)
 
-Context runs one marketplace with two distinct surfaces:
+Context runs one marketplace with two modes:
 
 - **User A (Query):** Context is the librarian. You ask a question and pay once for a curated response.
 - **User B (Execute):** Your app/agent is the librarian. You select methods directly and pay per execute call within a session budget.
@@ -116,10 +116,10 @@ A future major release can add response-named aliases (for example, `pricePerRes
 
 ## The Protocol (Settlement)
 
-All value flows through `ContextRouter.sol` on Base, with surface-specific settlement semantics:
+All value flows through `ContextRouter.sol` on Base, with mode-specific settlement semantics:
 
 - **Query mode (`/api/v1/query`)** keeps deferred settlement after the response is delivered.
-- **Execute mode (`/api/v1/tools/execute`)** uses execute sessions (`maxSpendUsd`) with deferred batch settlement flushes.
+- **Execute mode (`/api/v1/tools/execute`)** uses execute sessions (`maxSpendUsd`) with automatic payment in deferred batches.
 
 ### How Settlement Works
 
@@ -140,7 +140,7 @@ For **Execute mode**:
 5. Session responses expose `methodPrice`, `spent`, `remaining`, and `maxSpend`
 
 <Info>
-**Key benefit:** Both surfaces avoid blocking users on on-chain settlement. Query responses and execute results return first, then settlement is handled asynchronously. Failed executions do not silently overcharge successful-call economics.
+**Key benefit:** Both modes avoid blocking users on on-chain settlement. Query responses and execute results return first, then settlement is handled asynchronously. Failed executions do not silently overcharge successful-call economics.
 </Info>
 
 ### Payment Distribution
@@ -276,9 +276,9 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 | Scenario | Behavior |
 |----------|----------|
 | Free tools (\$0.00) | Can be used immediately without payment |
-| Query surface | Pay-per-response (~\$0.10), answer-safe method gating, up to 100 MCP calls per turn, deferred settlement |
-| Execute surface | Per-call method pricing (~\$0.001) inside execute sessions, deferred batch settlement |
-| Unpriced execute methods | **Query-only** — invisible on Execute surface until `_meta.pricing.executeUsd` is set |
+| Query mode | Pay-per-response (~\$0.10), query-eligible method selection, up to 100 MCP calls per turn, automatic payment after delivery |
+| Execute mode | Per-call method pricing (~\$0.001) inside execute sessions, automatic payment in deferred batches |
+| Unpriced execute methods | **Query-only** — invisible in Execute mode until `_meta.pricing.executeUsd` is set |
 | Settlement fails | Retried automatically (up to 5 attempts), then platform absorbs |
 
 <Info>
@@ -286,18 +286,18 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 </Info>
 
 <Warning>
-**Execute surface gating:** Methods without explicit `_meta.pricing.executeUsd` do not appear in SDK-level Execute discovery. They remain usable for Query only. Contributors must set execute pricing (either via the contribute form or in MCP server `_meta`) to unlock Execute surface visibility. See [Tool Metadata](/guides/tool-metadata#pricing--surface-eligibility) for configuration details.
+**Execute mode gating:** Methods without explicit `_meta.pricing.executeUsd` do not appear in SDK-level Execute discovery. They remain usable in Query mode only. Contributors must set execute pricing (either via the contribute form or in MCP server `_meta`) to unlock Execute visibility. See [Tool Metadata](/guides/tool-metadata#pricing--execute-mode-eligibility) for configuration details.
 </Warning>
 
 ---
 
 ## SDK Payment Modes
 
-The SDKs expose two distinct surfaces, reflecting Context's dual role as both a response marketplace and an execution marketplace:
+The SDKs expose two modes, reflecting Context's role as both a response marketplace and an execution marketplace:
 
 | Mode | Endpoint | Payment Model | Settlement Timing | What You Get |
 |------|----------|---------------|-------------------|--------------|
-| **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Per execute call | Execute session accrual + deferred batch flush | Raw data + explicit spend envelope |
+| **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Per execute call | Session accrual + automatic batch payment | Raw data + explicit spending limit |
 | **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | AI-synthesized answer from the full agentic pipeline |
 
 **Execute** is for precision — you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.

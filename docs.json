@@ -27,27 +27,37 @@
           {
             "group": "Overview",
             "pages": [
-              "introduction",
-              "architecture/protocol"
+              "introduction"
             ]
           },
           {
-            "group": "Marketplace",
+            "group": "Build a Tool",
             "pages": [
               "guides/quickstart",
               "guides/build-tools",
               "guides/tool-metadata",
-              "guides/troubleshooting",
               "guides/handshake-architecture",
-              "grants"
+              "guides/troubleshooting"
             ]
           },
           {
-            "group": "Universal SDK",
+            "group": "Use the SDK",
             "pages": [
               "sdk/agentic-pattern",
               "sdk/reference",
               "sdk/python-reference"
+            ]
+          },
+          {
+            "group": "Earn Grants",
+            "pages": [
+              "grants"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "architecture/protocol"
             ]
           }
         ]

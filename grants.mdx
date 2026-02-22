@@ -5,11 +5,11 @@ description: "$10,000 Grant Program - Build MCP tools, earn upfront grants + ong
 
 # 💰 Become a Data Broker
 
-**What \$500/year subscription could YOUR tool replace for \$0.10/response?**
+**What \$500/year subscription could YOUR tool replace for \$0.10/response? What fragmented API mess could YOUR tool normalize for \$0.001/call?**
 
-Bloomberg. SensorTower. SEMrush. ZoomInfo. PitchBook. These companies gatekeep data behind enterprise contracts. You can unbundle them.
+Bloomberg. SensorTower. SEMrush. ZoomInfo. PitchBook. These companies gatekeep data behind enterprise contracts. You can unbundle them — as curated intelligence for the Context app, as normalized data for SDK developers, or both.
 
-Context Protocol is a decentralized marketplace where AI agents pay for data. Build an MCP tool that delivers valuable insights, and you earn **90% of usage fees** (Query responses and eligible Execute calls).
+Context Protocol is a decentralized marketplace where AI agents pay for data. Build an MCP tool that delivers value, and you earn **90% of usage fees** (Query responses and eligible Execute calls).
 
 <CardGroup cols={2}>
   <Card title="Apply Now" icon="rocket" href="https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform">
@@ -21,7 +21,10 @@ Context Protocol is a decentralized marketplace where AI agents pay for data. Bu
 </CardGroup>
 
 <Info>
-**🎯 North Star:** We fund MCP tools that unbundle curated data sources people currently pay for via subscriptions. If someone is paying \$500/year for it today, your tool can deliver it for \$0.10/response.
+**🎯 North Star:** We fund MCP tools that deliver data people currently overpay for. That means two things:
+
+- **Curated intelligence (Query mode):** Unbundle \$500/year subscriptions into \$0.10/response insights — Context is the librarian, your tool provides the analysis.
+- **Normalized data infrastructure (Execute mode):** Replace fragmented APIs with clean, typed, consistent data endpoints at \$0.001/call — the developer's agent is the librarian, your tool provides the building blocks.
 </Info>
 
 <Tip>
@@ -33,12 +36,12 @@ Context Protocol is a decentralized marketplace where AI agents pay for data. Bu
 
 We reject proposals that:
 
-- **Return raw data without curation**: Public APIs are fine as data sources, but we're not paying for JSON wrappers. Add the analysis, labeling, scoring, or synthesis that makes the data actionable. That's what premium subscriptions charge for.
+- **Wrap a single public API without adding value**: Calling CoinGecko and returning the JSON isn't a product. For Query mode, add analysis, scoring, or synthesis. For Execute mode, normalize across multiple sources into a consistent typed schema — that's the value.
 - **Chase dead or saturated markets**: Meme coin tooling, yield aggregators, and rug checkers had their moment. The alpha is gone.
 - **Compete with dominant free alternatives**: If Semantic Scholar, Etherscan, or Google News already does it for free, your tool needs a 10x differentiated angle.
-- **Lack evidence of an expensive subscription**: "This would be useful" isn't enough. Show us the \$500/year subscription people are actually paying for.
+- **Lack evidence of demand**: "This would be useful" isn't enough. Show us the expensive subscription people are paying for (Query tools) or the fragmented APIs developers are struggling to normalize (Execute tools).
 
-**The bar:** Can you find real Twitter threads, forum posts, or Reddit threads of people complaining or evangelising about paying for this specific data? If not, don't apply.
+**The bar:** Can you find real Twitter threads, forum posts, or Reddit threads of people complaining or evangelising about paying for this specific data — or developers complaining about integrating multiple inconsistent APIs for it? If not, don't apply.
 </Warning>
 
 ---
@@ -60,30 +63,43 @@ We're allocating **\$10,000 USD** to bootstrap the supply side of the Context Ma
 
 ### What Makes a Tier S Tool?
 
-We don't pay for raw data dumps. We pay for **answers**.
+It depends on who you're building for.
 
-| Feature | Raw Data (Tier B) | Curated Intelligence (Tier S) |
-|---------|-------------------|-------------------------------|
+**For Query mode** (Context is the librarian — \$0.10/response):
+
+We pay for **answers**, not raw data dumps. Tier S Query tools do the heavy lifting so the AI can synthesize immediately.
+
+| Feature | Raw Dump (❌) | Curated Intelligence (✅) |
+|---------|--------------|--------------------------|
 | **Crypto** | "Here's the transaction list" | "Top 5 whales accumulating this token right now" |
 | **Finance** | "Here's the SEC filing PDF" | "Key risk factors extracted with sentiment score" |
 | **E-commerce** | "Here are Amazon search results" | "Estimated monthly revenue: \$47K, trending up 23%" |
 | **Competitive Intel** | "Here's their homepage HTML" | "Tech stack: Stripe, Vercel, Segment. 2.3M monthly visitors" |
 
-**Tier S tools do the heavy lifting so the AI can act immediately.**
+**For Execute mode** (developer's agent is the librarian — \$0.001/call):
+
+We pay for **normalized, typed, reliable data** that an agent can iterate over. Tier S Execute tools eliminate the pain of integrating fragmented APIs.
+
+| Feature | Single API Wrapper (❌) | Normalized Data Product (✅) |
+|---------|------------------------|------------------------------|
+| **Crypto** | "Here's Binance prices" | "Cross-exchange prices in unified `{ exchange, pair, price, volume }` schema" |
+| **Finance** | "Here's one SEC filing" | "Parsed 10-K/10-Q with structured metrics, comparable across companies" |
+| **E-commerce** | "Here's one retailer's data" | "Product pricing across Amazon, Walmart, Target in consistent format" |
+| **Competitive Intel** | "Here's one data source" | "Tech stack + traffic + hiring signals normalized per domain" |
 
 ---
 
 ### 🦄 Tier S: \$1,000 + Revenue Share
 
-**High-value tools that replace expensive subscriptions.**
+**High-value tools that replace expensive subscriptions or fragmented API integrations.**
 
-These unlock data people currently pay \$500–\$20,000/year for. Complex pipelines, novel analysis, or hard-to-access sources.
+For Query mode: complex pipelines, novel analysis, or hard-to-access sources that unlock data people currently pay \$500–\$20,000/year for. For Execute mode: normalized data infrastructure across multiple sources that eliminates painful multi-API integration for agent builders.
 
 ### 🛠️ Tier A: \$250-\$500 + Revenue Share
 
-**High-utility tools agents query frequently.**
+**High-utility tools agents use frequently.**
 
-Reliable, well-documented tools that solve common needs. Think "best-in-class API wrapper with smart curation."
+For Query mode: reliable, well-documented tools with smart curation. For Execute mode: well-typed, single-source data endpoints with consistent schemas and good coverage.
 
 ### 🚀 Tier B: Revenue Share Only
 
@@ -132,7 +148,7 @@ Your proposal should say: *"SensorTower charges \$5K/year. Users on Twitter repo
 
 ## 📋 Request for Builders (RFB)
 
-We're actively funding tools across these verticals. These ideas target **specific features of expensive subscriptions**, not commodity data. If you have a novel idea with evidence of an expensive paywall, pitch it.
+We're actively funding tools across these verticals. These ideas target **specific features of expensive subscriptions** (Query mode) and **fragmented data that needs normalization** (Execute mode), not commodity data. If you have a novel idea with evidence of demand, pitch it.
 
 ---
 
@@ -182,7 +198,9 @@ Nansen's value isn't rug checking or gas prices. It's **wallet labeling, smart m
 | **Wallet Attribution** | Label unknown wallets: Is this a CEX? A fund? A known trader? Cross-reference patterns | **S** |
 
 <Note>
-**What we're NOT funding in crypto:** Honeypot detectors, gas oracles, yield aggregators, bridge routers, funding rate scanners. These are already solved by free tools (DeFiLlama, CoinGecko, exchange APIs) with no premium tier worth unbundling. The \$2.5K/year Nansen subscription exists because of *wallet intelligence*. That's where the value is.
+**What we're NOT funding in crypto:** Honeypot detectors, gas oracles, yield aggregators, bridge routers. These are already solved by free tools (DeFiLlama, CoinGecko, exchange APIs) with no premium tier worth unbundling.
+
+**What IS worth building:** For Query mode, wallet intelligence is the premium — that's what the \$2.5K/year Nansen subscription pays for. For Execute mode, cross-exchange normalized data (prices, order books, funding rates in a unified schema you build and maintain) is valuable infrastructure that eliminates the pain of integrating each exchange API separately.
 </Note>
 
 ---
@@ -358,7 +376,7 @@ Note: We're not funding weather APIs (free everywhere), basic flight tracking (F
   <Step title="Get Paid">
     Once verified, you're live on the marketplace!
     - Update your listing response price from \$0 to your desired response fee
-    - Optionally enable execute pricing for methods you want in Execute surface
+    - Optionally enable execute pricing for methods you want in Execute mode
     - Agents discover and use your tool across Query + Execute
     - You earn 90% of eligible fees in USDC
     - Grant payment follows the schedule below

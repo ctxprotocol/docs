@@ -35,30 +35,7 @@ description: "The Monetization Layer for MCP — Connect Users, Builders, and De
 - 🔌 **One Interface, Everything:** Stop integrating APIs one by one. Use a single SDK to access any tool in the marketplace.
 - 🧠 **Zero-Ops:** We're a gateway to the best MCP tools. Just send the JSON and get the result.
 - ⚡️ **Agentic Discovery:** Your Agent can search the marketplace at runtime to find tools it didn't know it needed.
-- 💸 **Dual-Surface Economics:** Use Query for pay-per-response intelligence or Execute for session-budgeted method calls.
-
----
-
-## Who Is This SDK For?
-
-| Role | What You Use |
-|------|--------------|
-| **AI Agent Developer** | `@ctxprotocol/sdk` (TypeScript) or `ctxprotocol` (Python) — Query for curated answers or Execute with explicit method pricing + session budgets |
-| **Tool Contributor (Data Broker)** | `@modelcontextprotocol/sdk` + `@ctxprotocol/sdk` — Standard MCP server + security middleware |
-
-<Info>
-**For AI Agent Developers:** Use the SDK to search one marketplace with two surfaces:
-- **Query surface** for curated answers (pay-per-response)
-- **Execute surface** for deterministic method calls (per-call pricing inside execute sessions)
-
-**For Tool Contributors:** You need **both** SDKs:
-- `@modelcontextprotocol/sdk` — Build your MCP server (tools, schemas, handlers)
-- `@ctxprotocol/sdk` — Secure your endpoint with `createContextMiddleware()` to verify requests
-</Info>
-
-<Info>
-**Tool contributors wrapping rate-limited APIs:** publish `_meta.rateLimit` hints so Context can pace planner/runtime calls safely. Start with [Tool Metadata](/guides/tool-metadata#rate-limit-hints).
-</Info>
+- 💸 **Simple Pricing:** Pay per response for curated intelligence, or pay per call for raw data — your choice.
 
 ---
 
@@ -66,22 +43,7 @@ description: "The Monetization Layer for MCP — Connect Users, Builders, and De
 
 Context is not just a chatbot — it's an **economic engine for the AI era**. We connect three distinct groups in a decentralized marketplace for [Model Context Protocol (MCP)](https://modelcontextprotocol.io) tools.
 
-Build a standard MCP server, paste your endpoint URL, set a listing response price, optionally add method-level execute pricing, and get paid in USDC when agents use your tool.
-
----
-
-## One Marketplace, Two Surfaces
-
-Listings can expose methods to one or both surfaces using method metadata (`_meta.surface`):
-
-| Surface | Who is the librarian? | Billing model | Method eligibility |
-|---------|------------------------|---------------|--------------------|
-| **Query** | Context app/runtime | Pay-per-response | `surface` is `answer` or `both` and `queryEligible=true` |
-| **Execute** | Your app/agent | Per execute call (session-budgeted) | Explicit method execute pricing (`_meta.pricing.executeUsd`) |
-
-<Info>
-Mixed listings are supported immediately. A listing can have some methods for Query and others for Execute. Methods without explicit execute pricing remain query-only.
-</Info>
+Build a standard MCP server, paste your endpoint URL, set a price, and get paid in USDC when agents use your tool.
 
 ---
 
@@ -147,28 +109,8 @@ import { ContextClient } from "@ctxprotocol/sdk";
 
 const client = new ContextClient({ apiKey: "sk_live_..." });
 
-// Query surface: curated intelligence, pay-per-response
 const answer = await client.query.run("What are the top whale movements on Base?");
-
-// Execute surface: explicit execute pricing + session budget
-const executeTools = await client.discovery.search({
-  query: "ethereum gas prices",
-  mode: "execute",
-  surface: "execute",
-  requireExecutePricing: true,
-});
-
-const session = await client.tools.startSession({ maxSpendUsd: "2.00" });
-const method = executeTools[0]?.mcpTools?.[0];
-if (!method) throw new Error("No execute method available");
-
-const result = await client.tools.execute({
-  toolId: executeTools[0].id,
-  toolName: method.name,
-  args: { chainId: 1 },
-  sessionId: session.session.sessionId ?? undefined,
-});
-console.log(result.session); // { methodPrice, spent, remaining, maxSpend, ... }
+console.log(answer.response);
 ```
 
 ```python Python
@@ -177,32 +119,16 @@ from ctxprotocol import ContextClient
 
 async def main():
     async with ContextClient(api_key="sk_live_...") as client:
-        # Query surface
         answer = await client.query.run("What are the top whale movements on Base?")
-
-        # Execute surface: discover execute-priced methods
-        tools = await client.discovery.search(
-            "ethereum gas prices",
-            mode="execute",
-            surface="execute",
-            require_execute_pricing=True,
-        )
-
-        session = await client.tools.start_session(max_spend_usd="2.00")
-        method = tools[0].mcp_tools[0]
-
-        # Execute with session budget envelope
-        result = await client.tools.execute(
-            tool_id=tools[0].id,
-            tool_name=method.name,
-            args={"chainId": 1},
-            session_id=session.session.session_id,
-        )
-        print(result.session)  # method_price, spent, remaining, max_spend, ...
+        print(answer.response)
 
 asyncio.run(main())
 ```
 </CodeGroup>
+
+<Info>
+**Want more control?** The SDK also supports [Execute mode](/sdk/reference#tools-execute-mode) for per-call pricing with spending limits — ideal for custom agent pipelines. See the [Agentic Pattern](/sdk/agentic-pattern) guide or the [SDK Reference](/sdk/reference).
+</Info>
 
 <CardGroup cols={3}>
   <Card title="Users" icon="user" href="https://ctxprotocol.com">
@@ -215,5 +141,3 @@ asyncio.run(main())
     Integrate the SDK into your agents
   </Card>
 </CardGroup>
-
-

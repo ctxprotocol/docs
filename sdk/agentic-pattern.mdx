@@ -5,7 +5,7 @@ description: "How to build autonomous AI agents using the Discovery → Schema �
 
 ## Overview
 
-The most powerful way to use the Context SDK is to **let your LLM do the driving**. Context provides one marketplace with two surfaces (Query + Execute), and there are two primary approaches:
+The most powerful way to use the Context SDK is to **let your LLM do the driving**. Context provides one marketplace with two modes (Query + Execute), and there are two primary approaches:
 
 ### Option 1: Query API (Recommended)
 
@@ -23,11 +23,11 @@ print(answer.response)  # AI-synthesized answer, tools handled server-side
 ```
 </CodeGroup>
 
-The server discovers answer-safe tools, executes the full agentic pipeline (up to 100 MCP calls per response turn), handles retries and completeness checks, and returns a curated answer — all for one flat fee. See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
+The server discovers query-eligible tools, executes the full agentic pipeline (up to 100 MCP calls per response turn), handles retries and completeness checks, and returns a curated answer — all for one flat fee. See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
 
 ### Option 2: Build Your Own Loop
 
-If you want full control over tool selection, argument construction, and result synthesis, follow the **Discovery → Schema → Execution** loop below (typically on the Execute surface with session budgets).
+If you want full control over tool selection, argument construction, and result synthesis, follow the **Discovery → Schema → Execution** loop below (typically in Execute mode with spending limits).
 
 <Info>
 This pattern enables your agent to find and use tools it has **never seen before** — true autonomous capability discovery at runtime.
@@ -78,7 +78,7 @@ const tools = await client.discovery.search({
 - Returns tools matching the semantic intent of the query
 - Each tool includes its name, description, price, and available methods
 
-For deterministic execution pipelines, use Execute-surface filters:
+For deterministic execution pipelines, use Execute mode filters:
 
 ```typescript
 const executeTools = await client.discovery.search({
