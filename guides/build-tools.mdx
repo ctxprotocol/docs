@@ -430,7 +430,7 @@ Deploy to any platform: Vercel, Railway, Render, AWS, or your own infrastructure
 
 ## Step 4: Set a Price
 
-Choose your listing economics:
+Context runs one marketplace with two surfaces. Your pricing determines where your tool appears:
 
 | Price | Use Case |
 |-------|----------|
@@ -442,12 +442,14 @@ Choose your listing economics:
 Query fees are paid **once per chat turn**. The runtime may call methods up to 100 times within that turn as a safety-capped orchestration limit.
 </Note>
 
-<Info>
-Execute eligibility is method-level: methods without explicit `_meta.pricing.executeUsd` remain query-only in Execute discovery.
-</Info>
+<Warning>
+**Execute Surface Gating Rule:** Methods without explicit `_meta.pricing.executeUsd` are **invisible** on the Execute surface. SDK consumers cannot discover or call them. This is a hard platform gate — if you want SDK-level execute revenue, you must set execute pricing.
+
+Set a default execute price in the contribute form (fans out to all methods), or declare `_meta.pricing.executeUsd` per method in your MCP server code. See [Tool Metadata](/guides/tool-metadata#pricing--surface-eligibility) for the full metadata reference.
+</Warning>
 
 <Tip>
-Execute pricing is usually much lower than listing response pricing because it is charged per method call. A common starting point is approximately **1/100 of your listing response price**.
+Execute pricing is usually much lower than listing response pricing because it is charged per method call. A common starting point is approximately **1/100 of your listing response price** (e.g., \$0.10 response → \$0.001 per execute call).
 </Tip>
 
 <Note>
@@ -698,10 +700,23 @@ app.use(express.json());
 // Secure endpoint with Context middleware
 app.use("/mcp", createContextMiddleware());
 
-// Define tools with outputSchema
+// Define tools with outputSchema and _meta
 const TOOLS = [{
   name: "get_gas_price",
   description: "Get current gas prices",
+  _meta: {
+    surface: "both",
+    queryEligible: true,
+    latencyClass: "instant",
+    pricing: {
+      executeUsd: "0.001",
+    },
+    rateLimit: {
+      maxRequestsPerMinute: 60,
+      cooldownMs: 1000,
+      maxConcurrency: 5,
+    },
+  },
   inputSchema: {
     type: "object",
     properties: {

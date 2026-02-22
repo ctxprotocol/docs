@@ -276,10 +276,18 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 | Scenario | Behavior |
 |----------|----------|
 | Free tools (\$0.00) | Can be used immediately without payment |
-| Query surface | Pay-per-response, answer-safe method gating, deferred settlement |
-| Execute surface | Per-call method pricing inside execute sessions, deferred batch settlement |
-| Unpriced execute methods | Query-only until execute pricing metadata is set |
+| Query surface | Pay-per-response (~\$0.10), answer-safe method gating, up to 100 MCP calls per turn, deferred settlement |
+| Execute surface | Per-call method pricing (~\$0.001) inside execute sessions, deferred batch settlement |
+| Unpriced execute methods | **Query-only** — invisible on Execute surface until `_meta.pricing.executeUsd` is set |
 | Settlement fails | Retried automatically (up to 5 attempts), then platform absorbs |
+
+<Info>
+**Why execute pricing is ~1/100 of response pricing:** A single Query response can invoke up to 100 method calls per turn, all covered by one flat response fee. When SDK consumers pay per-execute-call, the per-call price must be proportionally lower. A common starting point is execute price = listing response price / 100.
+</Info>
+
+<Warning>
+**Execute surface gating:** Methods without explicit `_meta.pricing.executeUsd` do not appear in SDK-level Execute discovery. They remain usable for Query only. Contributors must set execute pricing (either via the contribute form or in MCP server `_meta`) to unlock Execute surface visibility. See [Tool Metadata](/guides/tool-metadata#pricing--surface-eligibility) for configuration details.
+</Warning>
 
 ---
 

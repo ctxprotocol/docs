@@ -1,12 +1,194 @@
 ---
 title: "Tool Metadata"
-description: "Configure _meta on your MCP tools to declare rate-limit hints and context injection requirements"
+description: "Configure _meta on your MCP tools to declare pricing, surface eligibility, rate-limit hints, and context injection requirements"
 ---
 
-Every MCP tool definition supports a `_meta` field for platform-level configuration that sits alongside `inputSchema` and `outputSchema`. This guide covers the two main `_meta` capabilities:
+Every MCP tool definition supports a `_meta` field for platform-level configuration that sits alongside `inputSchema` and `outputSchema`. This guide covers the three `_meta` capabilities:
 
+- **[Pricing & Surface Eligibility](#pricing--surface-eligibility)** — control which marketplace surfaces your methods appear on and set execute pricing
 - **[Rate-Limit Hints](#rate-limit-hints)** — tell the planner and runtime how to pace calls to your API
 - **[Context Injection](#context-injection)** — declare what user-specific data the platform should inject into your tool's arguments
+
+---
+
+## Pricing & Surface Eligibility
+
+<Warning>
+**This section determines whether your tool is visible on the Execute surface.** Methods without explicit `_meta.pricing.executeUsd` are **query-only** and will not appear in SDK-level Execute discovery. This is a hard platform gate, not a suggestion.
+</Warning>
+
+### Why This Matters
+
+Context runs **one marketplace with two surfaces**:
+
+| Surface | Who is the librarian? | Billing | What you get |
+|---------|------------------------|---------|---------------------|
+| **Query** | Context runtime (used via the app **or** `client.query.run()` in the SDK) | Pay-per-response (~$0.10) | Curated AI-synthesized answer from up to 100 MCP calls |
+| **Execute** | Your app/agent (used via `client.tools.execute()` in the SDK) | Per method call (~$0.001) | Raw structured data with session spend visibility |
+
+<Info>
+SDK consumers can use **both** surfaces. Use `client.query.run()` when you want Context to be the librarian (curated intelligence, pay-per-response). Use `client.tools.execute()` when your agent is the librarian (raw data, per-call pricing, session budgets). See [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference).
+</Info>
+
+Execute pricing is typically **~1/100 of listing response price** because a single Query response can invoke up to 100 method calls internally. When developers pay per-execute-call, they need proportionally lower prices.
+
+### Metadata Shape
+
+Add these fields to each method definition under `_meta`:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `surface` | `"answer"` \| `"execute"` \| `"both"` | Which marketplace surface(s) this method is eligible for |
+| `queryEligible` | `boolean` | Whether the Query runtime can select this method for answer synthesis |
+| `latencyClass` | `"instant"` \| `"fast"` \| `"slow"` \| `"streaming"` | Expected response time class (Query excludes `streaming` by default) |
+| `pricing.executeUsd` | `string` | Per-call execute price in USD (required for Execute eligibility) |
+| `pricing.queryUsd` | `string` | Reserved metadata for future per-method query billing (not used for billing in current rollout) |
+
+### Execute Eligibility Rule
+
+<Warning>
+**Hard gate:** A method is Execute-eligible **only** when it has an explicit `_meta.pricing.executeUsd` value. There is no fallback to listing-level pricing for Execute calls.
+
+- Methods **with** `_meta.pricing.executeUsd` → visible in both Query and Execute surfaces (depending on `surface` field)
+- Methods **without** `_meta.pricing.executeUsd` → **query-only**, invisible to SDK Execute discovery
+</Warning>
+
+### Default Execute Price (Contributor Shortcut)
+
+When you list your tool on the marketplace, you can set a single **default execute price** in the contribute form. This convenience input fans out to every method's `_meta.pricing.executeUsd` at ingestion time. You don't need to edit each method individually unless you want per-method overrides.
+
+| Approach | How it works |
+|----------|--------------|
+| **Simple (recommended)** | Set one default execute price in the contribute form → applied to all methods |
+| **Advanced** | Set `_meta.pricing.executeUsd` per method in your MCP server code → preserved on refresh |
+| **Mixed** | Default fills gaps; explicit method-level values take precedence |
+
+### TypeScript Example
+
+```typescript
+const TOOLS = [
+  {
+    name: "get_gas_prices",
+    description: "Get current gas prices for EVM chains",
+    _meta: {
+      surface: "both",
+      queryEligible: true,
+      latencyClass: "instant",
+      pricing: {
+        executeUsd: "0.001",
+      },
+    },
+    inputSchema: {
+      type: "object",
+      properties: {
+        chainId: { type: "number", description: "EVM chain ID" },
+      },
+    },
+    outputSchema: {
+      type: "object",
+      properties: {
+        gasPrice: { type: "number" },
+        unit: { type: "string" },
+      },
+      required: ["gasPrice", "unit"],
+    },
+  },
+  {
+    name: "stream_live_trades",
+    description: "Stream real-time trade data (Execute surface only)",
+    _meta: {
+      surface: "execute",
+      queryEligible: false,
+      latencyClass: "streaming",
+      pricing: {
+        executeUsd: "0.0005",
+      },
+    },
+    inputSchema: { type: "object", properties: {} },
+    outputSchema: { type: "object", properties: {} },
+  },
+];
+```
+
+### Python Example
+
+```python
+TOOLS = [
+    {
+        "name": "get_gas_prices",
+        "description": "Get current gas prices for EVM chains",
+        "_meta": {
+            "surface": "both",
+            "queryEligible": True,
+            "latencyClass": "instant",
+            "pricing": {
+                "executeUsd": "0.001",
+            },
+        },
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "chainId": {"type": "number", "description": "EVM chain ID"},
+            },
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "gasPrice": {"type": "number"},
+                "unit": {"type": "string"},
+            },
+            "required": ["gasPrice", "unit"],
+        },
+    },
+]
+```
+
+### Choosing a Surface
+
+| Your tool is best for... | Set `surface` to | Set `queryEligible` | Set `pricing.executeUsd` |
+|---|---|---|---|
+| Curated intelligence (e.g., "smart money analysis") | `"answer"` or `"both"` | `true` | Optional (set if you also want Execute revenue) |
+| Normalized raw data (e.g., "cross-exchange prices") | `"execute"` or `"both"` | `false` for execute-only, `true` for both | **Required** |
+| Both curated answers and raw data access | `"both"` | `true` | **Required** |
+
+<Tip>
+**Mixed listings are supported.** A single tool can have some methods for Query only (curated intelligence tools), some for Execute only (streaming or raw data), and some for both. The platform routes each method based on its individual metadata.
+</Tip>
+
+### Pricing Guidance
+
+| Listing response price (Query) | Suggested execute price per method | Ratio |
+|---|---|---|
+| $0.01 | $0.0001 | 1/100 |
+| $0.05 | $0.0005 | 1/100 |
+| $0.10 | $0.001 | 1/100 |
+| $0.25 | $0.0025 | 1/100 |
+
+<Note>
+The ~1/100 ratio is guidance, not a protocol-enforced rule. A Query response can make up to 100 method calls in one turn, so execute pricing per call should be proportionally lower.
+</Note>
+
+### Legacy Tools (No `_meta`)
+
+Tools listed before this metadata rollout continue working in Query with unchanged economics. They receive default metadata at ingestion time:
+
+| Field | Default |
+|---|---|
+| `surface` | `"both"` |
+| `queryEligible` | `true` |
+| `latencyClass` | `"slow"` |
+| `pricing.executeUsd` | Not set → **query-only in Execute surfaces** |
+
+<Info>
+To enable Execute surface visibility for a legacy tool, either set a default execute price in the Developer Tools page or add `_meta.pricing.executeUsd` to your MCP server code and click "Refresh Skills".
+</Info>
+
+### Reference Implementation
+
+The [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor) demonstrates all `_meta` capabilities in production:
+- Per-method `_meta.pricing.executeUsd` with a default fallback and explicit opt-out for query-only methods
+- Per-method `_meta.rateLimit` hints built from upstream API tier constraints
+- Batch tool recommendations via `recommendedBatchTools`
 
 ---
 
