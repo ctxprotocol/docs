@@ -121,6 +121,10 @@ async def main():
 asyncio.run(main())
 ```
 
+<Tip>
+**Full working example:** See [`examples/client/execute_client.py`](https://github.com/ctxprotocol/sdk-python/tree/main/examples/client/execute_client.py) for a complete Execute-mode client with multi-call session management and spend tracking.
+</Tip>
+
 <Note>
 Mixed listings are first-class: one listing can expose methods to both modes. Methods without explicit execute pricing remain Query-only until pricing metadata is added.
 </Note>

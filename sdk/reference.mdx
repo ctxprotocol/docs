@@ -112,6 +112,10 @@ console.log(result.result);
 console.log(result.session); // methodPrice, spent, remaining, maxSpend, status...
 ```
 
+<Tip>
+**Full working example:** See [`examples/client/src/execute.ts`](https://github.com/ctxprotocol/sdk/tree/main/examples/client/src/execute.ts) for a complete Execute-mode client with multi-call session management and spend tracking.
+</Tip>
+
 <Note>
 Mixed listings are first-class: one listing can expose methods to both modes. Methods without explicit execute pricing remain discoverable for Query but are excluded from Execute discovery when `requireExecutePricing=true`.
 </Note>

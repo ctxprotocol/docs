@@ -356,6 +356,8 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
 
 <Info>
 **The evidence bar for Execute mode is different.** Instead of "show us the expensive subscription," show us the **fragmented API landscape** — the 5 different exchanges with 5 different schemas that developers currently integrate and maintain separately. If an agent builder would rather pay $0.001/call than spend a week normalizing data from multiple sources, that's a fundable tool.
+
+**Reference implementation:** The [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider) example demonstrates the ideal Execute-mode architecture: background ingestion from Binance + Hyperliquid into a local cache, normalized schema, zero upstream rate limits at serving time.
 </Info>
 
 ### ⚡ Crypto & DeFi Infrastructure

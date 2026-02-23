@@ -570,7 +570,7 @@ See [Choosing a Mode](/guides/tool-metadata#choosing-a-mode) for the full visibi
 Execute pricing is typically **~1/100 of your listing response price** (e.g., \$0.10 response → \$0.001 per execute call) because a single Query response can invoke up to 100 method calls internally.
 </Tip>
 
-See [Tool Metadata](/guides/tool-metadata#pricing--execute-mode-eligibility) for the full metadata reference. For a production example, see the [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
+See [Tool Metadata](/guides/tool-metadata#pricing--execute-mode-eligibility) for the full metadata reference. For production examples, see the [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor) (rate limit hints + per-method pricing) and the [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider) (Execute-mode data broker with background ingestion).
 
 ---
 
@@ -759,7 +759,10 @@ Check out these complete working examples:
 
 ### TypeScript (Express + MCP SDK)
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
+  <Card title="Normalized Data Provider" icon="database" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider">
+    **Execute-mode reference** — Binance + Hyperliquid price normalizer with background ingestion, `_meta` pricing, and `inputSchema` with `default`/`examples`
+  </Card>
   <Card title="Blocknative" icon="gas-pump" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/blocknative-contributor">
     Gas price API (3 tools)
   </Card>
