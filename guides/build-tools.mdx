@@ -128,10 +128,12 @@ return {
 ```
 
 <Tip>
-Use standard JSON Schema keys in `inputSchema` for argument guidance:
+Use standard JSON Schema keys in `inputSchema` properties to guide argument generation:
 
-- Set fallback values with `default`
-- Add representative calls with `examples`
+- **`default`** — fallback value the AI uses when the user doesn't specify one (e.g., `"default": "BTC"`)
+- **`examples`** — sample values the AI references to understand valid inputs (e.g., `"examples": ["BTC", "ETH", "SOL"]`)
+
+The platform reads these fields during orchestration to generate correct arguments for your methods. Without them, the AI must guess valid values from the description alone — leading to more retries and lower first-pass success rates.
 
 Do not add custom `_meta.inputExamples`; `_meta` should only carry tool metadata such as pricing, context requirements, and rate-limit hints.
 </Tip>

@@ -229,6 +229,10 @@ app.listen(PORT, () => {
 });
 ```
 
+<Tip>
+This toy tool has no parameters, but real tools should add `default` and `examples` to `inputSchema` properties. The AI reads these during orchestration to generate correct arguments — without them, it guesses from the description alone, leading to more retries. See [Build & List Your Tool](/guides/build-tools) for the full pattern.
+</Tip>
+
 ---
 
 ## Step 3: Test Locally
