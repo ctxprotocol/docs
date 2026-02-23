@@ -441,6 +441,25 @@ interface McpToolMeta {
 }
 ```
 
+<Info>
+For argument guidance, use standard JSON Schema fields directly inside `inputSchema` properties. Put fallback values in `default` and sample invocations in `examples`. Do not rely on custom `_meta.inputExamples`.
+</Info>
+
+```typescript
+const TOOLS = [{
+  name: "get_price_history",
+  inputSchema: {
+    type: "object",
+    properties: {
+      symbol: { type: "string", default: "BTC", examples: ["BTC", "ETH", "SOL"] },
+      interval: { type: "string", enum: ["1h", "4h", "1d"], default: "1h", examples: ["1h", "4h"] },
+      limit: { type: "number", default: 100, examples: [50, 100, 200] },
+    },
+    required: [],
+  },
+}];
+```
+
 ---
 
 ### ExecutionResult (Execute Mode)

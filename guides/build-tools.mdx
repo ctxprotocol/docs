@@ -103,7 +103,12 @@ const TOOLS = [{
   inputSchema: {
     type: "object",
     properties: {
-      chainId: { type: "number", description: "EVM chain ID" },
+      chainId: {
+        type: "number",
+        description: "EVM chain ID",
+        default: 1,
+        examples: [1, 10, 8453],
+      },
     },
   },
   outputSchema: {
@@ -121,6 +126,15 @@ return {
   structuredContent: data,
 };
 ```
+
+<Tip>
+Use standard JSON Schema keys in `inputSchema` for argument guidance:
+
+- Set fallback values with `default`
+- Add representative calls with `examples`
+
+Do not add custom `_meta.inputExamples`; `_meta` should only carry tool metadata such as pricing, context requirements, and rate-limit hints.
+</Tip>
 
 <AccordionGroup>
   <Accordion title="Optimizing Outputs for AI Context Windows" icon="sparkles">
@@ -463,7 +477,12 @@ const TOOLS = [{
   inputSchema: {
     type: "object",
     properties: {
-      chainId: { type: "number", description: "EVM chain ID" },
+      chainId: {
+        type: "number",
+        description: "EVM chain ID",
+        default: 1,
+        examples: [1, 10, 8453],
+      },
     },
   },
   outputSchema: {
