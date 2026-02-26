@@ -301,7 +301,7 @@ print(closed.session.status)  # closed
 The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get an AI-synthesized answer backed by multi-tool data aggregation, error recovery, and completeness checks.
 </Info>
 
-#### `client.query.run(query, tools?, model_id?, include_data?, include_data_url?, idempotency_key?)`
+#### `client.query.run(query, tools?, model_id?, include_data?, include_data_url?, query_depth?, idempotency_key?)`
 
 Run an agentic query. The server discovers query-eligible tools, executes the full pipeline (up to 100 MCP calls per response turn as a runtime safety cap), applies model-aware mediator/data budgeting, and returns an AI-synthesized answer. Query billing is pay-per-response with automatic payment after delivery.
 
@@ -313,6 +313,7 @@ Run an agentic query. The server discovers query-eligible tools, executes the fu
 | `model_id` | `str` | No | Model ID to use for planning/synthesis (e.g. `kimi-model-thinking`, `glm-model`) |
 | `include_data` | `bool` | No | Include execution data inline in the response |
 | `include_data_url` | `bool` | No | Persist execution data to blob and return a URL |
+| `query_depth` | `"fast" \| "auto" \| "deep"` | No | Query orchestration depth (`fast` lower latency, `auto` server-routed, `deep` completeness-oriented) |
 | `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
 
 **Returns:** `QueryResult`
@@ -330,6 +331,7 @@ answer = await client.query.run(
     model_id="glm-model",
     include_data=True,
     include_data_url=True,
+    query_depth="auto",
     idempotency_key="6e7f1389-f72f-41d9-bf26-0608a4d8be87",
 )
 ```
@@ -340,14 +342,34 @@ answer = await client.query.run(
 Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, `claude-sonnet-model`, `claude-opus-model`.
 </Note>
 
-#### `client.query.stream(query, tools?, model_id?, include_data?, include_data_url?, idempotency_key?)`
+<Info>
+`query_depth` is available in both `run()` and `stream()`:
+
+- `fast`: lower-latency path for simple lookups.
+- `auto`: server routes to either `fast` or `deep` using query intent and selected tool complexity.
+- `deep`: completeness-oriented path (default when omitted).
+</Info>
+
+#### High-Fidelity Rehydration (Retrieval-First Synthesis)
+
+When retrieval-first rollout is enabled in the deployment, the query runtime can switch synthesis context assembly from baseline truncation to retrieval-first slices for full-data or truncation-sensitive requests.
+
+- Stage artifacts are emitted in request-scoped internal storage (selection, planning, execution, completeness, synthesis).
+- Retrieval primitives (path lookup, array windows/sampling, keyword slices, top-K relevance) are used to build a bounded context pack from canonical execution data.
+- Final synthesis still passes through the existing synthesis safety contract.
+- `include_data` and `include_data_url` continue to reference the same canonical execution dataset used by retrieval-first assembly.
+
+#### `client.query.stream(query, tools?, model_id?, include_data?, include_data_url?, query_depth?, idempotency_key?)`
 
 Same as `run()` but streams events in real-time via SSE.
 
 **Returns:** `AsyncGenerator` of stream events
 
 ```python
-async for event in client.query.stream("What are the top whale movements?"):
+async for event in client.query.stream(
+    query="What are the top whale movements?",
+    query_depth="fast",
+):
     if event.type == "tool-status":
         print(f"Tool {event.tool.name}: {event.status}")
     elif event.type == "text-delta":
