@@ -434,6 +434,36 @@ Your MCP Tool is now available on the marketplace. Users can discover and use yo
 
 ---
 
+## Validate Your Tool
+
+Now that your tool is live, validate it works correctly through the marketplace — not just on your local server.
+
+<Steps>
+  <Step title="Manual: Test in the Chat App">
+    Enable **Developer Mode** in Settings → Developer Settings. In the right sidebar, turn off **Auto mode** and select your tool. Send a message and check the **Developer Logs** preview card at the bottom of the response for errors. See the [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for details.
+  </Step>
+  <Step title="Manual: Test via the SDK">
+    Use the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference) to test both surfaces:
+
+    - **Query mode:** `client.query.run({ query: "...", tools: ["your-tool-id"], queryDepth: "deep", includeDeveloperTrace: true })` — validates your tool produces meaningful answers through the agentic pipeline
+    - **Execute mode** (if enabled): `client.tools.execute({ toolId: "...", toolName: "...", args: {...} })` — validates per-method call responses match your declared schemas
+  </Step>
+  <Step title="Automated: Deep Validation System Prompt">
+    For a comprehensive QA pass, use the **[Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md)** — a reusable prompt you can give to any coding agent (Cursor, Claude, etc.). It runs the full validation workflow:
+
+    - Checks your server against the [Context Protocol docs](https://docs.ctxprotocol.com) for compliance
+    - Tests both Query mode and Execute mode through the SDK with developer traces
+    - Generates a marketplace listing (name, description, "Try asking" prompts)
+    - Provides actionable fixes and re-tests in a loop until all gates pass
+  </Step>
+</Steps>
+
+<Tip>
+The deep validation prompt handles both **pre-submission** (direct endpoint testing before you list) and **post-submission** (full SDK-based marketplace testing after you list). Give it your endpoint URL and API key and it figures out the right workflow.
+</Tip>
+
+---
+
 ## Updating Your Tool
 
 When you add new endpoints, modify schemas, or change your tool's functionality:

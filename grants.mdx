@@ -444,7 +444,7 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
     - Paste your MCP endpoint URL
     - Use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to generate your submission name, description, and category
     - **Set your listing response price to \$0** for initial testing (you can change it after we review)
-    - Optionally set a default execute price (fans out to method-level `_meta.pricing.executeUsd`)
+    - **Advanced (optional):** If you also want SDK developers to call your methods directly with per-call billing ([Execute mode](/guides/tool-metadata#pricing--execute-mode-eligibility)), set a default execute price — typically ~1/100 of your response price. Skip this if you're starting with Query mode only; you can enable it later.
     - Add stake to activate your tool
   </Step>
   <Step title="Debug & Refine">
@@ -458,7 +458,7 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
     See the full [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for detailed instructions.
     
     <Tip>
-    **Automated deep validation:** For a comprehensive QA pass, use the [Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md) — a reusable prompt you can give to any coding agent to run the full review → deploy → trace-driven fix loop against your server, including Developer Mode runtime analysis via the SDK.
+    **Automated deep validation:** For a comprehensive QA pass, use the [Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md) — a reusable prompt you can give to any coding agent. It validates your server against the Context Protocol docs, tests both Query mode and Execute mode through the SDK, analyzes Developer Mode runtime traces, and provides actionable fixes in a loop until everything passes.
     </Tip>
   </Step>
   <Step title="Request Review">
