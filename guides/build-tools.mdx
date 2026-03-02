@@ -150,17 +150,17 @@ Context's query pipeline uses model-aware data budgets when preparing tool outpu
 - Include a compact `summary` object alongside deep raw data when possible
 - Aim for payloads under **~500K chars** for full visibility across all supported models
 
-  ```typescript
-  // ✅ Good: separated and prioritizable
-  return {
-    summary: { direction: "outflow", confidence: 0.82 },
-    news: "ETF outflows accelerated this week due to ...",
-    chart: { timestamps: [...], values: [...] },
-  };
+```typescript
+// ✅ Good: separated and prioritizable
+return {
+  summary: { direction: "outflow", confidence: 0.82 },
+  news: "ETF outflows accelerated this week due to ...",
+  chart: { timestamps: [...], values: [...] },
+};
 
-  // ❌ Bad: giant opaque blob (hard to prioritize/truncate safely)
-  return JSON.stringify(allData);
-  ```
+// ❌ Bad: giant opaque blob (hard to prioritize/truncate safely)
+return JSON.stringify(allData);
+```
   </Accordion>
 
   <Accordion title="Write Detailed Output Schemas (Performance Critical)" icon="bolt">
@@ -182,36 +182,36 @@ Expose capability flags in `structuredContent` (for example, `supportsLongShortT
 
 **The planning LLM defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the LLM will generate `data.exchangeName` when your API returns `data.exchange_name` — triggering a retry every time.
 
-  ```typescript
-  // ❌ Bad: Vague schema — LLM must guess property names
-  outputSchema: {
-    type: "object",
-    properties: {
-      data: { type: "array" }
-    }
+```typescript
+// ❌ Bad: Vague schema — LLM must guess property names
+outputSchema: {
+  type: "object",
+  properties: {
+    data: { type: "array" }
   }
+}
 
-  // ✅ Good: Detailed schema with exact property names and descriptions
-  outputSchema: {
-    type: "object",
-    properties: {
-      data: {
-        type: "array",
-        description: "Array of exchange balance objects, one per exchange",
-        items: {
-          type: "object",
-          properties: {
-            exchange_name: { type: "string", description: "Exchange name (e.g. 'Binance')" },
-            total_balance: { type: "number", description: "Total balance in the queried coin" },
-            balance_change_1d: { type: "number", description: "Balance change in last 24 hours" },
-            balance_change_percent_1d: { type: "number", description: "Percent change in last 24 hours" },
-          }
+// ✅ Good: Detailed schema with exact property names and descriptions
+outputSchema: {
+  type: "object",
+  properties: {
+    data: {
+      type: "array",
+      description: "Array of exchange balance objects, one per exchange",
+      items: {
+        type: "object",
+        properties: {
+          exchange_name: { type: "string", description: "Exchange name (e.g. 'Binance')" },
+          total_balance: { type: "number", description: "Total balance in the queried coin" },
+          balance_change_1d: { type: "number", description: "Balance change in last 24 hours" },
+          balance_change_percent_1d: { type: "number", description: "Percent change in last 24 hours" },
         }
-      },
-      fetchedAt: { type: "string", description: "ISO 8601 timestamp" }
-    }
+      }
+    },
+    fetchedAt: { type: "string", description: "ISO 8601 timestamp" }
   }
-  ```
+}
+```
 
 **Output schema checklist:**
 
@@ -246,18 +246,18 @@ If your tool generates charts, heatmaps, screenshots, or other visual content, *
 
 **Recommended: Return Image URLs**
 
-  ```typescript
-  return {
-    content: [
-      { type: "text", text: "Analysis complete. Here's the chart:" }
-    ],
-    structuredContent: {
-      summary: "Market analysis shows bullish signals...",
-      chart_url: "https://your-cdn.com/charts/eth-analysis-12345.png",
-      chart_alt: "ETH price chart with support levels marked"
-    }
-  };
-  ```
+```typescript
+return {
+  content: [
+    { type: "text", text: "Analysis complete. Here's the chart:" }
+  ],
+  structuredContent: {
+    summary: "Market analysis shows bullish signals...",
+    chart_url: "https://your-cdn.com/charts/eth-analysis-12345.png",
+    chart_alt: "ETH price chart with support levels marked"
+  }
+};
+```
 
 **Image Hosting Options**
 
@@ -270,27 +270,27 @@ If your tool generates charts, heatmaps, screenshots, or other visual content, *
 
 **Output Schema for Image Tools**
 
-  ```json
-  {
-    "type": "object",
-    "properties": {
-      "summary": {
-        "type": "string",
-        "description": "Text summary of the analysis"
-      },
-      "chart_url": {
-        "type": "string",
-        "format": "uri",
-        "description": "URL to the hosted chart image"
-      },
-      "chart_alt": {
-        "type": "string",
-        "description": "Accessible description of the image"
-      }
+```json
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "Text summary of the analysis"
     },
-    "required": ["summary", "chart_url"]
-  }
-  ```
+    "chart_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the hosted chart image"
+    },
+    "chart_alt": {
+      "type": "string",
+      "description": "Accessible description of the image"
+    }
+  },
+  "required": ["summary", "chart_url"]
+}
+```
 
 The AI will include your image URL in its response, and users can click to view. For the best experience, use publicly accessible URLs (no auth required) with reasonable cache headers.
 </Accordion>
@@ -567,27 +567,27 @@ By default, your tool is available in **Query mode** — users ask questions and
   <Step title="Or declare pricing per method in code">
     For fine-grained control, add `_meta` to each method in your MCP server:
 
-    ```typescript
-    const TOOLS = [{
-      name: "get_gas_price",
-      description: "Get current gas prices",
-      _meta: {
-        surface: "both",
-        queryEligible: true,
-        latencyClass: "instant",
-        pricing: {
-          executeUsd: "0.001",
-        },
-        rateLimit: {
-          maxRequestsPerMinute: 60,
-          cooldownMs: 1000,
-          maxConcurrency: 5,
-        },
-      },
-      inputSchema: { /* ... */ },
-      outputSchema: { /* ... */ },
-    }];
-    ```
+```typescript
+const TOOLS = [{
+  name: "get_gas_price",
+  description: "Get current gas prices",
+  _meta: {
+    surface: "both",
+    queryEligible: true,
+    latencyClass: "instant",
+    pricing: {
+      executeUsd: "0.001",
+    },
+    rateLimit: {
+      maxRequestsPerMinute: 60,
+      cooldownMs: 1000,
+      maxConcurrency: 5,
+    },
+  },
+  inputSchema: { /* ... */ },
+  outputSchema: { /* ... */ },
+}];
+```
   </Step>
 </Steps>
 
@@ -623,15 +623,15 @@ Context uses automated schema validation as part of our crypto-native dispute re
 
 **Example: Schema Compliance**
 
-  ```typescript
-  // ❌ BAD: Schema says number, but you return string
-  outputSchema: { temperature: { type: "number" } }
-  structuredContent: { temperature: "72" }  // GUILTY - schema mismatch!
+```typescript
+// ❌ BAD: Schema says number, but you return string
+outputSchema: { temperature: { type: "number" } }
+structuredContent: { temperature: "72" }  // GUILTY - schema mismatch!
 
-  // ✅ GOOD: Output matches schema exactly
-  outputSchema: { temperature: { type: "number" } }
-  structuredContent: { temperature: 72 }  // Valid
-  ```
+// ✅ GOOD: Output matches schema exactly
+outputSchema: { temperature: { type: "number" } }
+structuredContent: { temperature: 72 }  // Valid
+```
 
 Unlike Web2 "star ratings" that can be gamed by bots, Context disputes require **economic proof** (you paid for the query). This protects honest developers from spam while ensuring bad actors face consequences.
   </Accordion>
@@ -662,26 +662,26 @@ The timeout forces you to **pre-compute insights** rather than running heavy que
 
 The best data businesses don't sell raw database access. They sell curated, **pre-computed insights**. This is exactly how Bloomberg, Nansen, Arkham, and Messari work — and it's the right model for Query mode.
 
-  ```
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │              QUERY MODE: DATA BROKER'S JOB (offline)                │
-  │                                                                     │
-  │  1. Run heavy queries on your data source (30 min timeout - OK)    │
-  │  2. Pre-compute valuable insights ("wallets that sold tops")       │
-  │  3. Store results in your own database                             │
-  │  4. Update daily/hourly via cron jobs                              │
-  │                                                                     │
-  └─────────────────────────────────────────────────────────────────────┘
-                                ↓
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │                    MCP TOOL (instant)                               │
-  │                                                                     │
-  │  User: "What are the smart money wallets holding?"                 │
-  │  Tool: SELECT * FROM my_precomputed_smart_money LIMIT 10           │
-  │  Response: < 1 second ✅                                            │
-  │                                                                     │
-  └─────────────────────────────────────────────────────────────────────┘
-  ```
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│              QUERY MODE: DATA BROKER'S JOB (offline)                │
+│                                                                     │
+│  1. Run heavy queries on your data source (30 min timeout - OK)    │
+│  2. Pre-compute valuable insights ("wallets that sold tops")       │
+│  3. Store results in your own database                             │
+│  4. Update daily/hourly via cron jobs                              │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    MCP TOOL (instant)                               │
+│                                                                     │
+│  User: "What are the smart money wallets holding?"                 │
+│  Tool: SELECT * FROM my_precomputed_smart_money LIMIT 10           │
+│  Response: < 1 second ✅                                            │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 **Designing for Execute Mode**
 
@@ -699,27 +699,27 @@ The timeout still applies per-call (a single normalized price lookup shouldn't t
 | No pagination or filtering | Parametric access: symbol, exchange, time range |
 | Inconsistent error formats | Structured error responses with codes |
 
-  ```
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │            EXECUTE MODE: DATA NORMALIZER'S JOB (ongoing)            │
-  │                                                                     │
-  │  1. Connect to upstream sources (exchange APIs, data providers)     │
-  │  2. Normalize schemas into consistent typed formats                │
-  │  3. Expose focused, single-purpose methods                         │
-  │  4. Return clean, paginated, parametric data per call              │
-  │                                                                     │
-  └─────────────────────────────────────────────────────────────────────┘
-                                ↓
-  ┌─────────────────────────────────────────────────────────────────────┐
-  │                    AGENT PIPELINE (iterative)                       │
-  │                                                                     │
-  │  Agent: get_prices("BTC/USDT", exchanges=["binance","coinbase"])   │
-  │  Agent: get_orderbook("BTC/USDT", exchange="binance", depth=20)    │
-  │  Agent: get_funding_rates("BTC/USDT")                              │
-  │  Agent: → runs own analysis across all results                     │
-  │                                                                     │
-  └─────────────────────────────────────────────────────────────────────┘
-  ```
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│            EXECUTE MODE: DATA NORMALIZER'S JOB (ongoing)            │
+│                                                                     │
+│  1. Connect to upstream sources (exchange APIs, data providers)     │
+│  2. Normalize schemas into consistent typed formats                │
+│  3. Expose focused, single-purpose methods                         │
+│  4. Return clean, paginated, parametric data per call              │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│                    AGENT PIPELINE (iterative)                       │
+│                                                                     │
+│  Agent: get_prices("BTC/USDT", exchanges=["binance","coinbase"])   │
+│  Agent: get_orderbook("BTC/USDT", exchange="binance", depth=20)    │
+│  Agent: get_funding_rates("BTC/USDT")                              │
+│  Agent: → runs own analysis across all results                     │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 **Product Tiers by Mode**
 
@@ -737,16 +737,16 @@ For Query mode: pre-compute it. Run heavy analysis offline, store results in you
 
 For Execute mode: break it into smaller methods. Instead of one method that analyzes all wallets, expose `get_wallet_activity` per wallet — let the agent iterate.
 
-  ```typescript
-  // ❌ BAD (either mode): Long-running analysis at request time
-  { name: "analyze_all_wallets", returns: "timeout after 60s" }
+```typescript
+// ❌ BAD (either mode): Long-running analysis at request time
+{ name: "analyze_all_wallets", returns: "timeout after 60s" }
 
-  // ✅ GOOD (Query): Pre-computed results served instantly
-  { name: "get_smart_money_wallets", returns: "instant curated insight from your DB" }
+// ✅ GOOD (Query): Pre-computed results served instantly
+{ name: "get_smart_money_wallets", returns: "instant curated insight from your DB" }
 
-  // ✅ GOOD (Execute): Focused method the agent calls per-wallet
-  { name: "get_wallet_activity", inputs: "{ address, timeRange }", returns: "normalized activity data" }
-  ```
+// ✅ GOOD (Execute): Focused method the agent calls per-wallet
+{ name: "get_wallet_activity", inputs: "{ address, timeRange }", returns: "normalized activity data" }
+```
 
 | | Query Mode | Execute Mode |
 |---|---|---|
