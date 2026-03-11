@@ -289,7 +289,7 @@ The Query API is Context's **response marketplace** — instead of buying raw AP
 
 #### `client.query.run(options)`
 
-Run an agentic query. The server applies discovery-first orchestration (`discover/probe -> plan-from-evidence -> execute -> bounded fallback`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns an AI-synthesized answer. Query billing is pay-per-response with automatic payment after delivery.
+Run an agentic query. The server applies discovery-first orchestration (`discover/probe -> plan-from-evidence -> execute -> bounded fallback`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns an AI-synthesized answer. On the internal `deep-heavy` Scout lane, the runtime may perform a tiny bounded set of deterministic read-only pre-plan tool probes when safe; `deep-light` stays metadata-first, and `fast` remains one-shot biased. Query billing is pay-per-response with automatic payment after delivery.
 
 **Parameters:**
 | Option | Type | Required | Description |
@@ -341,11 +341,13 @@ Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, 
 `queryDepth` is available in both `run()` and `stream()`:
 
 - `fast`: lower-latency path for simple lookups.
-- `auto`: server routes to either `fast` or `deep` using query intent and selected tool complexity.
+- `auto`: server routes to either `fast` or `deep` using query intent and selected tool metadata quality.
 - `deep`: completeness-oriented path (default when omitted).
 
 `includeDeveloperTrace` and `orchestrationMetrics` are optional diagnostics.
 `debugScoutDeepMode` remains test-only and is ignored by normal production usage.
+Inside `deep`, `deep-light` stays metadata-first while `deep-heavy` enables bounded Scout probing when the selected tool metadata is too weak to trust on its own.
+Selection diagnostics can show initial vs final lane decisions, Scout probe adequacy, bounded pre-plan probe call counts, and whether pre-plan evidence changed the initial plan.
 </Info>
 
 #### High-Fidelity Rehydration (Retrieval-First Synthesis)
