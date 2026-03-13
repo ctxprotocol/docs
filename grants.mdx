@@ -53,8 +53,8 @@ We're allocating **\$10,000 USD** to bootstrap the supply side of the Context Ma
 | Metric | Target |
 |--------|--------|
 | **Total Pool** | \$10,000 USD |
-| **Grant Range** | \$250 – \$1,000 per tool |
-| **Expected Tools** | 15–40 new MCP servers |
+| **Grant Range** | \$500 – \$1,000 per tool |
+| **Expected Tools** | 10–20 new MCP servers |
 | **Payment** | USDC (Base network) |
 
 ---
@@ -95,7 +95,7 @@ We pay for **normalized, typed, reliable data** that an agent can iterate over. 
 
 For Query mode: complex pipelines, novel analysis, or hard-to-access sources that unlock data people currently pay \$500–\$20,000/year for. For Execute mode: normalized data infrastructure across multiple sources that eliminates painful multi-API integration for agent builders.
 
-### 🛠️ Tier A: \$250-\$500 + Revenue Share
+### 🛠️ Tier A: \$500 + Revenue Share
 
 **High-utility tools agents use frequently.**
 
@@ -409,6 +409,10 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
 
 ## 📝 How to Apply
 
+<Warning>
+**One application at a time.** If you have an active grant project (Processing, Draft Created, Conversation, or any awarded tier), complete it before submitting a new application. Duplicate submissions will be automatically rejected.
+</Warning>
+
 <Steps>
   <Step title="Create Your Account">
     Sign in at [ctxprotocol.com](https://ctxprotocol.com) to create your account. This generates your **embedded wallet** the address where you'll receive grants and revenue.
@@ -435,7 +439,7 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
     npm install @ctxprotocol/sdk @modelcontextprotocol/sdk
     ```
     
-    **Constraint:** Tools must return data in under 30 seconds. Focus on instant retrieval and analysis.
+    **Constraint:** Tools must return data in under 60 seconds. Focus on instant retrieval and analysis.
     
     Follow the [Build Tools Guide](/guides/build-tools) for the complete pattern.
   </Step>
@@ -464,9 +468,11 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
   <Step title="Request Review">
     Once your tool is working correctly, email **grants@ctxprotocol.com** with:
     - Your tool name and endpoint URL
+    - Your **tool ID** from ctxprotocol.com (found on your tool's listing page)
     - Link to your public GitHub repo for the MCP server (for code review)
     - 3-5 robust test questions that thoroughly exercise your tool's capabilities
     - Expected responses for each question (so we know what "correct" looks like)
+    - Your **wallet address** (for payment verification)
     
     We'll test your tool and verify it meets our quality standards before activating grant payments.
   </Step>
@@ -487,7 +493,7 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
 <Warning>
 **Grant Payment Schedule (50/50 Split)**
 
-- **50% on verification**: Paid when your tool passes our quality check and goes live
+- **50% on approval**: Seed funding sent when your grant is approved, so you can start building immediately
 - **50% after 30 days**: Paid after 30 days of verified uptime and usage
 
 This ensures tools are maintained and actually serve the marketplace.
@@ -500,7 +506,7 @@ To receive grant payments, your tool must:
 | Requirement | Why |
 |-------------|-----|
 | ✅ Pass schema validation | `outputSchema` must match actual responses |
-| ✅ Sub-30s response time | Agents expect fast data |
+| ✅ Sub-60s response time | Agents expect fast data |
 | ✅ 95%+ uptime (30 days) | Reliable for the second payment |
 | ✅ Handle errors gracefully | Return structured errors, not crashes |
 
@@ -528,7 +534,7 @@ You're not alone. We're here to help you ship.
     We review proposals within **48 hours**. Complex proposals may require a quick call.
   </Accordion>
   <Accordion title="Can I build multiple tools?">
-    Absolutely. Each tool is evaluated independently. Build a suite of related tools for bonus consideration.
+    Yes, but one at a time. Complete your current grant project before applying for another. This ensures quality and focus.
   </Accordion>
   <Accordion title="What if my tool idea isn't on the RFB list?">
     The RFB is a starting point, not a limit. If you have evidence of an expensive subscription your tool unbundles, pitch it. But show your research (see "How to Find Unbundling Opportunities" above).
@@ -543,7 +549,7 @@ You're not alone. We're here to help you ship.
     Yes, as long as you comply with the license. Wrapping an existing API or open-source tool is fine just make it useful for agents.
   </Accordion>
   <Accordion title="What's the response time limit?">
-    Tools must return data in **under 30 seconds**. This isn't the place for long-running simulations focus on instant data retrieval and analysis.
+    Tools must return data in **under 60 seconds**. This isn't the place for long-running simulations focus on instant data retrieval and analysis.
   </Accordion>
 </AccordionGroup>
 
