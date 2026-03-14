@@ -38,6 +38,7 @@ We reject proposals that:
 
 - **Wrap a single public API without adding value**: Calling CoinGecko and returning the JSON isn't a product. For Query mode, add analysis, scoring, or synthesis. For Execute mode, normalize across multiple sources into a consistent typed schema — that's the value.
 - **Chase dead or saturated markets**: Meme coin tooling, yield aggregators, and rug checkers had their moment. The alpha is gone.
+- **Unbundle subscriptions that AI itself is killing**: SEO tools (SEMrush, Ahrefs, Moz), keyword research platforms, and backlink analyzers exist because Google Search exists. As users shift to AI chatbots, these subscriptions are in structural decline. We don't fund cheaper versions of dying products. Ask: "Is the subscription I'm unbundling itself being disrupted by AI?" If yes, don't apply.
 - **Compete with dominant free alternatives**: If Semantic Scholar, Etherscan, or Google News already does it for free, your tool needs a 10x differentiated angle.
 - **Lack evidence of demand**: "This would be useful" isn't enough. Show us the expensive subscription people are paying for (Query tools) or the fragmented APIs developers are struggling to normalize (Execute tools).
 
@@ -191,10 +192,12 @@ The ideas below are **Query mode** tools — curated intelligence that replaces 
 |-----------|-------------|------|
 | **App Store Intel** | Downloads, revenue estimates, ASO keywords for any App Bundle ID | **S** |
 | **Tech Stack Detector** | Scan any domain → AWS, Stripe, Shopify, Segment, etc. | **A** |
-| **Website Traffic Estimator** | Monthly visitors, traffic sources, engagement metrics | **S** |
+| **Website Traffic Estimator** | Monthly visitors, traffic sources, engagement metrics. Note: web traffic as a standalone metric is declining as distribution shifts to AI interfaces. Higher value if combined with app usage, social engagement, or AI-referral signals | **A** |
 | **Company Enrichment** | Domain → company size, funding, industry, key people | **S** |
 | **Job Posting Analyzer** | What's a company hiring for? Signals growth & priorities | **A** |
 | **LinkedIn Company Scanner** | Employee count trends, departures, hiring velocity | **S** |
+| **Ad Spend Estimator** | Estimate competitor Google/Meta ad spend and creative strategy | **S** |
+| **Social Mention Tracker** | Brand mentions across Twitter, Reddit, HN with sentiment | **A** |
 
 ---
 
@@ -246,20 +249,6 @@ Nansen's value isn't rug checking or gas prices. It's **wallet labeling, smart m
 | **Supplier Finder** | Search Alibaba/1688 for manufacturers matching specs | **A** |
 | **Price History Tracker** | Historical pricing across major retailers | **A** |
 | **Review Sentiment Analyzer** | Aggregate complaints and praises from product reviews | **A** |
-
----
-
-### 🔍 SEO & Marketing
-
-*Replaces: SEMrush (\$1.2K/yr), Ahrefs, Moz Pro, SpyFu*
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Backlink Analyzer** | Who links to a domain, anchor text distribution, authority | **S** |
-| **Keyword Research** | Search volume, difficulty, related terms, SERP features | **A** |
-| **SERP Analyzer** | What's ranking? Content patterns? Featured snippets? | **A** |
-| **Ad Spend Estimator** | Estimate competitor Google/Meta ad spend | **S** |
-| **Social Mention Tracker** | Brand mentions across Twitter, Reddit, HN with sentiment | **A** |
 
 ---
 
@@ -327,7 +316,7 @@ Note: Semantic Scholar and Google Scholar are free. We're not funding basic pape
 
 | Tool Idea | Description | Tier |
 |-----------|-------------|------|
-| **Research Landscape Mapper** | Given a topic, map the key papers, authors, institutions, and emerging trends. Synthesis, not search | **S** |
+| **Research Landscape Mapper** | Access proprietary citation graph data (impact factors, h-index, institutional affiliations, funding sources) locked behind Web of Science/Scopus paywalls. The value is the data access, not the synthesis — AI already synthesizes well, but it cannot access paywalled citation metrics | **S** |
 | **Grant Opportunity Matcher** | Find funding opportunities matching research criteria across NSF, NIH, private foundations | **A** |
 | **Clinical Trial Matcher** | Match patient criteria to active trials with eligibility analysis | **A** |
 | **Patent-to-Paper Linker** | Connect academic research to commercial patents. Who's commercializing what? | **A** |
