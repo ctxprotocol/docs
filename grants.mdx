@@ -458,13 +458,21 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
     </Tip>
   </Step>
   <Step title="Request Review">
-    Once your tool is working correctly, email **grants@ctxprotocol.com** with:
-    - Your tool name and endpoint URL
-    - Your **tool ID** from ctxprotocol.com (found on your tool's listing page)
-    - Link to your public GitHub repo for the MCP server (for code review)
-    - 3-5 robust test questions that thoroughly exercise your tool's capabilities
-    - Expected responses for each question (so we know what "correct" looks like)
+    <Warning>
+    Your tool **must be live on the marketplace** before requesting review. If you skip the "Contribute to Marketplace" and "Debug & Refine" steps above, your review will be returned and you'll be asked to complete those steps first.
+    </Warning>
+    
+    Once your tool is submitted, tested, and working correctly on the marketplace, email **grants@ctxprotocol.com** with:
+    - Your **tool name** and **endpoint URL**
+    - Your **tool ID** from ctxprotocol.com (go to [Developer → Tools](https://ctxprotocol.com/developer/tools) and copy the ID shown on your tool card — this is how we identify your tool for testing)
+    - Link to your **public GitHub repo** for the MCP server (for code review)
+    - **3-5 robust test questions** that thoroughly exercise your tool's capabilities
+    - **Expected responses** for each question (so we know what "correct" looks like)
     - Your **wallet address** (for payment verification)
+    
+    <Tip>
+    **Make sure your listing description is complete.** If you used the [MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md) in the Contribute step, your description should already include Features, Try Asking questions, and Agent Tips. Reviews that find a poor or generic description will be sent back for improvement.
+    </Tip>
     
     We'll test your tool and verify it meets our quality standards before activating grant payments.
   </Step>
