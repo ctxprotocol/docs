@@ -1,0 +1,175 @@
+---
+title: "Liquidity Heatmap and Exchange-Flow Wedge Contract"
+description: "Demand-side source of truth for premium Query answers about exchange-flow intelligence"
+---
+
+## What this contract locks
+
+- The first demand-side Query wedge is `liquidity heatmap / exchange-flow intelligence`.
+- This contract is the product and evaluation source of truth for future Query/runtime changes. Do not promote clarification, Scout, lane, or repair-loop changes unless they improve this wedge locally and on the deployed runtime.
+- The wedge is intentionally narrower than "crypto market intelligence." It focuses on venue-level inflows/outflows, liquidity rotation, baseline comparison, and explainable catalysts.
+
+## Product thesis
+
+- A premium Query answer in this wedge should save the user from stitching together exchange dashboards, screenshots, spreadsheets, and ad hoc news searches.
+- The answer must be inspectable by both humans and external agents. Prose alone is not enough.
+- The wedge is not solved by one tool call. When the prompt asks for explanation, confirmation, or divergence, the librarian should compose a flow source with a second evidence source instead of collapsing into generic narration or unnecessary clarification.
+
+## Locked response modes
+
+| Response shape | Primary consumer | Required behavior |
+| --- | --- | --- |
+| `answer` | Existing callers | Keep the backward-compatible natural-language answer surface. |
+| `answer_with_evidence` | First-party chat | Return natural-language answer plus a structured evidence package, freshness, confidence, artifact refs, and optional `view`. |
+| `evidence_only` | External agents | Return the same structured evidence package without depending on prose synthesis. |
+
+Until response-shape transport lands in the API and SDKs, treat the following as frozen contract fields rather than already-shipped wire keys:
+
+- `response`
+- `summary`
+- `evidence`
+- `artifacts`
+- `freshness`
+- `confidence`
+- optional `view`
+
+## Shared evidence contract
+
+All must-win wedge answers must make these fields reconstructable in machine-readable form, not only in prose:
+
+- `asset` or `assets`
+- `timeWindow`
+- `asOf`
+- `aggregateFlow.netFlowUsd`
+- `aggregateFlow.grossInflowUsd`
+- `aggregateFlow.grossOutflowUsd`
+- `aggregateFlow.direction`
+- `venueBreakdown[].venue`
+- `venueBreakdown[].netFlowUsd`
+- `venueBreakdown[].grossInflowUsd`
+- `venueBreakdown[].grossOutflowUsd`
+- `venueBreakdown[].shareOfTotal`
+- `sourceRefs[].provider`
+- `sourceRefs[].dataset`
+- `sourceRefs[].observedAt`
+- `sourceRefs[].artifactRef`
+- `confidence.level`
+- `confidence.reason`
+- `assumptions[]`
+- `knownUnknowns[]`
+
+When a prompt asks for more than raw flow direction, the answer must also expose the relevant extension fields:
+
+- `baselineComparison.baselineWindow`, `baselineComparison.deltaUsd`, `baselineComparison.deltaPct`, `baselineComparison.regimeChange`
+- `catalystRefs[].source`, `catalystRefs[].publishedAt`, `catalystRefs[].claim`, `catalystRefs[].relationToFlow`
+- `derivativesContext.openInterestDirection`, `derivativesContext.openInterestChangePct`, `derivativesContext.liquidationBias`, `derivativesContext.venues[]`, `derivativesContext.relationshipToSpotFlows`
+- `anomaly.asset`, `anomaly.venue`, `anomaly.metric`, `anomaly.observedValueUsd`, `anomaly.baselineValueUsd`, `anomaly.deltaUsd`, `anomaly.deltaPct`, `anomaly.zScore`
+- `regimeShift.previousState`, `regimeShift.currentState`, `regimeShift.flipTimestamp`, `regimeShift.supportingVenues[]`, `regimeShift.supportingMetrics[]`
+
+## Acceptable ambiguity behavior
+
+- If `asset`, venue scope, and time window are explicit, the runtime should not clarify.
+- If the user says "today" or "right now," the server may default to rolling `24h`, but it must disclose that assumption.
+- If the user asks for a "heatmap" without naming venues, the server may use the supported major-venue set and disclose that scope. It should not clarify unless the venue choice would materially change the answer.
+- If the prompt asks for an explanation or confirmation, the server should gather the second evidence source instead of clarifying.
+- If the prompt requires unsupported venue-only data, the correct outcome is `capability_miss`, not a weak generic answer.
+
+## Shared failure labels
+
+Use these labels in future scorecards and validation artifacts when a must-win prompt misses:
+
+- `missing_evidence`
+- `clarified_unnecessarily`
+- `wrong_tool_path`
+- `stale_answer`
+- `unsupported_causal_claim`
+- `capability_miss_misfire`
+- `deployment_mismatch`
+- `executed_but_weak`
+
+## Must-Win Prompts
+
+### 1. BTC flow plus catalyst
+
+- Prompt: `Is BTC flowing into or out of exchanges on Coinglass? Search for news explaining the flow.`
+- Target user: discretionary crypto trader or market analyst.
+- Why they pay: they want live flow direction plus likely catalysts faster than manually checking a dashboard and then hunting for news context.
+- Weak substitute: Coinglass plus manual search is too slow, not normalized, and not machine-readable.
+- Preferred response shape: `answer_with_evidence`
+- Preferred view: `timeseries`
+- Required evidence fields: `asset`, `timeWindow`, `asOf`, `aggregateFlow.netFlowUsd`, `aggregateFlow.direction`, `venueBreakdown[].venue`, `venueBreakdown[].netFlowUsd`, `venueBreakdown[].shareOfTotal`, `catalystRefs[].source`, `catalystRefs[].publishedAt`, `catalystRefs[].claim`, `catalystRefs[].relationToFlow`, `sourceRefs[].provider`, `sourceRefs[].artifactRef`, `confidence.level`
+- Freshness: flow data should be no older than `15m`; catalyst/news evidence should be no older than `6h`.
+- Acceptable ambiguity behavior: no clarification. If the time window is omitted, default to rolling `24h` and disclose it.
+- Failure: no explicit direction, no quantified net flow, no venue breakdown, no supporting catalyst or explicit "no credible catalyst found" note, or a one-source answer that ignores the requested explanation step.
+
+### 2. Cross-exchange BTC heatmap
+
+- Prompt: `Which exchanges are seeing the largest BTC inflows and outflows over the last 24 hours? Give me a heatmap-style ranking with magnitude and share of total flow.`
+- Target user: market structure trader, research desk, or exchange analyst.
+- Why they pay: they need a ranked venue view they can act on immediately, not raw screenshots or scattered charts.
+- Weak substitute: dashboard screenshots and manual spreadsheets do not produce a normalized ranking or share-of-total view.
+- Preferred response shape: `answer_with_evidence`
+- Preferred view: `heatmap`
+- Required evidence fields: `asset`, `timeWindow`, `asOf`, `venueBreakdown[].venue`, `venueBreakdown[].netFlowUsd`, `venueBreakdown[].grossInflowUsd`, `venueBreakdown[].grossOutflowUsd`, `venueBreakdown[].shareOfTotal`, `venueBreakdown[].rank`, `sourceRefs[].provider`, `sourceRefs[].artifactRef`
+- Freshness: no older than `15m`.
+- Acceptable ambiguity behavior: no clarification.
+- Failure: no venue ranking, no share-of-total numbers, no heatmap/table-ready structure, or only aggregate prose with no machine-readable venue breakdown.
+
+### 3. Stablecoin rotation
+
+- Prompt: `Where is stablecoin liquidity rotating today? Rank exchanges by USDT and USDC net inflow, then compare the move with the prior 7-day baseline.`
+- Target user: intraday trader, treasury desk, or venue risk analyst.
+- Why they pay: the answer condenses rotation signals and regime change into one artifact instead of forcing manual venue-by-venue inspection.
+- Weak substitute: first-party dashboards usually require manual cross-exchange comparison and often do not normalize per-stablecoin flow shifts against a recent baseline.
+- Preferred response shape: `answer_with_evidence`
+- Preferred view: `leaderboard`
+- Required evidence fields: `assets`, `timeWindow`, `asOf`, `venueBreakdown[].venue`, `venueBreakdown[].asset`, `venueBreakdown[].netFlowUsd`, `venueBreakdown[].rank`, `baselineComparison.baselineWindow`, `baselineComparison.deltaUsd`, `baselineComparison.deltaPct`, `baselineComparison.regimeChange`, `sourceRefs[].provider`, `sourceRefs[].artifactRef`
+- Freshness: flow data no older than `30m`.
+- Acceptable ambiguity behavior: interpret "today" as rolling `24h` and disclose it. Do not clarify.
+- Failure: USDT and USDC are collapsed into one unlabeled value, the answer omits the baseline comparison, or the venue ranking is missing.
+
+### 4. Spot-versus-derivatives divergence
+
+- Prompt: `Show me whether ETH exchange flows confirm or contradict current derivatives positioning. Compare net spot flows, open interest direction, and liquidations, and call out any venue-specific divergence.`
+- Target user: derivatives trader, portfolio manager, or macro analyst.
+- Why they pay: they need a clear cross-signal verdict without manually combining spot-flow, OI, and liquidation pages.
+- Weak substitute: separate dashboard tabs do not produce a concise confirm-versus-contradict judgment or a reusable evidence package.
+- Preferred response shape: `answer_with_evidence`
+- Preferred view: `table`
+- Required evidence fields: `asset`, `timeWindow`, `asOf`, `aggregateFlow.netFlowUsd`, `aggregateFlow.direction`, `venueBreakdown[].venue`, `venueBreakdown[].netFlowUsd`, `derivativesContext.openInterestDirection`, `derivativesContext.openInterestChangePct`, `derivativesContext.liquidationBias`, `derivativesContext.venues[]`, `derivativesContext.relationshipToSpotFlows`, `sourceRefs[].provider`, `sourceRefs[].artifactRef`
+- Freshness: flow and derivatives evidence no older than `15m`.
+- Acceptable ambiguity behavior: no clarification.
+- Failure: one side of the comparison is missing, there is no explicit confirm-versus-contradict verdict, or no venue-specific divergence is called out.
+
+### 5. Abnormal flow event
+
+- Prompt: `Which venue shows the most abnormal exchange-flow event right now for BTC, ETH, or stablecoins? Quantify the anomaly versus the 30-day baseline and cite the likely catalyst.`
+- Target user: alert-driven analyst, market maker, or high-frequency discretionary trader.
+- Why they pay: they want the biggest abnormal move surfaced and explained without running a custom monitoring stack.
+- Weak substitute: raw dashboards may show current numbers, but they rarely quantify abnormality against a rolling baseline or attach likely catalysts.
+- Preferred response shape: `answer_with_evidence`
+- Preferred view: `heatmap`
+- Required evidence fields: `timeWindow`, `asOf`, `anomaly.asset`, `anomaly.venue`, `anomaly.metric`, `anomaly.observedValueUsd`, `anomaly.baselineValueUsd`, `anomaly.deltaUsd`, `anomaly.deltaPct`, `anomaly.zScore`, `catalystRefs[].source`, `catalystRefs[].publishedAt`, `catalystRefs[].claim`, `sourceRefs[].provider`, `sourceRefs[].artifactRef`, `confidence.level`
+- Freshness: flow data no older than `15m`; catalyst evidence no older than `6h`.
+- Acceptable ambiguity behavior: do not clarify on the asset universe. Evaluate `BTC`, `ETH`, `USDT`, and `USDC` by default and disclose that scope.
+- Failure: no quantified anomaly, no baseline comparison, or a causal claim with no cited supporting source.
+
+### 6. BTC regime flip
+
+- Prompt: `Did BTC exchange flows flip from accumulation to distribution in the last 48 hours? Summarize the regime change, the leading venues, and the evidence behind the shift.`
+- Target user: swing trader, newsletter writer, or portfolio manager.
+- Why they pay: they want a defensible regime summary with timestamps and venue evidence, not generic directionality prose.
+- Weak substitute: manual chart reading is slow and subjective, especially when the user also needs venue attribution and catalyst context.
+- Preferred response shape: `answer_with_evidence`
+- Preferred view: `timeseries`
+- Required evidence fields: `asset`, `timeWindow`, `asOf`, `regimeShift.previousState`, `regimeShift.currentState`, `regimeShift.flipTimestamp`, `regimeShift.supportingVenues[]`, `regimeShift.supportingMetrics[]`, `baselineComparison.baselineWindow`, `baselineComparison.deltaUsd`, `baselineComparison.deltaPct`, `catalystRefs[].source`, `catalystRefs[].publishedAt`, `catalystRefs[].claim`, `sourceRefs[].provider`, `sourceRefs[].artifactRef`, `confidence.level`
+- Freshness: flow data no older than `30m`; catalyst evidence no older than `12h`.
+- Acceptable ambiguity behavior: no clarification.
+- Failure: no explicit flip point, no venue evidence, no supporting metrics, or a regime claim that is not grounded in baseline comparison.
+
+## Non-goals
+
+- Order-book microstructure or trade execution guidance for unsupported venues.
+- User-specific wallet, account, or trading actions.
+- Generic macro commentary with no venue-level flow evidence.
+- Plain prose answers that cannot be reconstructed by a downstream agent.

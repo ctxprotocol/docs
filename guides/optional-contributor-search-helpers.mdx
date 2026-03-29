@@ -1,0 +1,207 @@
+---
+title: "Optional Contributor Search Helpers"
+description: "Frozen contract for contributor-side LLM-backed search helpers on search-hard venues"
+---
+
+## What This Pattern Is
+
+Some contributor venues expose great primitives but weak native search. In those cases, a contributor may optionally add a **contributor-side search helper** that turns a broad natural-language request into a bounded candidate set and, when needed, uses a cheap LLM judge to pick the best match.
+
+This pattern is intentionally **optional**:
+
+- Context marketplace discovery stays generic.
+- Contributor servers stay responsible for venue-specific retrieval inside their own methods.
+- Contributors with strong upstream search should usually **not** adopt this helper at all.
+
+## Frozen Product Boundaries
+
+The contract is locked to these boundaries:
+
+- Context runtime discovers tools and methods, not venue-specific market/entity candidates.
+- The helper runs inside the contributor server or contributor-side SDK helper layer.
+- Deterministic candidate gathering, provenance, normalization, and schema validation stay contributor-owned and auditable.
+- If the helper surfaces diagnostics to the runtime, they must be standardized trace metadata rather than venue-specific control flow leaking into the marketplace contract.
+- The helper does **not** change `client.query.run()`, `client.tools.execute()`, or the public Query/Execute billing model.
+
+## When To Use It
+
+Use this pattern only when all of the following are true:
+
+- the contributor wraps a venue where the upstream search surface is weak, noisy, or incomplete
+- deterministic-only ranking has already proven insufficient on real prompts
+- the contributor still has a deterministic way to fetch, normalize, and validate candidates before and after any model judgment
+
+Do **not** use this pattern when:
+
+- the upstream venue already exposes reliable direct search and candidate resolution
+- the venue can be solved by a small deterministic wrapper without model judgment
+- the contributor cannot return honest degraded outcomes when the judge is slow, malformed, unavailable, or over budget
+
+## Contributor Adoption Checklist
+
+Before you enable this helper for a venue, lock all of the following:
+
+- the exact named prompt families you are trying to resolve, plus one generic overlap fixture, one still-ambiguous fixture, and one capability-miss fixture
+- the strongest public retrieval surface(s) you will hit before any model judgment
+- the deterministic constraints that must still hold before and after the judge runs
+- the default provider/model, timeout, budget, disable switch, and degraded-outcome policy you will expose to contributors
+- how the extra LLM spend will be recovered in your own listing response price and/or execute pricing
+- where you will save replayable machine-readable validation artifacts for later agents and rollout reviews
+
+If you cannot explain the helper in those terms, you probably do not need it yet.
+
+## Frozen Helper Flow
+
+The helper contract is locked to this shape:
+
+1. Distill the request into one or more compact search intents or clause-owned search queries.
+2. Hit the venue's strongest public retrieval surface.
+3. Deterministically normalize, deduplicate, and locally rank the candidate pool.
+4. Ask a cheap judge model to return strict JSON that names the primary, related, and rejected candidates.
+5. Deterministically validate the judge output against the actual shortlist.
+6. Fetch full details only for the shortlisted candidates.
+7. Return structured answer data plus search provenance, confidence, and any degraded-outcome signal.
+
+The product claim is **not** "deterministic-only resolution." This helper exists for venues where model judgment is part of the real quality path, but the model must stay inside a deterministic safety envelope.
+
+## Allowed Outcomes
+
+The helper may return only these outcome classes:
+
+- `selected`: one validated candidate survived and the contributor can proceed with a bounded, honest confidence signal
+- `shortlist_only`: the helper could not honestly select one candidate, so it returns a bounded shortlist plus the degradation reason
+- `capability_miss`: no viable candidate can satisfy the requested venue, market family, or capability
+
+Additional rules:
+
+- A malformed, contradictory, slow, unavailable, disabled, or over-budget judge must never silently manufacture certainty.
+- The helper may return a low-confidence `selected` result only when one best candidate still survives deterministic validation and that low confidence is surfaced honestly.
+- If the judge fails and no uniquely grounded candidate remains, the helper must degrade to `shortlist_only` or `capability_miss`.
+
+## Provider And Cost Policy
+
+Provider/model behavior is frozen to the following rules:
+
+- The helper core accepts an injected judge implementation or equivalent config-driven adapter boundary.
+- Provider choice is contributor-configurable; OpenRouter is only the reference adapter for this phase.
+- Contributors may override provider, model, timeout, budget, and disable-switch behavior without changing helper call sites.
+- Billing is contributor BYOK only in this phase. Any extra model spend belongs to the contributor server.
+- The platform does **not** provide hosted judge routing, deferred judge reimbursement, or platform-funded model fallback in this rollout.
+- If a design spike or local validation run exercises a judge, use `glm-turbo-model` locally unless you are intentionally comparing models.
+
+### Pricing Responsibility In Practice
+
+- Context continues to bill the normal Query and Execute surfaces only. The helper does **not** create a new marketplace billing surface.
+- Any incremental judge spend comes from the contributor's own provider credentials, so the contributor should recover it through listing response pricing and, when relevant, execute pricing.
+- Keep the judge cheap enough that honest degradation remains viable. A helper that only works when every call burns an oversized model budget is not ready for rollout.
+
+## Public Semantics That Must Match Across SDKs
+
+These semantics are now locked across the TypeScript and Python SDKs:
+
+- the helper stays contributor-side and optional in both languages
+- the same high-level knobs must exist in both languages: provider/model override, timeout, budget, disable switch, and degraded-outcome policy
+- the same result concepts must exist in both languages: shortlisted candidates, selected candidate, related/rejected candidates, confidence, provenance, and degraded-outcome signals
+- the same compact provenance envelope must exist in both languages: `searchMetadata` with `selectedCandidateId`, shortlist/related/rejected candidate ids, candidate counts, judge snapshot, provenance sources, and validator trace summary
+- the same machine-readable validation artifact shape must exist in both languages: top-level case metadata plus a nested `resolution` block with `selectedCandidateId`, shortlist/related/rejected ids, confidence, reason, and `degradedReasonCode`
+- developer traces must expose aggregated contributor search provenance at `QueryDeveloperTraceDiagnostics.contributorSearches`
+- a semantic mismatch between the two SDKs is a contract bug, not an acceptable language difference
+
+## TypeScript And Python Adoption Surface
+
+Both SDKs now ship contributor-focused helper modules:
+
+<CodeGroup>
+```typescript
+import {
+  buildContributorSearchValidationArtifact,
+  createSearchIntent,
+  extractContributorSearchesFromDeveloperTrace,
+  mergeContributorSearchConfig,
+  resolveContributorSearch,
+} from "@ctxprotocol/sdk/contrib/search";
+```
+
+```python
+from ctxprotocol.contrib.search import (
+    build_contributor_search_validation_artifact,
+    create_search_intent,
+    extract_contributor_searches_from_developer_trace,
+    merge_contributor_search_config,
+    resolve_contributor_search,
+)
+```
+</CodeGroup>
+
+Keep these adoption rules aligned across both languages:
+
+- TypeScript can stay camelCase and Python can stay snake_case at the API surface, but the JSON-facing `searchMetadata`, validation artifact fields, and degraded reason codes must remain semantically identical.
+- Provider/model overrides, timeout, budget, disable switch behavior, and degraded-outcome policy must merge in the same order in both SDKs: helper defaults -> contributor defaults -> per-call overrides.
+- Runtime developer traces expose aggregated contributor helper provenance at `QueryDeveloperTraceDiagnostics.contributorSearches`; that is the runtime visibility contract, not a venue-specific `_meta` field.
+
+## Packaging Decision
+
+The core helper exports now ship at these SDK-owned paths:
+
+- TypeScript core helper surface: `@ctxprotocol/sdk/contrib/search`
+- Python core helper surface: `ctxprotocol.contrib.search`
+- the core helper surface lives inside each SDK as a contributor-focused module rather than as a new marketplace protocol requirement
+- provider-specific adapters will sit alongside that core helper surface rather than inside the marketplace runtime
+- OpenRouter remains the first planned reference adapter, but the contract must remain provider-agnostic
+
+## Degraded Outcomes In Practice
+
+Use degraded outcomes to stay honest, not as a hidden retry loop:
+
+- `selected`: one deterministically valid best candidate survives. This may still carry low confidence, but only when that low confidence is surfaced explicitly.
+- `shortlist_only`: grounded candidates remain, but the helper cannot honestly pick one winner. Common reason codes include `judge_disabled`, `judge_timeout`, `judge_budget_exceeded`, `judge_invalid_output`, and `validator_rejected`.
+- `capability_miss`: no viable candidate satisfies the requested venue, market family, or capability.
+
+Saved artifacts and tool results should preserve the machine-readable explanation, not just the prose reason:
+
+- `resolution.degradedReasonCode`
+- `searchMetadata.degraded`
+- `searchMetadata.judge`
+- `searchMetadata.trace`
+
+## Saved Validation Evidence
+
+Use the checked-in artifact directories as the current replayable evidence base:
+
+- TypeScript Polymarket pilot: `context-sdk/examples/server/polymarket-contributor/validation/`
+- TypeScript Kalshi pilot: `context-sdk/examples/server/kalshi-contributor/validation/`
+- Python parity fixtures: `context-sdk-python/examples/client/validation/`
+
+When reviewing evidence, inspect both the human-readable resolution and the bounded machine signals:
+
+- `resolution.selectedCandidateId`, shortlist/related/rejected ids, and `degradedReasonCode`
+- `searchMetadata.judge.usage` for observed tokens, cost, and latency
+- `searchMetadata.provenance` and `searchMetadata.trace` for retrieval sources and validator behavior
+
+## Validation Anchors For Later Batches
+
+Future implementation work must keep passing these anchors:
+
+- Polymarket: `What are Polymarket's implied odds on US or allied boots on the ground in Iran—which specific markets, resolution dates, and price levels matter, and how should I think about that for broader risk-off positioning?`
+- Kalshi: `What does Kalshi imply about the Supreme Court tariffs case, and which exact market should I inspect?`
+- Generic overlap fixture: multiple overlapping candidates exist but one best match should win
+- Still-ambiguous fixture: low confidence or clarification survives instead of fake certainty
+- Capability-miss fixture: no candidate can satisfy the requested venue or capability
+
+## Rollout Recommendation
+
+Do **not** recommend this helper as the default marketplace pattern just because it now ships in both SDKs. Broader rollout stays gated until all of these hold at the same time:
+
+- TypeScript and Python surfaces still match on config knobs, `searchMetadata`, validation-artifact semantics, and developer-trace visibility.
+- The TypeScript contributor pilots keep passing the Polymarket and Kalshi anchors with bounded judge cost and bounded judge latency visible in saved artifacts.
+- Python parity fixtures keep passing the same named and generic behavior classes, including still-ambiguous and capability-miss cases.
+- Checked-in machine-readable artifacts remain replayable in all three validation directories.
+- Degraded outcomes stay honest in both traces and artifacts instead of being flattened into fake certainty.
+
+Until those gates are green together, treat this as an optional contributor-side pattern proven on the current pilots, not a new marketplace requirement and not the default recommendation for contributors with healthy upstream search.
+
+## Related Docs
+
+- [Build & List Your Tool](/guides/build-tools)
+- [Tool Metadata](/guides/tool-metadata)
+- [Query and Chat Agentic Flow](/architecture/query-chat-agentic-flow)

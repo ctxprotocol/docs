@@ -13,6 +13,48 @@ Want to earn revenue from your data? **Turn the insights people pay \$500/year f
 
 ---
 
+## Start With A Product Contract
+
+Before you write code, decide which product you are actually shipping:
+
+| Surface | What you are selling | What good looks like |
+|---------|----------------------|----------------------|
+| **Query** | A premium answer contract | Context can return `answer_with_evidence` in chat and `evidence_only` for external agents with the right facts, source refs, freshness, confidence, and view hints |
+| **Execute** | A normalized primitive contract | Agents get stable typed fields, consistent pagination/filtering, and explicit execute pricing without having to normalize fragmented APIs themselves |
+| **Both** | A normalized primitive that can also power premium answers | The same canonical data can support Query synthesis and direct Execute calls |
+
+Every serious builder brief should specify:
+
+- the exact premium feature or normalized primitive
+- the target paying user
+- 5 must-win prompts or requests
+- the expected evidence fields or normalized schema
+- the ideal output surface (`Query`, `Execute`, or `both`)
+- freshness / latency expectations
+- why free substitutes or direct APIs are insufficient
+
+<Info>
+If your pitch still reads like a category label such as "crypto analytics" or "company data," it is too vague. Name the exact feature users would pay for.
+</Info>
+
+## Optional Search Helpers For Search-Hard Venues
+
+Most contributors should rely on strong upstream search plus clean tool schemas. If your venue's native search is too weak to reliably resolve the right market, entity, or series from real user prompts, you may adopt the optional contributor-side pattern described in [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers).
+
+Treat that pattern as a **contributor utility**, not a marketplace requirement:
+
+- keep Context discovery generic
+- keep candidate gathering, normalization, provenance, and validation deterministic inside the contributor
+- inject any model judge behind a provider-agnostic boundary
+- keep provider credentials and model spend contributor-owned
+- return honest degraded outcomes when the judge is disabled, malformed, slow, unavailable, or over budget
+- keep the helper optional even after it ships in both SDKs; contributors with strong upstream search should still avoid it
+- save replayable validation artifacts for named regressions, generic overlap, still-ambiguous, and capability-miss cases before you recommend it more broadly
+
+If your upstream venue already exposes reliable search and candidate selection, do **not** add this helper just because it exists. For the full adoption checklist, parity contract, and rollout gate, see [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers).
+
+---
+
 ## AI-Assisted Builder (TL;DR)
 
 **Have an API subscription you want to unbundle?** Use Cursor, Claude, or any AI coding agent to build your MCP server automatically.
@@ -27,7 +69,8 @@ Want to earn revenue from your data? **Turn the insights people pay \$500/year f
   <Step title="Build the MCP Server">
     Use the **[MCP Builder Template](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-builder-template.md)** as a system prompt to:
     - Fetch API docs via Context7 and discover all endpoints
-    - Design "giga-brained" intelligence tools (not just API passthroughs)
+    - Define the exact feature, target user, must-win prompts, evidence fields, and ideal surface before writing code
+    - Design premium answer products or normalized primitives (not just API passthroughs)
     - Generate complete schemas with `outputSchema`
     - Implement the full MCP server
     
@@ -57,11 +100,12 @@ I want to build an MCP server for the Context Marketplace using the CoinGecko AP
 1. Use context7 to fetch the CoinGecko API documentation
 2. Follow the mcp-builder-template.md workflow:
    - PHASE 1: Discover all endpoints
-   - PHASE 2: Generate discovery questions (STOP for my review)
+   - PHASE 2: Generate the product contract: target user, 5 must-win prompts, evidence fields, and ideal output surface (STOP for my review)
    - PHASE 3: Design and implement tools after I approve
 
-Focus on "giga-brained" tools that combine multiple endpoints to answer
-questions users couldn't easily answer with raw API calls.
+Focus on a premium feature users would actually pay for, not a generic
+API wrapper. The end result should either power Query answers with evidence
+or provide Execute primitives with a clean normalized schema.
 ```
 
 <Tip>
@@ -133,7 +177,7 @@ Use standard JSON Schema keys in `inputSchema` properties to guide argument gene
 - **`default`** — fallback value the AI uses when the user doesn't specify one (e.g., `"default": "BTC"`)
 - **`examples`** — sample values the AI references to understand valid inputs (e.g., `"examples": ["BTC", "ETH", "SOL"]`)
 
-The platform reads these fields during orchestration to generate correct arguments for your methods. In the internal `deep-heavy` Scout lane, they can also determine whether the runtime can form a safe bounded read-only pre-plan probe before planning. In `deep-light`, the same fields still improve metadata-first planning without probing. Without them, the AI must guess valid values from the description alone, leading to fewer safe probes, more retries, and lower first-pass success rates.
+The platform reads these fields during orchestration to generate correct arguments for your methods. In the active unified `deep` lane, they improve metadata-first planning, clarification grounding, and method selection before execution. Historical traces may still mention `deep-light` or `deep-heavy`, but those legacy labels now normalize to the same `deep` runtime path. Without strong schema hints, the AI must guess valid values from the description alone, leading to more retries and lower first-pass success rates.
 
 Do not add custom `_meta.inputExamples`; `_meta` should only carry tool metadata such as pricing, context requirements, and rate-limit hints.
 </Tip>
@@ -440,12 +484,13 @@ Now that your tool is live, validate it works correctly through the marketplace 
 
 <Steps>
   <Step title="Manual: Test in the Chat App">
-    Enable **Developer Mode** in Settings → Developer Settings. In the right sidebar, turn off **Auto mode** and select your tool. Send a message and check the **Developer Logs** preview card at the bottom of the response for errors. See the [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for details.
+    Enable **Developer Mode** in Settings → Developer Settings. In the right sidebar, turn off **Auto mode** and select your tool. Send one of your **must-win prompts** and check the **Developer Logs** preview card at the bottom of the response for errors. See the [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for details.
   </Step>
   <Step title="Manual: Test via the SDK">
     Use the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference) to test both surfaces:
 
-    - **Query mode:** `client.query.run({ query: "...", tools: ["your-tool-id"], queryDepth: "deep", includeDeveloperTrace: true })` — validates your tool produces meaningful answers through the agentic pipeline
+    - **Query mode:** `client.query.run({ query: "...", tools: ["your-tool-id"], queryDepth: "deep", responseShape: "answer_with_evidence", includeDeveloperTrace: true })` — validates your tool can support the same premium answer contract the first-party chat uses
+    - **Agent-facing Query mode:** rerun the same must-win prompt with `responseShape: "evidence_only"` and confirm the evidence package is still useful without prose synthesis
     - **Execute mode** (if enabled): `client.tools.execute({ toolId: "...", toolName: "...", args: {...} })` — validates per-method call responses match your declared schemas
   </Step>
   <Step title="Automated: Deep Validation System Prompt">
@@ -453,7 +498,8 @@ Now that your tool is live, validate it works correctly through the marketplace 
 
     - Checks your server against the [Context Protocol docs](https://docs.ctxprotocol.com) for compliance
     - Tests both Query mode and Execute mode through the SDK with developer traces
-    - Generates a marketplace listing (name, description, "Try asking" prompts)
+    - Scores the server against must-win prompts, expected evidence fields, and intended output surfaces
+    - Generates a marketplace listing (name, description, must-win style "Try asking" prompts)
     - Provides actionable fixes and re-tests in a loop until all gates pass
   </Step>
 </Steps>
@@ -461,6 +507,10 @@ Now that your tool is live, validate it works correctly through the marketplace 
 <Tip>
 The deep validation prompt handles both **pre-submission** (direct endpoint testing before you list) and **post-submission** (full SDK-based marketplace testing after you list). Give it your endpoint URL and API key and it figures out the right workflow.
 </Tip>
+
+<Note>
+If you are validating a local or preview runtime on your own machine, prefer `answerModelId: "glm-turbo-model"` for Query regression runs unless you are intentionally comparing models. It is the default non-geo-blocked local validation model for this workstream.
+</Note>
 
 ---
 

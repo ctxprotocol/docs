@@ -36,13 +36,13 @@ Context Protocol is a decentralized marketplace where AI agents pay for data. Bu
 
 We reject proposals that:
 
-- **Wrap a single public API without adding value**: Calling CoinGecko and returning the JSON isn't a product. For Query mode, add analysis, scoring, or synthesis. For Execute mode, normalize across multiple sources into a consistent typed schema — that's the value.
+- **Wrap a single public API without adding value**: Calling CoinGecko and returning the JSON isn't a product. For Query mode, add analysis, scoring, or synthesis. For Execute mode, normalize across multiple sources into a consistent typed schema — that's the value. If the likely buyer would rather own the integration than pay through Context, it is Tier B at best unless you add strong normalization, provenance, partial-failure handling, caching, rate-limit protection, or multi-source abstraction.
 - **Chase dead or saturated markets**: Meme coin tooling, yield aggregators, and rug checkers had their moment. The alpha is gone.
 - **Unbundle subscriptions that AI itself is killing**: SEO tools (SEMrush, Ahrefs, Moz), keyword research platforms, and backlink analyzers exist because Google Search exists. As users shift to AI chatbots, these subscriptions are in structural decline. We don't fund cheaper versions of dying products. Ask: "Is the subscription I'm unbundling itself being disrupted by AI?" If yes, don't apply.
 - **Compete with dominant free alternatives**: If Semantic Scholar, Etherscan, or Google News already does it for free, your tool needs a 10x differentiated angle.
-- **Lack evidence of demand**: "This would be useful" isn't enough. Show us the expensive subscription people are paying for (Query tools) or the fragmented APIs developers are struggling to normalize (Execute tools).
+- **Lack evidence of demand**: "This would be useful" isn't enough. Show us the expensive subscription people are paying for (Query tools) or the fragmented APIs developers are struggling to normalize (Execute tools). The evidence must support the exact feature or primitive you are pitching, not just the broad vertical.
 
-**The bar:** Can you find real Twitter threads, forum posts, or Reddit threads of people complaining or evangelising about paying for this specific data — or developers complaining about integrating multiple inconsistent APIs for it? If not, don't apply.
+**The bar:** Can you find real Twitter threads, forum posts, or Reddit threads of people complaining or evangelising about paying for this specific answer product — or developers complaining about the exact integration and normalization pain your Execute primitive solves? If not, don't apply.
 </Warning>
 
 ---
@@ -176,222 +176,181 @@ Your proposal should say: *"Developers integrating multiple exchange APIs spend 
 
 ## 📋 Request for Builders (RFB)
 
-We're actively funding tools across these verticals. These ideas target **specific features of expensive subscriptions** (Query mode) and **fragmented data that needs normalization** (Execute mode), not commodity data. If you have a novel idea with evidence of demand, pitch it.
+We are no longer funding broad category wrappers like "crypto analytics" or "competitive intelligence."
+We fund **feature-level products** with explicit demand, explicit evidence, and an explicit surface contract.
+If you cannot explain why the buyer would rather pay through Context than own the workflow or integration themselves, the proposal is Tier B at best.
+
+Every proposal should read like a product brief:
+
+| You must specify | Query mode answer product | Execute mode primitive product |
+|------------------|---------------------------|--------------------------------|
+| **Exact thing being unbundled** | The premium answer users currently pay for | The painful multi-source primitive developers currently normalize themselves |
+| **Exact paying persona + why they pay through Context** | Trader, analyst, seller, researcher, or operator, plus why a managed Query answer beats manual search, dashboards, or a generic chatbot | Agent builder, workflow engineer, quant, or internal tools team, plus why they would pay Context instead of owning the integration directly |
+| **5 must-win prompts** | Questions Context should answer materially better than a generic chatbot | Requests an agent can reliably compose into downstream logic |
+| **Demand proof** | Specific evidence that people pay for or complain about this exact answer workflow, not just the category | Specific evidence that developers struggle with this exact integration or normalization pain, not just the category |
+| **Expected evidence / schema** | Facts, source refs, freshness, confidence, artifact links, ideal view | Stable typed fields, pagination/filtering rules, error semantics |
+| **Ideal output surface** | `Query` with `answer_with_evidence`, and optionally `evidence_only` for external agents | `Execute` or `both`, with normalized typed outputs |
+| **Why Context wins vs DIY / free substitutes** | Dashboards, screenshots, docs, manual search, and generic chatbots are too slow or not machine-readable for the paid answer contract | Direct APIs, vendor SDKs, and in-house scripts have inconsistent schemas, auth models, missing normalization, or too much maintenance burden |
+
+<Info>
+**The north star:** submit a premium feature, not a generic category.
+
+Good: "Exchange-flow intelligence with venue heatmaps, baseline comparison, and catalyst refs."
+
+Weak: "Crypto analytics."
+
+Good: "Cross-exchange order book normalization with one schema and stable pagination."
+
+Weak: "Exchange API wrapper."
+</Info>
 
 ---
 
 ## 🧠 Request for Builders: Query Mode Intelligence
 
-The ideas below are **Query mode** tools — curated intelligence that replaces expensive subscriptions at \$0.10/response. Context is the librarian; your tool provides the analysis.
+In Query mode, **Context is the librarian**. Your tool should help Context produce a premium answer contract for both:
 
-### 🏢 Competitive Intelligence & Sales
+- first-party chat via `answer_with_evidence`
+- external agents via `evidence_only`
 
-*Replaces: ZoomInfo (\$15K/yr), SensorTower (\$5K/yr), BuiltWith (\$3K/yr), SimilarWeb*
+That means your value is not just "the data exists." Your value is that the answer comes back with the right evidence fields, source refs, freshness, confidence, and a sensible render shape.
 
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **App Store Intel** | Downloads, revenue estimates, ASO keywords for any App Bundle ID | **S** |
-| **Tech Stack Detector** | Scan any domain → AWS, Stripe, Shopify, Segment, etc. | **A** |
-| **Website Traffic Estimator** | Monthly visitors, traffic sources, engagement metrics. Note: web traffic as a standalone metric is declining as distribution shifts to AI interfaces. Higher value if combined with app usage, social engagement, or AI-referral signals | **A** |
-| **Company Enrichment** | Domain → company size, funding, industry, key people | **S** |
-| **Job Posting Analyzer** | What's a company hiring for? Signals growth & priorities | **A** |
-| **LinkedIn Company Scanner** | Employee count trends, departures, hiring velocity | **S** |
-| **Ad Spend Estimator** | Estimate competitor Google/Meta ad spend and creative strategy | **S** |
-| **Social Mention Tracker** | Brand mentions across Twitter, Reddit, HN with sentiment | **A** |
+### Brief 1: Exchange-Flow Intelligence
 
----
+*Replaces: Coinglass dashboards + manual spreadsheets + ad hoc news search*
 
-### 📈 Financial Markets & Research
+- **Target user:** discretionary trader, research desk, exchange analyst
+- **Why they pay:** they want a venue-level flow answer they can act on immediately, not screenshots and tab-hopping
+- **Why free substitutes fail:** dashboards rarely produce a normalized ranking, baseline comparison, and explanation package in one machine-readable artifact
+- **Must-win prompts:**
+  - `Is BTC flowing into or out of exchanges on Coinglass? Search for news explaining the flow.`
+  - `Which exchanges are seeing the largest BTC inflows and outflows over the last 24 hours? Give me a heatmap-style ranking with magnitude and share of total flow.`
+  - `Where is stablecoin liquidity rotating today? Rank exchanges by USDT and USDC net inflow, then compare the move with the prior 7-day baseline.`
+  - `Show me whether ETH exchange flows confirm or contradict current derivatives positioning. Compare net spot flows, open interest direction, and liquidations, and call out any venue-specific divergence.`
+  - `Did BTC exchange flows flip from accumulation to distribution in the last 48 hours? Summarize the regime change, the leading venues, and the evidence behind the shift.`
+- **Expected evidence fields:** `asset`, `assets`, `timeWindow`, `asOf`, `aggregateFlow`, `venueBreakdown`, `sourceRefs`, `confidence`, `assumptions`, `knownUnknowns`, plus baseline/catalyst/derivatives extensions when the prompt asks for them
+- **Ideal output surface:** `Query`; preferred response shapes are `answer_with_evidence` for chat and `evidence_only` for external agents; ideal views are `heatmap`, `timeseries`, `leaderboard`, or `table`
+- **Tier target:** **S**
 
-*Replaces: Bloomberg (\$24K/yr), FactSet (\$12K/yr), Capital IQ (\$20K/yr)*
+### Brief 2: Prediction-Market Liquidity Intelligence
 
-Bloomberg's value is **parsed, structured financial data with analysis**, not raw filings you can get from EDGAR for free. Build tools that do the heavy lifting of extraction and interpretation.
+*Replaces: Polymarket/Kalshi browsing plus manual orderbook inspection*
 
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **SEC Filing Parser** | Turn 10-K/10-Q into structured JSON with key metrics, risk factors, and YoY changes | **S** |
-| **Earnings Call Analyzer** | Extract management quotes, sentiment shifts, guidance changes from transcripts | **S** |
-| **Insider Trading Tracker** | Real-time Form 4 filings with context: who's buying/selling and historical patterns | **A** |
-| **Institutional Holdings** | 13F filings parsed: what are hedge funds accumulating? Position changes quarter-over-quarter | **A** |
-| **IPO Pipeline Analyzer** | Upcoming listings with S-1 analysis, pricing expectations, comparable valuations | **A** |
+- **Target user:** trader, market maker, newsletter writer, sports/politics analyst
+- **Why they pay:** they need spread, depth, slippage, and venue comparison fast enough to trade or publish on it
+- **Why free substitutes fail:** raw market pages show pieces of the picture, but not a reusable liquidity verdict with comparable fields
+- **Must-win prompts:**
+  - `Analyze liquidity for the World Cup winner market.`
+  - `Which active Kalshi markets can absorb a $5,000 position with less than 2 cents of slippage?`
+  - `Compare liquidity and pricing efficiency for the same event on Polymarket and Kalshi.`
+  - `What is the cheapest way to exit a large YES position in this market right now?`
+  - `Which active markets have the widest spread relative to their recent volume?`
+- **Expected evidence fields:** `eventId`, `marketId`, `venue`, `side`, `bestBid`, `bestAsk`, `spreadBps`, `depth`, `slippage`, `recentVolume`, `observedAt`, `sourceRefs`
+- **Ideal output surface:** `Query` or `both`; ideal views are `table`, `leaderboard`, and `heatmap`
+- **Tier target:** **S**
 
----
+### Brief 3: Filing and Earnings Delta Intelligence
 
-### ⚡ Crypto & DeFi
+*Replaces: Bloomberg / FactSet / Capital IQ workflows built on top of raw filings and transcripts*
 
-*Replaces: Nansen (\$2.5K/yr), Arkham (\$1.5K/yr)*
+- **Target user:** equity analyst, PM, founder, investor-relations advisor
+- **Why they pay:** they want structured risk changes and management deltas without reading long PDFs or transcripts manually
+- **Why free substitutes fail:** EDGAR is free, but extraction, comparison, and ranking are the premium layer
+- **Must-win prompts:**
+  - `What changed in this company's risk factors versus the previous 10-K?`
+  - `Summarize the biggest guidance changes in the last two earnings calls.`
+  - `Which recent filings show the sharpest increase in supply-chain risk language?`
+  - `Compare management tone and guidance changes across three semiconductor companies this quarter.`
+  - `What are the three most important accounting or legal red flags in this filing?`
+- **Expected evidence fields:** `company`, `filingType`, `period`, `section`, `excerpt`, `changeType`, `changeMagnitude`, `sourceRefs`, `publishedAt`, `confidence`
+- **Ideal output surface:** `Query`; ideal views are `table`, `diff`, and `leaderboard`
+- **Tier target:** **S**
 
-Nansen's value isn't rug checking or gas prices. It's **wallet labeling, smart money identification, and entity clustering**. That's what people pay \$2.5K/year for. Build tools that deliver those specific insights.
+### Brief 4: App Download and Keyword-Share Intelligence
 
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Wallet Profiler** | Total P&L, biggest wins, current positions, activity patterns (the core Nansen feature) | **S** |
-| **Smart Money Tracker** | Who are the wallets with consistent alpha? What are they accumulating right now? | **S** |
-| **Entity Clustering** | Which wallets belong to the same entity? Surface connected wallets from on-chain patterns | **S** |
-| **Whale Alert with Context** | Not just "big transfer". Labeled entities, historical context, likely intent | **S** |
-| **Wallet Attribution** | Label unknown wallets: Is this a CEX? A fund? A known trader? Cross-reference patterns | **S** |
+*Replaces: SensorTower / Data.ai subscription slices where the user only needs one premium answer*
+
+- **Target user:** growth marketer, app founder, investor, product lead
+- **Why they pay:** they need one concrete market-intel answer before a pitch, launch, or budget decision
+- **Why free substitutes fail:** public app-store pages do not expose reliable download estimates, keyword-share trends, or competitor deltas
+- **Must-win prompts:**
+  - `Estimate downloads and revenue for this bundle ID over the last 30 days.`
+  - `Which competitors gained the most keyword share this week in this category?`
+  - `Compare download momentum for these three apps after the latest product launch.`
+  - `What is the fastest-growing finance app in Brazil this month and what evidence supports that call?`
+  - `Which ASO keywords matter most for this app and how did that change from last month?`
+- **Expected evidence fields:** `bundleId`, `country`, `timeWindow`, `downloadEstimate`, `revenueEstimate`, `keywordShare`, `rankChange`, `sourceRefs`, `freshness`, `confidence`
+- **Ideal output surface:** `Query`; ideal views are `leaderboard`, `timeseries`, and `table`
+- **Tier target:** **S**
 
 <Note>
-**What we're NOT funding in crypto:** Honeypot detectors, gas oracles, yield aggregators, bridge routers. These are already solved by free tools (DeFiLlama, CoinGecko, exchange APIs) with no premium tier worth unbundling.
-
-**What IS worth building:** For Query mode, wallet intelligence is the premium — that's what the \$2.5K/year Nansen subscription pays for. For Execute mode, cross-exchange normalized data (prices, order books, funding rates in a unified schema you build and maintain) is valuable infrastructure that eliminates the pain of integrating each exchange API separately.
+**What Query proposals should look like:** a premium answer contract with must-win prompts, evidence fields, freshness targets, and a clear reason a user would pay for one answer instead of assembling it manually.
 </Note>
-
----
-
-### 🛒 E-commerce & Product Research
-
-*Replaces: Jungle Scout (\$500/yr), Helium 10, Keepa Pro*
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Amazon Product Analyzer** | BSR trends, review sentiment, estimated monthly revenue | **S** |
-| **Supplier Finder** | Search Alibaba/1688 for manufacturers matching specs | **A** |
-| **Price History Tracker** | Historical pricing across major retailers | **A** |
-| **Review Sentiment Analyzer** | Aggregate complaints and praises from product reviews | **A** |
-
----
-
-### 👨‍💻 Developer Tools
-
-*Replaces: Snyk (\$500/yr), Sonatype (\$1K/yr), enterprise security scanning*
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Dependency Vulnerability Scanner** | Deep CVE analysis with exploit likelihood scoring (what Snyk charges \$500/yr for) | **S** |
-| **Supply Chain Risk Analyzer** | Package author history, maintainer changes, typosquat detection, dependency tree risks | **S** |
-| **GitHub Repo Analyzer** | Code quality, bus factor, activity patterns, license risks, contributor reputation | **A** |
-| **License Compliance Checker** | Scan dependencies for GPL/copyleft licenses that could affect your commercial use | **A** |
-
----
-
-### ⚖️ Legal & Compliance
-
-*Replaces: LexisNexis, Westlaw, PACER subscriptions*
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Court Filing Monitor** | Track federal cases involving specific companies or people | **S** |
-| **Patent Search** | Find patents by topic, claims, assignee, filing date | **A** |
-| **Trademark Lookup** | Is this name registered? Potential conflicts? | **A** |
-| **Regulatory Filing Tracker** | FDA approvals, FCC filings, EPA permits | **A** |
-| **Corporate Registry Search** | Business filings across state databases | **A** |
-
----
-
-### 🏠 Real Estate & Location
-
-*Replaces: CoStar (\$15K/yr), Zillow API, location analytics platforms*
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Property Valuation** | Estimate property value from address with comparable sales | **S** |
-| **Rental Comp Finder** | Comparable rents in any area | **A** |
-| **Permit Tracker** | What's being built or renovated? | **A** |
-| **Foot Traffic Estimator** | Estimate daily visitors to any location | **S** |
-| **Demographic Lookup** | Census data, income levels, population by zip | **A** |
-
----
-
-### 🎬 Media & Entertainment
-
-*Replaces: Chartmetric (\$5K/yr), influencer analytics platforms (\$2K/yr)*
-
-Note: Social Blade has a free tier for basic YouTube stats. We fund tools that go deeper: authenticity scoring, cross-platform analysis, and data Social Blade doesn't surface.
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Influencer Authenticity Scorer** | Fake follower detection, engagement authenticity, audience quality (what brands pay \$2K/yr to verify) | **S** |
-| **Podcast Analytics** | Estimated downloads, listener demographics, sponsor history (data locked behind Chartmetric) | **S** |
-| **Creator Brand Safety** | Scan creator history for controversial content, brand risks, audience sentiment | **A** |
-| **Music Rights Lookup** | Who owns this track? Licensing complexity score, sync history | **A** |
-
----
-
-### 🔬 Academic & Research
-
-*Replaces: Web of Science (\$5K/yr), Scopus, specialized research databases*
-
-Note: Semantic Scholar and Google Scholar are free. We're not funding basic paper search. We fund tools that deliver **analysis and synthesis** that researchers currently pay for.
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Research Landscape Mapper** | Access proprietary citation graph data (impact factors, h-index, institutional affiliations, funding sources) locked behind Web of Science/Scopus paywalls. The value is the data access, not the synthesis — AI already synthesizes well, but it cannot access paywalled citation metrics | **S** |
-| **Grant Opportunity Matcher** | Find funding opportunities matching research criteria across NSF, NIH, private foundations | **A** |
-| **Clinical Trial Matcher** | Match patient criteria to active trials with eligibility analysis | **A** |
-| **Patent-to-Paper Linker** | Connect academic research to commercial patents. Who's commercializing what? | **A** |
-
----
-
-### 🌍 Real World Data & Utilities
-
-*Tools that aggregate paid data sources or deliver analysis beyond free alternatives*
-
-Note: We're not funding weather APIs (free everywhere), basic flight tracking (FlightAware free tier), or news aggregation (Google News exists). We fund tools that deliver **unique aggregation or analysis**.
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Universal Package Tracker** | Track any shipment across all carriers with unified status and delivery predictions | **A** |
-| **Domain + Brand Availability** | Check domain, social handles, AND trademark conflicts in one call. Saves hours of manual research | **A** |
-| **Business Entity Verification** | Verify business registration, good standing, and officer information across state databases | **A** |
 
 ---
 
 ## 🔌 Request for Builders: Execute Mode Infrastructure
 
-Beyond curated intelligence, there's an equally valuable category of tools designed for **Execute mode**: normalized data infrastructure that eliminates the pain of integrating fragmented APIs.
+In Execute mode, **the developer's agent is the librarian**. The product is a normalized primitive contract, not a prose answer.
 
-Execute-mode tools serve SDK developers whose agents iterate over structured data at ~$0.001/call. The value isn't in the analysis — it's in the **normalization, consistency, and reliability** of the data across multiple sources.
+You are selling:
 
-<Info>
-**The evidence bar for Execute mode is different.** Instead of "show us the expensive subscription," show us the **fragmented API landscape** — the 5 different exchanges with 5 different schemas that developers currently integrate and maintain separately. If an agent builder would rather pay $0.001/call than spend a week normalizing data from multiple sources, that's a fundable tool.
+- consistent field names
+- predictable pagination/filtering
+- stable method semantics
+- explicit execute pricing
+- fewer hours spent normalizing fragmented APIs
 
-**Reference implementation:** The [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider) example demonstrates the ideal Execute-mode architecture: background ingestion from Binance + Hyperliquid into a local cache, normalized schema, zero upstream rate limits at serving time.
-</Info>
+### Brief 1: Cross-Exchange Order Book and Price Normalizer
 
-### ⚡ Crypto & DeFi Infrastructure
+*Replaces: integrating Binance + Coinbase + Kraken + OKX + Bybit separately*
 
-*Replaces: integrating Binance + Coinbase + Kraken + OKX + Bybit APIs individually*
+- **Target user:** quant, execution bot builder, analytics engineer
+- **Why they pay:** they want one schema and one pagination/filter contract instead of maintaining exchange-specific adapters
+- **Must-win requests:**
+  - `get_prices` across multiple exchanges with one `{ exchange, pair, price, volume, timestamp }` shape
+  - `get_orderbook` with the same depth schema on every venue
+  - `get_funding_rates` with normalized exchange and contract identifiers
+  - `get_liquidations` with consistent timestamps and side labels
+  - `get_market_snapshot` that combines top-of-book, funding, and open interest into one typed response
+- **Expected schema fields:** `exchange`, `symbol`, `timestamp`, `bids`, `asks`, `price`, `volume`, `fundingRate`, `openInterest`, `latencyNote`
+- **Ideal output surface:** `Execute` or `both`
+- **Tier target:** **S**
 
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Cross-Exchange Price Feed** | Unified `{ exchange, pair, price, volume, timestamp }` schema across 10+ exchanges. One method, consistent types | **S** |
-| **Order Book Aggregator** | Normalized depth data across exchanges — same schema whether it's Binance or Kraken | **A** |
-| **Multi-Chain Transaction Normalizer** | Unified transaction format across EVM chains (Ethereum, Base, Arbitrum, Polygon). Same schema, different chains | **S** |
-| **DeFi Position Normalizer** | Yield positions, LP data, and staking across Aave, Compound, Lido, etc. in a consistent format | **S** |
-| **Funding Rate Feed** | Perpetual funding rates across all major perp exchanges, normalized and comparable | **A** |
+### Brief 2: Multi-Source Company Identity and Enrichment Normalizer
 
-### 📈 Financial Data Infrastructure
+*Replaces: integrating Crunchbase + PitchBook + LinkedIn + BuiltWith + SimilarWeb separately*
 
-*Replaces: integrating EDGAR + international filings + FRED + BLS separately*
+- **Target user:** sales ops, internal tooling team, growth engineer
+- **Why they pay:** entity matching and schema cleanup are the expensive part, not fetching one record
+- **Must-win requests:**
+  - resolve one company from domain, name, and LinkedIn slug into a stable company ID
+  - fetch funding, employee, tech-stack, and traffic fields in one typed payload
+  - paginate comparable companies with the same schema regardless of source
+  - fetch hiring signals with normalized role/location fields
+  - return provenance per field so downstream systems can decide what to trust
+- **Expected schema fields:** `companyId`, `canonicalName`, `domain`, `sourceCoverage`, `employeeCount`, `funding`, `techStack`, `trafficEstimate`, `hiringSignals`, `provenance`
+- **Ideal output surface:** `Execute` or `both`
+- **Tier target:** **S**
 
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Multi-Source Financial Statements** | Balance sheet, income statement, cash flow in a consistent schema — whether the source is SEC, SEDAR, or Companies House | **S** |
-| **Economic Indicator Feed** | Normalized macro data (GDP, CPI, unemployment, rates) across FRED, BLS, ECB, and BOJ. One schema, global coverage | **S** |
-| **Corporate Events Feed** | Earnings dates, dividend announcements, splits, M&A — normalized across multiple data sources into a single event schema | **A** |
+### Brief 3: Multi-Retailer Pricing and Review Feed
 
-### 🏢 Business & Competitive Intelligence Infrastructure
+*Replaces: integrating Amazon + Walmart + Target + Shopify endpoints separately*
 
-*Replaces: integrating LinkedIn + Crunchbase + BuiltWith + SimilarWeb separately*
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Multi-Source Company Data** | Company metadata (size, funding, industry, tech stack) normalized across Crunchbase, PitchBook, LinkedIn, BuiltWith into one typed schema | **S** |
-| **Job Market Feed** | Job postings normalized across Indeed, LinkedIn, Greenhouse, Lever — consistent `{ company, role, level, location, salary_range }` per listing | **A** |
-| **Domain Intelligence Feed** | DNS records, SSL certs, WHOIS, tech stack, traffic estimates — all from one method with a consistent schema per domain | **A** |
-
-### 🛒 E-commerce & Pricing Infrastructure
-
-*Replaces: integrating Amazon + Walmart + Target + Shopify APIs separately*
-
-| Tool Idea | Description | Tier |
-|-----------|-------------|------|
-| **Multi-Retailer Price Feed** | Product pricing across Amazon, Walmart, Target in a unified `{ retailer, product, price, availability, timestamp }` schema | **S** |
-| **Review Aggregation Feed** | Product reviews normalized across retailers — same sentiment schema whether it's Amazon or Best Buy | **A** |
+- **Target user:** pricing bot builder, catalog ops team, e-commerce analyst
+- **Why they pay:** they need reliable downstream joins and comparisons, not one-off scraping results
+- **Must-win requests:**
+  - compare one product across multiple retailers with one price schema
+  - fetch historical prices with aligned timestamps and currency handling
+  - normalize review counts, star ratings, and review text summaries
+  - paginate search results across retailers with stable product identifiers
+  - return structured availability and seller metadata
+- **Expected schema fields:** `retailer`, `productId`, `canonicalSku`, `price`, `currency`, `availability`, `seller`, `reviewSummary`, `timestamp`
+- **Ideal output surface:** `Execute` or `both`
+- **Tier target:** **A**
 
 <Note>
-**Execute-mode tools can also serve Query mode.** If you set `surface: "both"` and `queryEligible: true` in your `_meta`, the Context app can use your normalized data as a source for curated responses too. Build for Execute, unlock both revenue streams with one line of config. See [Choosing a Mode](/guides/tool-metadata#choosing-a-mode).
+**Execute-mode tools can also serve Query mode.** If you set `surface: "both"` and `queryEligible: true` in your `_meta`, Context can use your normalized data as a source for premium Query answers too. See [Choosing a Mode](/guides/tool-metadata#choosing-a-mode).
 </Note>
 
 ---
@@ -417,7 +376,13 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
     - **Your email** — use the same email that's on your GitHub (public profile email or commit email). We verify GitHub ownership automatically, and mismatched emails will delay your review.
     - **Your wallet address** (from Step 1 — required for payment)
     - Tool name and description
-    - **What expensive service does this replace?** (This helps us understand the value)
+    - **Exact premium feature or normalized primitive** you are shipping
+    - **Target paying user** and why they would pay for this instead of using free substitutes
+    - **5 must-win prompts** that prove the product contract
+    - **Expected evidence fields or normalized schema fields**
+    - **Ideal output surface**: `Query`, `Execute`, or `both`
+    - **Freshness / latency target** and any ambiguity behavior expectations
+    - **What expensive service or fragmented integration this replaces**
     - Which tier you're targeting
     - Technical approach (1-2 paragraphs)
     - Your background (GitHub, portfolio)
@@ -466,8 +431,9 @@ Execute-mode tools serve SDK developers whose agents iterate over structured dat
     - Your **tool name** and **endpoint URL**
     - Your **tool ID** from ctxprotocol.com (go to [Developer → Tools](https://ctxprotocol.com/developer/tools) and copy the ID shown on your tool card — this is how we identify your tool for testing)
     - Link to your **public GitHub repo** for the MCP server (for code review)
-    - **3-5 robust test questions** that thoroughly exercise your tool's capabilities
-    - **Expected responses** for each question (so we know what "correct" looks like)
+    - **5 must-win prompts** that exercise the premium feature or normalized primitive you are claiming
+    - **Expected evidence fields / expected schema outputs** for each prompt
+    - **Expected response shape** for Query (`answer_with_evidence` and optionally `evidence_only`) or the exact Execute methods that should pass
     - Your **wallet address** (for payment verification)
     
     <Tip>
@@ -537,7 +503,7 @@ You're not alone. We're here to help you ship.
     Yes, but one at a time. Complete your current grant project before applying for another. This ensures quality and focus.
   </Accordion>
   <Accordion title="What if my tool idea isn't on the RFB list?">
-    The RFB is a starting point, not a limit. If you have evidence of an expensive subscription your tool unbundles, pitch it. But show your research (see "How to Find Unbundling Opportunities" above).
+    The RFB is a starting point, not a limit. If your idea is not listed, pitch it using the same contract: exact feature, target user, 5 must-win prompts, expected evidence fields or normalized schema, ideal output surface, and proof that free substitutes are insufficient.
   </Accordion>
   <Accordion title="Do I keep the revenue after the grant?">
     Yes! The grant is a one-time bootstrap. You keep **90% of all eligible usage fees** forever that's the whole point.

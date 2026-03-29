@@ -7,23 +7,52 @@ description: "How to build autonomous AI agents using the Discovery → Schema �
 
 The most powerful way to use the Context SDK is to **let your LLM do the driving**. Context provides one marketplace with two modes (Query + Execute), and there are two primary approaches:
 
+<Note>
+If you want the server-managed source of truth for how Context itself runs Query and chat requests, see [Query and Chat Agentic Flow](/architecture/query-chat-agentic-flow). This page focuses on the developer-facing pattern for building your own agent loop.
+</Note>
+
+### Choose The Contract First
+
+| Use this surface | When you want | What comes back |
+|------------------|---------------|-----------------|
+| **Query** | Context to act as the librarian | `answer`, `answer_with_evidence`, or `evidence_only` |
+| **Execute** | Your own agent to own the loop | Raw typed method outputs plus execute-session spend metadata |
+
+The first-party chat app is just a client of the same Query contract external SDK users get. If you want the server-managed answer package, use Query. If you want direct primitives for your own loop, use Execute.
+
 ### Option 1: Query API (Recommended)
 
 The simplest path — let Context's server handle everything:
 
 <CodeGroup>
 ```typescript TypeScript
-const answer = await client.query.run("What are the top whale movements on Base?");
-console.log(answer.response);  // AI-synthesized answer, tools handled server-side
+const answer = await client.query.run({
+  query: "What are the top whale movements on Base?",
+  responseShape: "answer_with_evidence",
+});
+console.log(answer.response);
+console.log(answer.summary);
+console.log(answer.evidence?.facts);
 ```
 
 ```python Python
-answer = await client.query.run("What are the top whale movements on Base?")
-print(answer.response)  # AI-synthesized answer, tools handled server-side
+answer = await client.query.run(
+    query="What are the top whale movements on Base?",
+    response_shape="answer_with_evidence",
+)
+print(answer.response)
+print(answer.summary)
+print(answer.evidence.facts if answer.evidence else None)
 ```
 </CodeGroup>
 
-The server discovers query-eligible tools, executes the full agentic pipeline (up to 100 MCP calls per response turn), handles retries and completeness checks, and returns a curated answer all for one flat fee. See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
+The server discovers query-eligible tools, executes the full agentic pipeline (up to 100 MCP calls per response turn), handles retries and completeness checks, and returns either:
+
+- a backward-compatible prose `answer`
+- `answer_with_evidence` for human-facing premium answers
+- `evidence_only` for agent-facing evidence packages without depending on prose synthesis
+
+See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
 
 ### Option 2: Build Your Own Loop
 

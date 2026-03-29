@@ -9,6 +9,10 @@ Every MCP tool definition supports a `_meta` field for platform-level configurat
 - **[Context Injection](#context-injection)** — declare what user-specific data the platform should inject into your tool's arguments
 - **[Pricing & Execute Mode Eligibility](#pricing-&-execute-mode-eligibility)** — control where your methods appear and set per-call execute pricing
 
+<Info>
+Optional contributor-side search helpers are **not** a new `_meta` contract in this rollout. If your venue needs the LLM-backed pattern described in [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers), keep that logic and any helper-private state inside the contributor. Standardized helper evidence now rides in contributor `searchMetadata` payloads and developer traces, not in ad hoc `_meta.searchHelper` fields.
+</Info>
+
 ---
 
 ## Rate-Limit Hints
@@ -582,11 +586,11 @@ Context runs **one marketplace with two modes**:
 
 | Mode | Who is the librarian? | Billing | What you get |
 |---------|------------------------|---------|---------------------|
-| **Query** | Context runtime (used via the app **or** `client.query.run()` in the SDK) | Pay-per-response (~$0.10) | Curated AI-synthesized answer from up to 100 MCP calls |
+| **Query** | Context runtime (used via the app **or** `client.query.run()` in the SDK) | Pay-per-response (~$0.10) | Managed librarian output: plain answer or structured evidence package assembled from up to 100 MCP calls |
 | **Execute** | Your app/agent (used via `client.tools.execute()` in the SDK) | Per method call (~$0.001) | Raw structured data with session spending limit visibility |
 
 <Info>
-SDK consumers can use **both** modes. Use `client.query.run()` when you want Context to be the librarian (curated intelligence, pay-per-response). Use `client.tools.execute()` when your agent is the librarian (raw data, per-call pricing, spending limits). See [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference).
+SDK consumers can use **both** modes. Use `client.query.run()` when you want Context to be the librarian (`answer`, `answer_with_evidence`, or `evidence_only`, pay-per-response). Use `client.tools.execute()` when your agent is the librarian (raw data, per-call pricing, spending limits). See [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference).
 </Info>
 
 Execute pricing is typically **~1/100 of listing response price** because a single Query response can invoke up to 100 method calls internally. When developers pay per call, they need proportionally lower prices.

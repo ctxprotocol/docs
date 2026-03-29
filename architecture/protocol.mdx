@@ -73,6 +73,10 @@ While optional in vanilla MCP, Context requires structured outputs because:
 
 When a user asks a complex question (e.g., *"Is it profitable to arb Uniswap vs Aave?"*), the Agent:
 
+<Note>
+For the detailed server-managed flow across `/api/v1/query` and `/api/chat`, including lane routing (`fast` / `deep`), clarification, planning, synthesis, and the historical legacy deep aliases accepted in debug surfaces, see [Query and Chat Agentic Flow](/architecture/query-chat-agentic-flow).
+</Note>
+
 <Steps>
   <Step title="Discover">
     Finds relevant tools from the marketplace (or uses pre-selected ones)
@@ -299,11 +303,11 @@ The SDKs expose two modes, reflecting Context's role as both a response marketpl
 | Mode | Endpoint | Payment Model | Settlement Timing | What You Get |
 |------|----------|---------------|-------------------|--------------|
 | **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Per execute call | Session accrual + automatic batch payment | Raw data + explicit spending limit |
-| **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | AI-synthesized answer from the full agentic pipeline |
+| **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | Managed librarian output: `answer`, `answer_with_evidence`, or `evidence_only` from the full agentic pipeline |
 
 **Execute** is for precision — you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.
 
-**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per response turn), targeted self-healing retries, completeness checks, and AI synthesis. One flat fee, curated answer. This is the same agentic pipeline that powers the client app.
+**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per response turn), targeted self-healing retries, completeness checks, and synthesis. One flat fee, with a response contract that can stay backward-compatible (`answer`) or return structured evidence packages (`answer_with_evidence`, `evidence_only`). This is the same agentic pipeline that powers the client app.
 
 <Info>
 **Why offer both?** Different consumers have different needs. An agent building a custom trading strategy wants raw data and full control (Execute). An agent answering user questions wants curated intelligence without managing orchestration (Query). Context serves both.

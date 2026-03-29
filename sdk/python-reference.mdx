@@ -63,8 +63,13 @@ from ctxprotocol import ContextClient
 
 async def main():
     async with ContextClient(api_key="sk_live_...") as client:
-        answer = await client.query.run("What are the top whale movements on Base?")
+        answer = await client.query.run(
+            query="What are the top whale movements on Base?",
+            response_shape="answer_with_evidence",
+        )
         print(answer.response)
+        print(answer.summary)
+        print(answer.evidence.facts if answer.evidence else None)
 
 asyncio.run(main())
 ```
@@ -87,7 +92,7 @@ The SDK offers two payment models:
 <Info>
 **You have access to both modes — pick the one that fits your use case.**
 
-- Use **Query** (`client.query.run()`) when you want a curated answer — Context is the librarian and handles discovery/orchestration (up to 100 MCP calls per response turn). Pay-per-response (~$0.10).
+- Use **Query** (`client.query.run()`) when you want a managed librarian contract — Context handles discovery/orchestration (up to 100 MCP calls per response turn) and can return plain `answer`, `answer_with_evidence`, or `evidence_only`. Pay-per-response (~$0.10).
 - Use **Execute** (`client.tools.execute()`) when your app/agent is the librarian and you want per-call pricing with spending limits (~$0.001/call).
 
 Most developers start with Query and add Execute later for specific pipelines that need raw data or explicit cost control. You can use both in the same application.
@@ -298,31 +303,32 @@ print(closed.session.status)  # closed
 ### Query (Pay-Per-Response)
 
 <Info>
-The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get an AI-synthesized answer backed by multi-tool data aggregation, error recovery, and completeness checks.
+The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a managed answer contract backed by multi-tool data aggregation, error recovery, and completeness checks.
 </Info>
 
-#### `client.query.run(query, tools?, model_id?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
+#### `client.query.run(query, tools?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
 
-Run an agentic query. The server applies discovery-first orchestration (`discover/probe -> plan-from-evidence -> execute -> bounded fallback`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns an AI-synthesized answer. On the internal `deep-heavy` Scout lane, the runtime may perform a tiny bounded set of deterministic read-only pre-plan tool probes when safe; `deep-light` stays metadata-first, and `fast` remains one-shot biased. Query billing is pay-per-response with automatic payment after delivery.
+Run an agentic query. The server applies discovery-first orchestration (`discover/probe -> plan-from-evidence -> execute -> bounded fallback`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns the selected Query response contract (`answer`, `answer_with_evidence`, or `evidence_only`). The active runtime now has one real completeness-oriented `deep` lane plus the lower-latency `fast` lane. `deep` stays metadata-first before planning, and `fast` remains one-shot biased. Query billing is pay-per-response with automatic payment after delivery.
 
 **Parameters:**
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
 | `query` | `str` | Yes | Natural-language question |
 | `tools` | `list[str]` | No | Tool IDs to use (auto-discover if omitted) |
-| `model_id` | `str` | No | Model ID to use for planning/synthesis (e.g. `kimi-model-thinking`, `glm-model`) |
+| `answer_model_id` | `str` | No | Final synthesis model ID (e.g. `kimi-model-thinking`, `glm-model`) |
+| `response_shape` | `"answer" \| "answer_with_evidence" \| "evidence_only"` | No | Structured response mode for Query answers |
 | `include_data` | `bool` | No | Include execution data inline in the response |
 | `include_data_url` | `bool` | No | Persist execution data to blob and return a URL |
 | `include_developer_trace` | `bool` | No | Include optional developer trace + orchestration diagnostics |
 | `query_depth` | `"fast" \| "auto" \| "deep"` | No | Query orchestration depth (`fast` lower latency, `auto` server-routed, `deep` completeness-oriented) |
-| `debug_scout_deep_mode` | `"deep-light" \| "deep-heavy"` | No | Development/testing only internal deep lane override |
+| `debug_scout_deep_mode` | `"deep"` | No | Development/testing only internal deep lane override; legacy `deep-light` / `deep-heavy` aliases are temporarily accepted |
 | `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
 
 **Returns:** `QueryResult`
 
 ```python
 answer = await client.query.run("What are the top whale movements on Base?")
-print(answer.response)      # AI-synthesized text
+print(answer.response)      # response text or summary
 print(answer.tools_used)    # [QueryToolUsage(id, name, skill_calls)]
 print(answer.cost)          # QueryCost(model_cost_usd, tool_cost_usd, total_cost_usd)
 print(answer.orchestration_metrics)  # Optional first-pass / rediscovery metrics
@@ -331,7 +337,8 @@ print(answer.orchestration_metrics)  # Optional first-pass / rediscovery metrics
 ```python
 answer = await client.query.run(
     query="Analyze whale activity on Base",
-    model_id="glm-model",
+    answer_model_id="glm-model",
+    response_shape="answer_with_evidence",
     include_data=True,
     include_data_url=True,
     include_developer_trace=True,
@@ -339,6 +346,12 @@ answer = await client.query.run(
     idempotency_key="6e7f1389-f72f-41d9-bf26-0608a4d8be87",
 )
 
+print(answer.response_shape)  # "answer_with_evidence"
+print(answer.summary)  # short machine-friendly summary
+print(answer.evidence.facts if answer.evidence else None)
+print(answer.artifacts.data_url if answer.artifacts else None)
+print(answer.freshness.as_of if answer.freshness else None)
+print(answer.confidence.level if answer.confidence else None)
 print(answer.developer_trace.summary if answer.developer_trace else None)
 print(
     answer.developer_trace.diagnostics.selection
@@ -348,7 +361,8 @@ print(
 ```
 
 <Note>
-`model_id` lets headless users choose the orchestration/synthesis model explicitly. If omitted, the API uses its default model.
+`answer_model_id` lets headless users choose the final synthesis model explicitly. If omitted, the API uses its managed default answer model.
+If `response_shape` is `evidence_only`, synthesis is skipped and no answer model runs for that request.
 
 Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, `claude-sonnet-model`, `claude-opus-model`.
 </Note>
@@ -362,9 +376,47 @@ Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, 
 
 `include_developer_trace` and `orchestration_metrics` are optional diagnostics.
 `debug_scout_deep_mode` remains a test-only override in non-production environments.
-Inside `deep`, `deep-light` stays metadata-first while `deep-heavy` enables bounded Scout probing when the selected tool metadata is too weak to trust on its own.
+Inside `deep`, the runtime currently uses one real metadata-first deep path. Legacy `deep-light` and `deep-heavy` debug values are normalized to `deep` when accepted for backwards compatibility.
 Selection diagnostics can show initial vs final lane decisions, Scout probe adequacy, bounded pre-plan probe call counts, and whether pre-plan evidence changed the initial plan.
 </Info>
+
+#### Structured Response Shapes
+
+Query is Context's managed librarian contract. You can choose how much structure you want back:
+
+| `response_shape` | Best for | Behavior |
+|------------------|----------|----------|
+| `answer` | Backward compatibility | Natural-language answer only |
+| `answer_with_evidence` | First-party chat, human-facing apps | Prose answer plus structured evidence, artifacts, freshness, confidence, and usage metadata |
+| `evidence_only` | External agents, downstream automation | Machine-friendly summary plus the same structured evidence package without depending on prose synthesis |
+
+The first-party chat app defaults to `answer_with_evidence`, but it is using the same Query contract you get in the SDK.
+
+#### Query Envelope Fields
+
+When `response_shape` is `answer_with_evidence` or `evidence_only`, the result may include:
+
+| Field | What it contains |
+|-------|------------------|
+| `summary` | Short machine-friendly summary of the answer |
+| `evidence` | Canonical facts, source refs, assumptions, known unknowns, and retrieval reason codes |
+| `artifacts` | `data_url`, canonical dataset metadata, and stage-artifact kinds |
+| `view` | Optional UI/render hint such as `table`, `leaderboard`, `heatmap`, or `timeseries` |
+| `freshness` | `as_of`, source timestamps, and freshness note |
+| `confidence` | Confidence level, reason, fact counts, and gap signals |
+| `usage` | Duration, cost, tools used, outcome type, and optional orchestration metrics |
+
+```python
+result = await client.query.run(
+    query="Which exchanges are seeing the largest BTC inflows and outflows over the last 24 hours?",
+    response_shape="evidence_only",
+)
+
+print(result.response)  # machine-friendly summary for evidence_only
+print(result.summary)
+print(result.evidence.source_refs if result.evidence else None)
+print(result.usage.tools_used if result.usage else None)
+```
 
 #### High-Fidelity Rehydration (Retrieval-First Synthesis)
 
@@ -375,7 +427,7 @@ When retrieval-first rollout is enabled in the deployment, the query runtime can
 - Final synthesis still passes through the existing synthesis safety contract.
 - `include_data` and `include_data_url` continue to reference the same canonical execution dataset used by retrieval-first assembly.
 
-#### `client.query.stream(query, tools?, model_id?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
+#### `client.query.stream(query, tools?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
 
 Same as `run()` but streams events in real-time via SSE.
 
@@ -396,6 +448,10 @@ async for event in client.query.stream(
 
 <Note>
 Use the same `idempotency_key` when retrying the same logical request after network or timeout errors.
+</Note>
+
+<Note>
+If you stream with `response_shape="evidence_only"`, expect the structured result on the final `done` event and few or no `text-delta` events.
 </Note>
 
 ---
@@ -421,6 +477,15 @@ from ctxprotocol import (
     QueryResult,
     QueryDeveloperTrace,
     QueryOrchestrationMetrics,
+    QueryResponseEnvelopeEvidence,
+    QueryResponseEnvelopeArtifacts,
+    QueryResponseEnvelopeView,
+    QueryResponseEnvelopeFreshness,
+    QueryResponseEnvelopeConfidence,
+    QueryResponseEnvelopeUsage,
+    QueryClarificationPayload,
+    QueryCapabilityMissPayload,
+    QueryAssumptionMetadata,
     ContextErrorCode,
 
     # Auth types (for MCP server contributors)
@@ -521,7 +586,7 @@ class ExecuteSessionSpend(BaseModel):
 
 ```python
 class QueryResult(BaseModel):
-    response: str                        # AI-synthesized answer
+    response: str                        # prose answer or machine-friendly summary
     tools_used: list[QueryToolUsage]     # [{ id, name, skill_calls }]
     cost: QueryCost                      # { model_cost_usd, tool_cost_usd, total_cost_usd }
     duration_ms: int
@@ -529,6 +594,18 @@ class QueryResult(BaseModel):
     data_url: str | None                 # Optional blob URL (include_data_url=True)
     developer_trace: QueryDeveloperTrace | None  # Optional runtime trace + diagnostics
     orchestration_metrics: QueryOrchestrationMetrics | None  # Optional first-pass metrics
+    response_shape: Literal["answer", "answer_with_evidence", "evidence_only"] | None
+    summary: str | None
+    evidence: QueryResponseEnvelopeEvidence | None
+    artifacts: QueryResponseEnvelopeArtifacts | None
+    view: QueryResponseEnvelopeView | None
+    freshness: QueryResponseEnvelopeFreshness | None
+    confidence: QueryResponseEnvelopeConfidence | None
+    usage: QueryResponseEnvelopeUsage | None
+    outcome_type: Literal["answer", "clarification_required", "capability_miss"]
+    clarification: QueryClarificationPayload | None
+    capability_miss: QueryCapabilityMissPayload | None
+    assumption_made: QueryAssumptionMetadata | None
 ```
 
 ---
@@ -625,6 +702,37 @@ class WalletContext(BaseModel):
 
 ---
 
+## Contributor Search Helpers
+
+If you are building a contributor for a search-hard venue, the Python SDK ships an optional helper surface at `ctxprotocol.contrib.search`.
+
+Use it only when the venue's upstream search is weak enough that deterministic retrieval plus a bounded model judge materially improves candidate resolution. Do **not** use it for venues that already expose reliable direct search.
+
+```python
+from ctxprotocol.contrib.search import (
+    build_contributor_search_validation_artifact,
+    create_search_intent,
+    extract_contributor_searches_from_developer_trace,
+    merge_contributor_search_config,
+    resolve_contributor_search,
+)
+```
+
+What this module is for:
+
+- contributor-side intent shaping, candidate normalization, shortlist construction, and validated resolution
+- provider-agnostic judge injection with stable override knobs for `provider`, `model`, `timeout`, `budget`, and `disabled`
+- machine-readable artifact generation via `build_contributor_search_validation_artifact(...)`
+- runtime trace inspection via `extract_contributor_searches_from_developer_trace(trace)` or `result.developer_trace.diagnostics.contributor_searches`
+
+Operational rules:
+
+- extra judge spend is contributor-owned in this rollout, so recover it through your own listing response price and/or execute pricing
+- keep deterministic validation around every judge result; malformed, timed-out, over-budget, or contradictory judgments must degrade honestly
+- save replayable validation artifacts alongside your contributor examples. Current reference fixtures live under `examples/client/validation/`
+
+---
+
 ## Error Handling
 
 The SDK raises `ContextError` with specific error codes:
@@ -665,6 +773,10 @@ except ContextError as e:
 ## Securing Your Tool (MCP Contributors)
 
 If you're building an MCP server, verify incoming requests using `ctxprotocol`.
+
+<Info>
+If you wrap a search-hard venue whose upstream API cannot reliably resolve the right market or entity, follow [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers). That pattern stays contributor-side, keeps provider credentials contributor-owned, and does **not** change `client.query.run()` or `_meta`.
+</Info>
 
 <Info>
 **Free vs Paid Security Requirements:**
