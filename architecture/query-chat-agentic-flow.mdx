@@ -84,7 +84,7 @@ Both entry surfaces now expose only one public model knob: the **answer model** 
 - Chat keeps the legacy wire field name `selectedChatModel`, but it is interpreted as the answer model for the final response.
 - `/api/v1/query` exposes `answerModelId` for the same purpose.
 - If `responseShape="evidence_only"`, synthesis is skipped and no answer model runs.
-- Internal stages such as tool selection, clarification, planning, repair, and completeness checks stay on the managed portfolio rather than inheriting the public answer-model choice.
+- Internal stages such as tool selection, clarification, planning, repair, completeness checks, and edge-case internal summarization stay on the managed portfolio rather than inheriting the public answer-model choice.
 
 ## Contributor Retrieval Boundary
 
@@ -122,6 +122,8 @@ For rollout decisions, treat the wedge as green only when all of these hold toge
 - the same required prompts pass on the deployed runtime
 - first-party chat still renders the shared `answer_with_evidence` Query envelope cleanly
 - external agent callers can consume both `answer_with_evidence` and `evidence_only`
+- the shared envelope still exposes typed public controller fields such as `stopReason`, `issueClass`, and `actionsTaken`
+- wedge answers still carry machine-readable `marketIntelligence` payloads plus `view.rows` / `view.columns` for the premium venue-ranking surface
 - the public SDK/docs surfaces still describe the same response-shape contract
 
 ---
@@ -297,6 +299,8 @@ After execution, the server can assemble a retrieval-first synthesis context fro
 
 This stage is shared across the Query surfaces and is independent from whether clarification triggered earlier.
 
+For the rare deep-query edge case where the retrieval pack plus execution summary still stays too large or already carries truncation markers, the runtime can run a managed `internal-summarization` stage before final answer synthesis. That stage compresses the evidence pack, preserves explicit gap/truncation caveats, and keeps the public answer-model choice focused on the final user-facing response.
+
 ---
 
 ## Observability and Debugging
@@ -311,6 +315,7 @@ When debugging the flow, the most useful artifacts/events are:
 - `planner-generated-code`
 - `completeness-evaluation`
 - `final-execution`
+- `internal-summarization`
 - `synthesis-context-selection`
 
 For live request traces, start with:

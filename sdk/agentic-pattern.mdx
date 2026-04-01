@@ -52,6 +52,8 @@ The server discovers query-eligible tools, executes the full agentic pipeline (u
 - `answer_with_evidence` for human-facing premium answers
 - `evidence_only` for agent-facing evidence packages without depending on prose synthesis
 
+For wedge-style premium answers, the structured envelope can also include `marketIntelligence`, `view.rows`, `view.columns`, and the public controller fields `stopReason`, `issueClass`, `actionsTaken`, and `controller`.
+
 See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
 
 ### Option 2: Build Your Own Loop

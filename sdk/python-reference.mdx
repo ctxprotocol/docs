@@ -399,9 +399,11 @@ When `response_shape` is `answer_with_evidence` or `evidence_only`, the result m
 | Field | What it contains |
 |-------|------------------|
 | `summary` | Short machine-friendly summary of the answer |
-| `evidence` | Canonical facts, source refs, assumptions, known unknowns, and retrieval reason codes |
+| `evidence` | Canonical facts, source refs, assumptions, known unknowns, retrieval reason codes, and optional wedge-specific `market_intelligence` |
 | `artifacts` | `data_url`, canonical dataset metadata, and stage-artifact kinds |
-| `view` | Optional UI/render hint such as `table`, `leaderboard`, `heatmap`, or `timeseries` |
+| `view` | Optional UI/render hint such as `table`, `leaderboard`, `heatmap`, or `timeseries`, plus optional `metrics`, `columns`, and `rows` |
+| `outcome` | Public outcome label, tone, `stop_reason`, and optional `issue_class` |
+| `controller` | Public bounded-controller summary including `actions_taken`, `next_action`, and patch-preservation flags |
 | `freshness` | `as_of`, source timestamps, and freshness note |
 | `confidence` | Confidence level, reason, fact counts, and gap signals |
 | `usage` | Duration, cost, tools used, outcome type, and optional orchestration metrics |
@@ -415,6 +417,8 @@ result = await client.query.run(
 print(result.response)  # machine-friendly summary for evidence_only
 print(result.summary)
 print(result.evidence.source_refs if result.evidence else None)
+print(result.evidence.market_intelligence.venue_breakdown if result.evidence and result.evidence.market_intelligence else None)
+print(result.stop_reason, result.issue_class, result.actions_taken)
 print(result.usage.tools_used if result.usage else None)
 ```
 

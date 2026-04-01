@@ -384,9 +384,11 @@ When `responseShape` is `answer_with_evidence` or `evidence_only`, the result ma
 | Field | What it contains |
 |-------|------------------|
 | `summary` | Short machine-friendly summary of the answer |
-| `evidence` | Canonical facts, source refs, assumptions, known unknowns, and retrieval reason codes |
+| `evidence` | Canonical facts, source refs, assumptions, known unknowns, retrieval reason codes, and optional wedge-specific `marketIntelligence` |
 | `artifacts` | `dataUrl`, canonical dataset metadata, and stage-artifact kinds |
-| `view` | Optional UI/render hint such as `table`, `leaderboard`, `heatmap`, or `timeseries` |
+| `view` | Optional UI/render hint such as `table`, `leaderboard`, `heatmap`, or `timeseries`, plus optional `metrics`, `columns`, and `rows` |
+| `outcome` | Public outcome label, tone, `stopReason`, and optional `issueClass` |
+| `controller` | Public bounded-controller summary including `actionsTaken`, `nextAction`, and patch-preservation flags |
 | `freshness` | `asOf`, source timestamps, and freshness note |
 | `confidence` | Confidence level, reason, fact counts, and gap signals |
 | `usage` | Duration, cost, tools used, outcome type, and optional orchestration metrics |
@@ -400,6 +402,8 @@ const result = await client.query.run({
 console.log(result.response); // machine-friendly summary for evidence_only
 console.log(result.summary);
 console.log(result.evidence?.sourceRefs);
+console.log(result.evidence?.marketIntelligence?.venueBreakdown);
+console.log(result.stopReason, result.issueClass, result.actionsTaken);
 console.log(result.usage?.toolsUsed);
 ```
 
