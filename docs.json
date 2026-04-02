@@ -43,6 +43,7 @@
           {
             "group": "Use the SDK",
             "pages": [
+              "sdk/mcp",
               "sdk/agentic-pattern",
               "sdk/reference",
               "sdk/python-reference"

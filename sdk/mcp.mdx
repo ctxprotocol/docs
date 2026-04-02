@@ -1,0 +1,209 @@
+---
+title: "MCP Server"
+description: "Connect any MCP-compatible agent to the Context marketplace"
+---
+
+## Overview
+
+Context provides a remote MCP server that exposes the entire marketplace — Query, Execute, and Discover — through the [Model Context Protocol](https://modelcontextprotocol.io). Any agent that supports Streamable HTTP MCP servers can connect in under a minute.
+
+**Three tools are available:**
+
+| Tool | What it does |
+|------|-------------|
+| `context_query` | Run an agentic Q&A query against the marketplace and get a grounded answer with evidence |
+| `context_execute` | Call a specific marketplace tool method directly and get the structured result |
+| `context_discover` | Search the marketplace for available tools before querying or executing |
+
+<Note>
+The MCP server wraps the same Query and Execute APIs that the TypeScript and Python SDKs use. Authentication is the same `sk_live_...` API key you already have.
+</Note>
+
+---
+
+## Prerequisites
+
+Before connecting, complete setup at [ctxprotocol.com](https://ctxprotocol.com):
+
+<Steps>
+  <Step title="Sign in">
+    Creates your embedded wallet
+  </Step>
+  <Step title="Set spending cap">
+    Approve USDC spending on the ContextRouter (one-time)
+  </Step>
+  <Step title="Fund wallet">
+    Add USDC for tool execution fees
+  </Step>
+  <Step title="Generate API key">
+    Settings → API Keys → Create key starting with `sk_live_`
+  </Step>
+</Steps>
+
+---
+
+## Endpoint
+
+```
+https://www.ctxprotocol.com/api/mcp
+```
+
+Transport: **Streamable HTTP** (the standard for remote MCP servers).
+
+Authentication: `Authorization: Bearer sk_live_...` header on every request.
+
+---
+
+## Setup by Agent
+
+### Cursor
+
+Add to your project's `.cursor/mcp.json` (or your global MCP settings):
+
+```json
+{
+  "mcpServers": {
+    "context-marketplace": {
+      "url": "https://www.ctxprotocol.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer sk_live_YOUR_KEY"
+      }
+    }
+  }
+}
+```
+
+Restart Cursor. The three tools appear in your MCP tool list automatically.
+
+### Claude Code
+
+```bash
+claude mcp add --transport http context-marketplace https://www.ctxprotocol.com/api/mcp \
+  --header "Authorization: Bearer sk_live_YOUR_KEY"
+```
+
+### OpenClaw / Claw Code
+
+Add to your project's `mcp.json` or pass via CLI:
+
+```json
+{
+  "mcpServers": {
+    "context-marketplace": {
+      "transport": "streamable-http",
+      "url": "https://www.ctxprotocol.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer sk_live_YOUR_KEY"
+      }
+    }
+  }
+}
+```
+
+### Any MCP Client (Generic)
+
+Any client that supports Streamable HTTP transport can connect by pointing to:
+
+- **URL**: `https://www.ctxprotocol.com/api/mcp`
+- **Transport**: Streamable HTTP
+- **Auth header**: `Authorization: Bearer sk_live_YOUR_KEY`
+
+The server returns a `Mcp-Session-Id` header after initialization. Clients that support session persistence should send it back on subsequent requests.
+
+---
+
+## Tools Reference
+
+### context_query
+
+Ask a natural-language question and get a grounded answer powered by the full marketplace.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `question` | string | Yes | The question to answer (1–4000 chars) |
+| `toolIds` | string[] | No | Restrict query to specific tool UUIDs |
+| `clarificationPolicy` | `"return"` \| `"auto"` \| `"error"` | No | How to handle ambiguous queries |
+| `queryDepth` | `"fast"` \| `"auto"` \| `"deep"` | No | Controls how many tool calls the engine uses |
+
+**Example prompt to your agent:**
+
+> Use the context_query tool to answer: "What are the top Polymarket markets by volume right now?"
+
+The response includes the answer text, structured evidence, and metadata.
+
+### context_execute
+
+Call a specific tool method with explicit arguments. Useful when your agent already knows which tool it wants.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `toolId` | string (UUID) | Yes | The marketplace tool ID |
+| `toolName` | string | Yes | The method name to call |
+| `args` | object | No | Arguments for the method |
+| `sessionId` | string (UUID) | No | Execution session for spend tracking |
+| `maxSpendUsd` | string | No | Cap spend for this session |
+| `closeSession` | boolean | No | Close the execution session after this call |
+
+### context_discover
+
+Search the marketplace to find tools before querying or executing.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | No | Search term |
+| `limit` | number | No | Max results (1–20, default 10) |
+| `mode` | `"query"` \| `"execute"` | No | Filter by mode |
+
+---
+
+## Example Workflows
+
+### Simple Q&A (one tool call)
+
+Tell your agent:
+
+> Use context_query to find out which Kalshi markets have the highest open interest today.
+
+The engine discovers relevant tools, executes the agentic pipeline, and returns a complete answer.
+
+### Discovery → Execute (agent-driven loop)
+
+For full control, your agent can:
+
+1. Call `context_discover` with a search query
+2. Inspect the returned tools and methods
+3. Call `context_execute` with the chosen tool and arguments
+4. Synthesize the structured result into an answer
+
+This mirrors the [Agentic Pattern](/sdk/agentic-pattern) but through MCP instead of the SDK.
+
+---
+
+## Pricing
+
+MCP requests use the same pricing as the SDK:
+
+- **Query**: pay-per-response (varies by tools used)
+- **Execute**: pay-per-call (method-level pricing set by tool builders)
+- **Discover**: free
+
+Your wallet balance and spending cap apply identically.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized">
+    Ensure your `Authorization` header uses the format `Bearer sk_live_...`. Keys are generated at [ctxprotocol.com/settings](https://ctxprotocol.com).
+  </Accordion>
+  <Accordion title="Tools not appearing in Cursor">
+    Check that `mcp.json` is valid JSON and the `url` field points to `https://www.ctxprotocol.com/api/mcp`. Restart Cursor after saving.
+  </Accordion>
+  <Accordion title="Session expired">
+    Sessions expire after 30 minutes of inactivity. Your MCP client will re-initialize automatically on the next request.
+  </Accordion>
+  <Accordion title="Query returns clarification_required">
+    The query was ambiguous. Either rephrase or set `clarificationPolicy: "auto"` to let the engine resolve it.
+  </Accordion>
+</AccordionGroup>
