@@ -85,6 +85,8 @@ If your upstream venue already exposes reliable search and candidate selection, 
   </Step>
   
   <Step title="Optimize and Ship">
+    **Before you start:** Make sure your wallet has a small balance (a few dollars is enough). The optimization process makes real query calls through the Context platform to validate your tool's responses. If your wallet is empty, the librarian cannot complete the agentic flow and validation will fail. Deposit funds at [Developer Dashboard](https://ctxprotocol.com/developer).
+
     Load the **[MCP Tool Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md)** into your AI coding agent with your API key and Tool ID. The skill automatically:
     - Researches your vertical to find where your tool creates unique value
     - Generates tough, realistic test prompts and proves they beat free LLMs
@@ -513,6 +515,8 @@ Now that your tool is live, validate it works correctly through the marketplace 
     - Audits latency metadata and fixes misclassifications
     - Iterates on fixes until pass rate exceeds 85%
     - Generates and pushes an optimized marketplace description automatically
+
+    **Requires a funded wallet.** The skill makes real query calls through the platform. If your balance is zero, validation will fail. [Deposit funds](https://ctxprotocol.com/developer) before running.
 
     Load it into any AI coding agent with your API key and Tool ID.
   </Step>
