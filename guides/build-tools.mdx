@@ -57,13 +57,13 @@ If your upstream venue already exposes reliable search and candidate selection, 
 
 ## AI-Assisted Builder (TL;DR)
 
-**Have an API subscription you want to unbundle?** Use Cursor, Claude, or any AI coding agent to build your MCP server automatically.
+**Have an API subscription you want to unbundle?** Use Cursor, Claude, or any AI coding agent to build and optimize your MCP server automatically.
 
 <Warning>
 **Prerequisite**: You need [Context7 MCP](https://github.com/upstash/context7) configured in your AI coding environment to fetch API documentation automatically.
 </Warning>
 
-### Two-Step Workflow
+### Three-Step Workflow
 
 <Steps>
   <Step title="Build the MCP Server">
@@ -80,17 +80,38 @@ If your upstream venue already exposes reliable search and candidate selection, 
     ```
   </Step>
   
-  <Step title="Generate Submission Details">
-    Once your server is built, use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to:
-    - Analyze your MCP server implementation
-    - Generate the perfect submission details for the marketplace form
-    - Get suggested name, description, category, and pricing
+  <Step title="Register on the Marketplace">
+    Go to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute) to register your tool. You'll get a **Tool ID** and can generate an **API key** at [Developer → API Keys](https://ctxprotocol.com/developer). You'll need both for the next step.
+  </Step>
+  
+  <Step title="Optimize and Ship">
+    Load the **[MCP Tool Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md)** into your AI coding agent with your API key and Tool ID. The skill automatically:
+    - Researches your vertical to find where your tool creates unique value
+    - Generates tough, realistic test prompts and proves they beat free LLMs
+    - Checks data quality from a buyer's perspective
+    - Audits latency metadata for correctness
+    - Fixes issues and retests in a loop until everything passes
+    - Generates the optimal marketplace description (with proven "Try asking" prompts)
+    - Pushes the description directly to your listing via the SDK — no manual copy-paste
     
     ```
-    Paste the mcp-server-analysis-prompt.md into your AI chat, then provide your server.ts code or repository URL.
+    Load the mcp-tool-optimization-skill.md from context-sdk/docs/.
+    My server code is in ./server.ts
+    My MCP endpoint is https://my-tool.example.com/mcp
+    My CONTEXT_API_KEY is sk_live_...
+    My TOOL_ID is abc-123-def
+    Run the full optimization workflow.
     ```
   </Step>
 </Steps>
+
+<Info>
+A tool that works is table stakes. A tool that delivers insights users cannot get from ChatGPT for free is what earns revenue and qualifies for Tier S grants.
+</Info>
+
+<Tip>
+**Lightweight QA alternative:** If you just need a quick protocol-compliance check without full optimization, use the [Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md) instead.
+</Tip>
 
 ### Example Prompt for Cursor/Claude
 
@@ -483,6 +504,18 @@ Your MCP Tool is now available on the marketplace. Users can discover and use yo
 Now that your tool is live, validate it works correctly through the marketplace — not just on your local server.
 
 <Steps>
+  <Step title="Recommended: Full Optimization Skill">
+    The **[MCP Tool Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md)** is the recommended validation path. It goes beyond protocol compliance to prove your tool delivers genuine alpha:
+
+    - Researches your vertical and identifies unique value angles
+    - Generates and validates must-win prompts that beat free LLMs
+    - Checks data quality from a buyer's perspective (including external accuracy)
+    - Audits latency metadata and fixes misclassifications
+    - Iterates on fixes until pass rate exceeds 85%
+    - Generates and pushes an optimized marketplace description automatically
+
+    Load it into any AI coding agent with your API key and Tool ID.
+  </Step>
   <Step title="Manual: Test in the Chat App">
     Enable **Developer Mode** in Settings → Developer Settings. In the right sidebar, turn off **Auto mode** and select your tool. Send one of your **must-win prompts** and check the **Developer Logs** preview card at the bottom of the response for errors. See the [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for details.
   </Step>
@@ -493,19 +526,10 @@ Now that your tool is live, validate it works correctly through the marketplace 
     - **Agent-facing Query mode:** rerun the same must-win prompt with `responseShape: "evidence_only"` and confirm the evidence package is still useful without prose synthesis
     - **Execute mode** (if enabled): `client.tools.execute({ toolId: "...", toolName: "...", args: {...} })` — validates per-method call responses match your declared schemas
   </Step>
-  <Step title="Automated: Deep Validation System Prompt">
-    For a comprehensive QA pass, use the **[Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md)** — a reusable prompt you can give to any coding agent (Cursor, Claude, etc.). It runs the full validation workflow:
-
-    - Checks your server against the [Context Protocol docs](https://docs.ctxprotocol.com) for compliance
-    - Tests both Query mode and Execute mode through the SDK with developer traces
-    - Scores the server against must-win prompts, expected evidence fields, and intended output surfaces
-    - Generates a marketplace listing (name, description, must-win style "Try asking" prompts)
-    - Provides actionable fixes and re-tests in a loop until all gates pass
-  </Step>
 </Steps>
 
 <Tip>
-The deep validation prompt handles both **pre-submission** (direct endpoint testing before you list) and **post-submission** (full SDK-based marketplace testing after you list). Give it your endpoint URL and API key and it figures out the right workflow.
+**Lightweight QA alternative:** For a quick protocol-compliance check without full optimization, use the **[Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md)**. It validates your server against the Context Protocol docs, tests both surfaces, and provides actionable fixes. Use this when you just want to confirm things work — use the optimization skill when you want to prove your tool is worth paying for.
 </Tip>
 
 <Note>
@@ -530,9 +554,10 @@ When you add new endpoints, modify schemas, or change your tool's functionality:
   </Step>
   
   <Step title="Update Description (if needed)">
-    If you've added significant new tools, update your description:
-    - Use the [MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md) to generate a new description
-    - Edit your tool in the Developer Tools page
+    If you've added significant new tools, update your description. Two options:
+    - **Recommended:** Re-run the [Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md) — it regenerates and pushes the description automatically via the SDK
+    - **Programmatic:** Use `client.developer.updateTool(toolId, { description: "..." })` directly from the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference)
+    - **Manual:** Edit your tool in the Developer Tools page
   </Step>
 </Steps>
 

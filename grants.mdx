@@ -403,13 +403,19 @@ You are selling:
   <Step title="Register Your Tool">
     Go to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute) to register your tool:
     - Paste your MCP endpoint URL
-    - Use the **[MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md)** to generate your submission name, description, and category
+    - Add a basic name and description (the optimization skill will generate and push the optimal description in the next step)
     - **Set your listing response price to \$0** for initial testing (you can change it after we review)
     - **Advanced (optional):** If you also want SDK developers to call your methods directly with per-call billing ([Execute mode](/guides/tool-metadata#pricing-&-execute-mode-eligibility)), set a default execute price — typically ~1/100 of your response price. Skip this if you're starting with Query mode only; you can enable it later.
     - Add stake to activate your tool
   </Step>
-  <Step title="Debug & Refine">
-    Before requesting review, test your tool in the Chat app:
+  <Step title="Optimize & Validate">
+    Before requesting review, run the full optimization workflow:
+    
+    **Recommended:** Load the **[MCP Tool Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md)** into your AI coding agent (Cursor, Claude Code, etc.) with your API key and Tool ID. It researches your vertical, proves your tool beats free LLMs, fixes issues, generates an optimal description, and pushes it to your listing automatically.
+    
+    The skill produces a structured **optimization artifact** — a machine-readable proof of differentiation. **Tier S grants require this artifact** (see Quality Requirements below).
+    
+    Also test manually in the Chat app:
     - Enable **Developer Mode** in Settings → Developer Settings
     - In the right sidebar tool selector turn off **Auto mode** and select your tool
     - Send a message to query your tool — you should see a response
@@ -419,7 +425,7 @@ You are selling:
     See the full [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for detailed instructions.
     
     <Tip>
-    **Automated deep validation:** For a comprehensive QA pass, use the [Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md) — a reusable prompt you can give to any coding agent. It validates your server against the Context Protocol docs, tests both Query mode and Execute mode through the SDK, analyzes Developer Mode runtime traces, and provides actionable fixes in a loop until everything passes.
+    **Lightweight alternative:** For a quick protocol-compliance check without full optimization, use the [Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md). Use the optimization skill for grant applications, especially Tier S.
     </Tip>
   </Step>
   <Step title="Request Review">
@@ -475,6 +481,11 @@ To receive grant payments, your tool must:
 | ✅ Sub-60s response time | Agents expect fast data |
 | ✅ 95%+ uptime (30 days) | Reliable for the second payment |
 | ✅ Handle errors gracefully | Return structured errors, not crashes |
+| ✅ **Tier S only:** Optimization artifact with ≥ 7 high-differentiation prompts | Proves the tool delivers value users cannot get from free LLMs |
+
+<Info>
+**Tier S grants require demonstrated differentiation vs free alternatives.** The [MCP Tool Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md) produces a structured artifact proving this — include it with your grant application.
+</Info>
 
 ---
 
