@@ -183,6 +183,7 @@ Search for tools matching a query string, or pass an options object for mode-awa
 | `requireExecutePricing` | `boolean` | No | Require explicit method execute pricing |
 | `excludeLatencyClasses` | `("instant" \| "fast" \| "slow" \| "streaming")[]` | No | Exclude by latency class |
 | `excludeSlow` | `boolean` | No | Convenience filter for query mode |
+| `favoritesOnly` | `boolean` | No | Override the account-level Favorites-Only Auto Mode for this request |
 
 **Returns:** `Promise<Tool[]>`
 
@@ -195,7 +196,16 @@ const executeTools = await client.discovery.search({
   surface: "execute",
   requireExecutePricing: true,
 });
+
+const favoriteOnlyTools = await client.discovery.search({
+  query: "crypto",
+  favoritesOnly: true,
+});
 ```
+
+<Info>
+If you enable Favorites-Only Auto Mode in [Settings](https://ctxprotocol.com/settings), SDK discovery and query requests made with the same API key inherit that account default automatically. Set `favoritesOnly: true` or `favoritesOnly: false` per request to override it. On Query requests with explicit `tools`, manual tool selection wins and `favoritesOnly` is ignored.
+</Info>
 
 ---
 
@@ -302,6 +312,7 @@ Run an agentic query. The server applies discovery-first orchestration (`discove
 |--------|------|----------|-------------|
 | `query` | `string` | Yes | Natural-language question |
 | `tools` | `string[]` | No | Tool IDs to use (auto-discover if omitted) |
+| `favoritesOnly` | `boolean` | No | Override the account-level Favorites-Only Auto Mode for this request |
 | `answerModelId` | `string` | No | Final synthesis model ID (e.g. `kimi-model-thinking`, `glm-model`) |
 | `responseShape` | `"answer" \| "answer_with_evidence" \| "evidence_only"` | No | Structured response mode for Query answers |
 | `includeData` | `boolean` | No | Include execution data inline in the response |
@@ -326,6 +337,7 @@ console.log(answer.orchestrationMetrics); // Optional first-pass / rediscovery m
 ```typescript
 const answer = await client.query.run({
   query: "Analyze whale activity on Base",
+  favoritesOnly: true,
   answerModelId: "glm-model",
   responseShape: "answer_with_evidence",
   includeData: true,
@@ -420,7 +432,7 @@ When retrieval-first rollout is enabled in the deployment, the query runtime can
 
 Same as `run()` but streams events in real-time via SSE.
 
-Supports the same options as `run()` (`tools`, `answerModelId`, `responseShape`, `includeData`, `includeDataUrl`, `includeDeveloperTrace`, `queryDepth`, `debugScoutDeepMode`, `idempotencyKey`).
+Supports the same options as `run()` (`tools`, `favoritesOnly`, `answerModelId`, `responseShape`, `includeData`, `includeDataUrl`, `includeDeveloperTrace`, `queryDepth`, `debugScoutDeepMode`, `idempotencyKey`).
 
 **Returns:** `AsyncGenerator<QueryStreamEvent>`
 

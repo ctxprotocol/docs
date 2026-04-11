@@ -193,6 +193,7 @@ Search for tools matching a query string, with optional mode-aware filters.
 | `require_execute_pricing` | `bool` | No | Require explicit method execute pricing |
 | `exclude_latency_classes` | `list["instant" \| "fast" \| "slow" \| "streaming"]` | No | Exclude by latency class |
 | `exclude_slow` | `bool` | No | Convenience filter for query mode |
+| `favorites_only` | `bool` | No | Override the account-level Favorites-Only Auto Mode for this request |
 
 **Returns:** `list[Tool]`
 
@@ -205,7 +206,16 @@ execute_tools = await client.discovery.search(
     surface="execute",
     require_execute_pricing=True,
 )
+
+favorite_only_tools = await client.discovery.search(
+    "crypto",
+    favorites_only=True,
+)
 ```
+
+<Info>
+If you enable Favorites-Only Auto Mode in [Settings](https://ctxprotocol.com/settings), SDK discovery and query requests made with the same API key inherit that account default automatically. Set `favorites_only=True` or `favorites_only=False` per request to override it. On Query requests with explicit `tools`, manual tool selection wins and `favorites_only` is ignored.
+</Info>
 
 ---
 
@@ -306,7 +316,7 @@ print(closed.session.status)  # closed
 The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a managed answer contract backed by multi-tool data aggregation, error recovery, and completeness checks.
 </Info>
 
-#### `client.query.run(query, tools?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
+#### `client.query.run(query, tools?, favorites_only?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
 
 Run an agentic query. The server applies discovery-first orchestration (`discover/probe -> plan-from-evidence -> execute -> bounded fallback`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns the selected Query response contract (`answer`, `answer_with_evidence`, or `evidence_only`). The active runtime now has one real completeness-oriented `deep` lane plus the lower-latency `fast` lane. `deep` stays metadata-first before planning, and `fast` remains one-shot biased. Query billing is pay-per-response with automatic payment after delivery.
 
@@ -315,6 +325,7 @@ Run an agentic query. The server applies discovery-first orchestration (`discove
 |--------|------|----------|-------------|
 | `query` | `str` | Yes | Natural-language question |
 | `tools` | `list[str]` | No | Tool IDs to use (auto-discover if omitted) |
+| `favorites_only` | `bool` | No | Override the account-level Favorites-Only Auto Mode for this request |
 | `answer_model_id` | `str` | No | Final synthesis model ID (e.g. `kimi-model-thinking`, `glm-model`) |
 | `response_shape` | `"answer" \| "answer_with_evidence" \| "evidence_only"` | No | Structured response mode for Query answers |
 | `include_data` | `bool` | No | Include execution data inline in the response |
@@ -337,6 +348,7 @@ print(answer.orchestration_metrics)  # Optional first-pass / rediscovery metrics
 ```python
 answer = await client.query.run(
     query="Analyze whale activity on Base",
+    favorites_only=True,
     answer_model_id="glm-model",
     response_shape="answer_with_evidence",
     include_data=True,
@@ -431,7 +443,7 @@ When retrieval-first rollout is enabled in the deployment, the query runtime can
 - Final synthesis still passes through the existing synthesis safety contract.
 - `include_data` and `include_data_url` continue to reference the same canonical execution dataset used by retrieval-first assembly.
 
-#### `client.query.stream(query, tools?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
+#### `client.query.stream(query, tools?, favorites_only?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
 
 Same as `run()` but streams events in real-time via SSE.
 

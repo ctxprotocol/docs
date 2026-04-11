@@ -124,12 +124,17 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 | `toolIds` | string[] | No | Restrict query to specific tool UUIDs |
 | `clarificationPolicy` | `"return"` \| `"auto"` \| `"error"` | No | How to handle ambiguous queries |
 | `queryDepth` | `"fast"` \| `"auto"` \| `"deep"` | No | Controls how many tool calls the engine uses |
+| `favoritesOnly` | boolean | No | Override the account-level Favorites-Only Auto Mode for this request |
 
 **Example prompt to your agent:**
 
 > Use the context_query tool to answer: "What are the top Polymarket markets by volume right now?"
 
 The response includes the answer text, structured evidence, and metadata.
+
+<Info>
+If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxprotocol.com/settings), `context_query` and `context_discover` inherit that account default automatically. Pass `favoritesOnly: true` or `favoritesOnly: false` on a single MCP call to override it. If you pass explicit `toolIds` to `context_query`, manual tool selection wins and favorites filtering is ignored.
+</Info>
 
 ### context_execute
 
@@ -153,6 +158,7 @@ Search the marketplace to find tools before querying or executing.
 | `query` | string | No | Search term |
 | `limit` | number | No | Max results (1–20, default 10) |
 | `mode` | `"query"` \| `"execute"` | No | Filter by mode |
+| `favoritesOnly` | boolean | No | Override the account-level Favorites-Only Auto Mode for this request |
 
 ---
 
