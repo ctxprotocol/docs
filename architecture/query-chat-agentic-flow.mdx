@@ -73,6 +73,44 @@ The main clarification-specific difference is policy mapping:
 
 That mapping is implemented through shared clarification policy logic so the chat route does not invent a separate ambiguity system.
 
+## Product Hierarchy
+
+Organize the company and codebase around this hierarchy:
+
+- **SDK/MCP is the product of record.** The canonical runtime contract is what external SDK/API callers and marketplace tools can rely on.
+- **The browser app is the showcase and operator console.** It should expose the same managed query behavior, but its transport and session wrapper can stay product-specific.
+- **Parity means shared core behavior, not identical wrappers.** Discovery, scout, clarification, iterative execution, final answer assembly, and envelope semantics should match; chat-specific streaming and persistence can differ.
+- **If Query passes and chat fails, suspect the chat adapter first.** The default debugging posture should be "shared core is correct, browser wrapper may be drifting" unless the traces prove otherwise.
+
+```mermaid
+flowchart LR
+  SDK[SDK / API callers] --> Q[/api/v1/query adapter]
+  CHAT[First-party browser chat] --> C[/api/chat adapter]
+  Q --> CORE[Shared managed runtime core]
+  C --> CORE
+  CORE --> DISC[Discover + select + scout + clarify + execute]
+  DISC --> ANSWER[Shared final answer assembly]
+  ANSWER --> QE[Query envelope / SDK payload]
+  ANSWER --> CS[Chat streaming + persistence]
+```
+
+## What Must Match Vs What May Differ
+
+Must match across `/api/v1/query` and `/api/chat`:
+
+- discovery and selection policy
+- metadata scout and clarification decisions
+- iterative execution and completeness behavior
+- deterministic response guards
+- final answer assembly and `answer_with_evidence` semantics
+
+May differ by surface:
+
+- authentication and session state
+- transport shape (JSON response vs streamed UI events)
+- browser-only presentation and persistence helpers
+- chat-only controls such as auto-clarify toggles, as long as they map into the shared clarification policy contract
+
 ### Answer-Model Semantics
 
 Both entry surfaces now expose only one public model knob: the **answer model** used for final synthesis.
