@@ -196,9 +196,9 @@ When your tool is registered on the marketplace but not returning expected resul
 
 When enabled, a **Developer Logs** card appears at the bottom of AI responses. Click to expand and see:
 
-- **Initial Code**: The TypeScript code the AI generated to call your tool
+- **Initial Execution Snapshot**: The execution payload the runtime started from
 - **Execution Trace**: All attempts, including errors and retries
-- **Final Code**: The code after any self-healing fixes (if different from initial)
+- **Final Execution Snapshot**: The final execution payload after any recovery steps
 - **Tool Call History**: Every call made to your tool with arguments and results
 - **Final Execution Result**: The data or error returned
 
@@ -245,7 +245,7 @@ Click **"Copy All"** to copy the complete debug log. You can then:
   </Accordion>
 
   <Accordion title="Output Schema Mismatches">
-    **Symptom**: "Suspicious null values" in execution trace, data completeness checks failing
+    **Symptom**: "Suspicious null values" in execution trace, or execution verification says the answer is still missing required data
     
     **Check**: Compare your `outputSchema` with the actual result in "Final Execution Result"
     
@@ -328,17 +328,17 @@ Click **"Copy All"** to copy the complete debug log. You can then:
   </Accordion>
 </AccordionGroup>
 
-### Self-Healing and Retries
+### Recovery and Retries
 
-The Context agent has a self-healing mechanism that automatically retries when:
+The Context runtime automatically retries when:
 
-1. **Runtime errors**: Code crashes → AI generates fix → retry
-2. **Suspicious nulls**: Code runs but returns null where data should exist → AI reflects → retry
-3. **Incomplete data**: Results don't fully answer the question → AI fetches more → retry
+1. **Runtime errors**: Execution fails on a likely recoverable tool/data-shape issue
+2. **Suspicious nulls**: Execution returns null where data should exist
+3. **Incomplete data**: Results do not fully answer the question and a targeted follow-up may help
 
 If you see multiple attempts in the execution trace, it usually means:
 - Your tool returned unexpected data format
-- The AI had to adjust how it processes your response
+- The runtime had to adjust how it processes your response
 - There may be schema or description improvements you can make
 
 <Tip>

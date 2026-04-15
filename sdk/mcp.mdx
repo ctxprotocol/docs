@@ -122,8 +122,7 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 |-----------|------|----------|-------------|
 | `question` | string | Yes | The question to answer (1–4000 chars) |
 | `toolIds` | string[] | No | Restrict query to specific tool UUIDs |
-| `clarificationPolicy` | `"return"` \| `"auto"` \| `"error"` | No | How to handle ambiguous queries |
-| `queryDepth` | `"fast"` \| `"auto"` \| `"deep"` | No | Controls how many tool calls the engine uses |
+| `clarificationPolicy` | `"return"` \| `"auto"` \| `"error"` | No | How to handle ambiguous queries (`auto` is the default for headless MCP use) |
 | `favoritesOnly` | boolean | No | Override the account-level Favorites-Only Auto Mode for this request |
 
 **Example prompt to your agent:**
@@ -170,9 +169,9 @@ Tell your agent:
 
 > Use context_query to find out which Kalshi markets have the highest open interest today.
 
-The engine discovers relevant tools, executes the agentic pipeline, and returns a complete answer.
+The engine discovers relevant tools, runs the managed librarian pipeline, and returns a complete answer.
 
-### Discovery → Execute (agent-driven loop)
+### Discovery -> Execute (agent-driven loop)
 
 For full control, your agent can:
 

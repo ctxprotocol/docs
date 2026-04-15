@@ -313,12 +313,12 @@ print(closed.session.status)  # closed
 ### Query (Pay-Per-Response)
 
 <Info>
-The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a managed answer contract backed by multi-tool data aggregation, error recovery, and completeness checks.
+The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a managed answer contract backed by discovery, metadata scouting, iterative execution, and synthesis.
 </Info>
 
-#### `client.query.run(query, tools?, favorites_only?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
+#### `client.query.run(query, tools?, favorites_only?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, idempotency_key?)`
 
-Run an agentic query. The server applies discovery-first orchestration (`discover/probe -> plan-from-evidence -> execute -> bounded fallback`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns the selected Query response contract (`answer`, `answer_with_evidence`, or `evidence_only`). The active runtime now has one real completeness-oriented `deep` lane plus the lower-latency `fast` lane. `deep` stays metadata-first before planning, and `fast` remains one-shot biased. Query billing is pay-per-response with automatic payment after delivery.
+Run an agentic query. The server applies the live librarian pipeline (`discover -> select -> metadata scout -> clarify if needed -> iterative execute -> synthesize -> settle`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns the selected Query response contract (`answer`, `answer_with_evidence`, or `evidence_only`). Query billing is pay-per-response with automatic payment after delivery.
 
 **Parameters:**
 | Option | Type | Required | Description |
@@ -331,8 +331,6 @@ Run an agentic query. The server applies discovery-first orchestration (`discove
 | `include_data` | `bool` | No | Include execution data inline in the response |
 | `include_data_url` | `bool` | No | Persist execution data to blob and return a URL |
 | `include_developer_trace` | `bool` | No | Include optional developer trace + orchestration diagnostics |
-| `query_depth` | `"fast" \| "auto" \| "deep"` | No | Query orchestration depth (`fast` lower latency, `auto` server-routed, `deep` completeness-oriented) |
-| `debug_scout_deep_mode` | `"deep"` | No | Development/testing only internal deep lane override; legacy `deep-light` / `deep-heavy` aliases are temporarily accepted |
 | `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
 
 **Returns:** `QueryResult`
@@ -354,7 +352,6 @@ answer = await client.query.run(
     include_data=True,
     include_data_url=True,
     include_developer_trace=True,
-    query_depth="auto",
     idempotency_key="6e7f1389-f72f-41d9-bf26-0608a4d8be87",
 )
 
@@ -380,16 +377,11 @@ Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, 
 </Note>
 
 <Info>
-`query_depth` is available in both `run()` and `stream()`:
-
-- `fast`: lower-latency path for simple lookups.
-- `auto`: server routes to either `fast` or `deep` using query intent and selected tool metadata quality.
-- `deep`: completeness-oriented path (default when omitted).
+The query runtime now exposes a single managed executor surface.
+The server decides internal budgets, ambiguity handling, and exploration policy from the query itself instead of asking SDK callers to choose a lane.
 
 `include_developer_trace` and `orchestration_metrics` are optional diagnostics.
-`debug_scout_deep_mode` remains a test-only override in non-production environments.
-Inside `deep`, the runtime currently uses one real metadata-first deep path. Legacy `deep-light` and `deep-heavy` debug values are normalized to `deep` when accepted for backwards compatibility.
-Selection diagnostics can show initial vs final lane decisions, Scout probe adequacy, bounded pre-plan probe call counts, and whether pre-plan evidence changed the initial plan.
+Selection diagnostics can still show internal policy decisions such as `selectedPolicy`, `oneShotBias`, Scout probe adequacy, bounded pre-plan probe call counts, and whether pre-plan evidence changed the initial plan.
 </Info>
 
 #### Structured Response Shapes
@@ -438,12 +430,12 @@ print(result.usage.tools_used if result.usage else None)
 
 When retrieval-first rollout is enabled in the deployment, the query runtime can switch synthesis context assembly from baseline truncation to retrieval-first slices for full-data or truncation-sensitive requests.
 
-- Stage artifacts are emitted in request-scoped internal storage (selection, planning, execution, completeness, synthesis).
+- Stage artifacts are emitted in request-scoped internal storage (selection, scout, execution, synthesis).
 - Retrieval primitives (path lookup, array windows/sampling, keyword slices, top-K relevance) are used to build a bounded context pack from canonical execution data.
 - Final synthesis still passes through the existing synthesis safety contract.
 - `include_data` and `include_data_url` continue to reference the same canonical execution dataset used by retrieval-first assembly.
 
-#### `client.query.stream(query, tools?, favorites_only?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, query_depth?, debug_scout_deep_mode?, idempotency_key?)`
+#### `client.query.stream(query, tools?, favorites_only?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, idempotency_key?)`
 
 Same as `run()` but streams events in real-time via SSE.
 
@@ -452,7 +444,6 @@ Same as `run()` but streams events in real-time via SSE.
 ```python
 async for event in client.query.stream(
     query="What are the top whale movements?",
-    query_depth="fast",
 ):
     if event.type == "tool-status":
         print(f"Tool {event.tool.name}: {event.status}")

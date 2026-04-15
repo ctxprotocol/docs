@@ -1,6 +1,6 @@
 ---
 title: "The Agentic Pattern"
-description: "How to build autonomous AI agents using the Discovery → Schema → Execution loop"
+description: "How to build autonomous AI agents using the Discovery -> Schema -> Execution loop"
 ---
 
 ## Overview
@@ -46,7 +46,7 @@ print(answer.evidence.facts if answer.evidence else None)
 ```
 </CodeGroup>
 
-The server discovers query-eligible tools, executes the full agentic pipeline (up to 100 MCP calls per response turn), handles retries and completeness checks, and returns either:
+The server discovers query-eligible tools, runs the full managed librarian pipeline (`discover -> select -> metadata scout -> clarify if needed -> iterative execute -> synthesize -> settle`), and returns either:
 
 - a backward-compatible prose `answer`
 - `answer_with_evidence` for human-facing premium answers

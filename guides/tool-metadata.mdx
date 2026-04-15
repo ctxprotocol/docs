@@ -5,7 +5,7 @@ description: "Configure _meta on your MCP tools to declare rate-limit hints, con
 
 Every MCP tool definition supports a `_meta` field for platform-level configuration that sits alongside `inputSchema` and `outputSchema`. This guide covers the three `_meta` capabilities:
 
-- **[Rate-Limit Hints](#rate-limit-hints)** — tell the planner and runtime how to pace calls to your API
+- **[Rate-Limit Hints](#rate-limit-hints)** — tell the metadata scout and execution runtime how to pace calls to your API
 - **[Context Injection](#context-injection)** — declare what user-specific data the platform should inject into your tool's arguments
 - **[Pricing & Execute Mode Eligibility](#pricing-&-execute-mode-eligibility)** — control where your methods appear and set per-call execute pricing
 
@@ -27,7 +27,7 @@ In the marketplace, each contributor has different upstream constraints. Without
 
 Publishing `_meta.rateLimit` (or `_meta.rateLimitHints`) gives Context two things:
 
-- Better planning (prefer batch/snapshot tools, avoid risky fan-out patterns)
+- Better execution choices (prefer batch/snapshot tools, avoid risky fan-out patterns)
 - Safer runtime pacing (respect cooldowns and concurrency intent)
 
 This reduces avoidable `429`/timeout loops and improves first-pass completion.
@@ -43,7 +43,7 @@ Add these fields to each tool definition under `_meta.rateLimit`:
 | `maxConcurrency` | number | Parallel call ceiling for this tool |
 | `supportsBulk` | boolean | Whether the tool already handles batch retrieval |
 | `recommendedBatchTools` | string[] | Preferred alternatives to fan-out loops |
-| `notes` | string | Human guidance for planner behavior |
+| `notes` | string | Human guidance for execution behavior |
 
 ### TypeScript Example
 
@@ -96,7 +96,7 @@ TOOLS = [
 - Publish hints per tool, not only globally. Heavy fan-out endpoints and lightweight snapshot endpoints should have different guidance.
 - Keep `maxConcurrency` conservative for expensive or quota-sensitive endpoints.
 - Populate `recommendedBatchTools` whenever you offer a better aggregation endpoint.
-- Treat `notes` as planner guidance for real-world constraints (for example, "call alone", "use shallow scan first").
+- Treat `notes` as execution guidance for real-world constraints (for example, "call alone", "use shallow scan first").
 
 <Warning>
 These hints are not a substitute for server-side protections. Keep your own upstream safeguards (timeouts, retries, and pacing) in the MCP server.

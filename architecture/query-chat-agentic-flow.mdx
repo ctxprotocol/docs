@@ -1,6 +1,6 @@
 ---
 title: "Query and Chat Agentic Flow"
-description: "Source of truth for `/api/v1/query` and `/api/chat`: lane routing, scout, clarification, planning, execution, and synthesis"
+description: "Source of truth for `/api/v1/query` and `/api/chat`: discover, select, metadata scout, clarify if needed, iterative execute, synthesize, and settle"
 ---
 
 ## What this document is for
@@ -14,11 +14,11 @@ The two routes are not separate orchestration systems. They are two entry surfac
 
 1. Normalize the request
 2. Discover or accept selected tools
-3. Choose a depth lane
-4. Build pre-plan evidence
+3. Select the execution policy and method universe
+4. Run the metadata scout
 5. Decide whether to answer, clarify, or capability-miss
-6. Plan and execute
-7. Check completeness, synthesize, and settle
+6. Iteratively execute with inline recovery
+7. Synthesize and settle
 
 ---
 
@@ -26,28 +26,25 @@ The two routes are not separate orchestration systems. They are two entry surfac
 
 The simplest way to reason about the runtime is:
 
-- **Discovery/selection decides the tool universe**
-- **The pre-plan probe decides what the runtime knows before planning**
+- **Discovery decides the candidate tool universe**
+- **Selection plus metadata scout decide what the runtime knows before execution**
 - **Method reasoning produces both an execution track and an ambiguity track**
-- **Clarification decides whether the user must disambiguate before planning/execution**
-- **Planning/execution only start after clarification has either not triggered or has been resolved**
+- **Clarification decides whether the user must disambiguate before iterative execution**
+- **Iterative execution owns recovery, rediscovery, and completeness inline**
 
-That placement is intentional. Clarification is a gate **between tool selection and planning**, not a post-planning UX patch.
+That placement is intentional. Clarification is a gate **between metadata scout and iterative execution**, not a post-execution UX patch.
 
 ```mermaid
 flowchart LR
-  A[Request arrives] --> B[Tool discovery or pinned tool selection]
-  B --> C[Depth routing]
-  C --> D[Pre-plan probe evidence]
-  D --> D2[Execution shortlist plus ambiguity pool]
-  D2 --> E{LLM judge plus validators}
-  E -->|single grounded path| F[Plan]
+  A[Request arrives] --> B[Discover]
+  B --> C[Select tools and lane]
+  C --> D[Metadata scout]
+  D --> E{Clarify if needed}
+  E -->|answer path| F[Iterative execute]
   E -->|clarification_required| G[Return options or auto-select]
   E -->|capability_miss| H[Return capability miss]
-  F --> I[Execute]
-  I --> J[Completeness and retries]
-  J --> K[Synthesis]
-  K --> L[Deferred settlement]
+  F --> I[Synthesize]
+  I --> J[Deferred settlement]
 ```
 
 ---
@@ -60,7 +57,6 @@ This is the SDK/API surface. It accepts things like:
 
 - `query`
 - pinned `tools`
-- `queryDepth`
 - `clarificationPolicy`
 - `includeDeveloperTrace`
 
@@ -84,11 +80,11 @@ Both entry surfaces now expose only one public model knob: the **answer model** 
 - Chat keeps the legacy wire field name `selectedChatModel`, but it is interpreted as the answer model for the final response.
 - `/api/v1/query` exposes `answerModelId` for the same purpose.
 - If `responseShape="evidence_only"`, synthesis is skipped and no answer model runs.
-- Internal stages such as tool selection, clarification, planning, repair, completeness checks, and edge-case internal summarization stay on the managed portfolio rather than inheriting the public answer-model choice.
+- Internal stages such as tool selection, metadata scout, clarification, iterative execution, and edge-case internal summarization stay on the managed portfolio rather than inheriting the public answer-model choice.
 
 ## Contributor Retrieval Boundary
 
-The runtime on this page is responsible for marketplace-generic discovery, clarification, planning, execution, and synthesis. It is **not** responsible for venue-specific candidate resolution inside contributor methods.
+The runtime on this page is responsible for marketplace-generic discovery, selection, metadata scout, clarification, iterative execution, and synthesis. It is **not** responsible for venue-specific candidate resolution inside contributor methods.
 
 If a contributor adopts the optional pattern described in [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers):
 
@@ -128,35 +124,25 @@ For rollout decisions, treat the wedge as green only when all of these hold toge
 
 ---
 
-## Lane Semantics
+## Managed Execution Policy
 
-The runtime has two practical execution lanes.
+The runtime now exposes one managed executor surface to public callers.
+SDK/API users do not choose between `fast` and `deep`; the server derives a bounded execution policy from the query itself.
 
-| Lane | Runtime contract | Probe posture | Planning posture | Typical use |
-|------|------------------|---------------|------------------|-------------|
-| `fast` | `methodReasoningEnabled=false`, `ambiguityJudgeEnabled=false`, `externalProbeEnabled=false`, `preserveFastOneShot=true` | No meaningful pre-plan reasoning | Focused, minimal recovery | Straightforward one-shot requests |
-| `deep` | `methodReasoningEnabled=true`, `ambiguityJudgeEnabled=true`, `externalProbeEnabled=false`, `preserveFastOneShot=false` | Metadata-first reasoning before planning | Focused planning with more recovery than `fast` | Completeness-oriented, ambiguous, or multi-tool requests |
+The important distinctions now live in internal policy knobs rather than public lane selection:
 
-### The important distinctions
+- step budget
+- ambiguity handling
+- metadata-scout effort
+- whether one-shot preservation is still appropriate
 
-- `scoutEnabled` is no longer the best mental model for deep-lane behavior.
-- `methodReasoningEnabled`, `ambiguityJudgeEnabled`, and `externalProbeEnabled` are the source-of-truth capability flags.
-
-The key invariants are:
-
-- `deep` does method reasoning
-- `deep` can clarify or capability-miss before planning
-- `deep` currently does not spend external probe budget before planning
-- `fast` intentionally preserves one-shot behavior
-- legacy `deep-light` / `deep-heavy` values are historical or debug-surface aliases that normalize to `deep`
-
-That contract is what allows ambiguity handling to remain available even while external Scout probing is disabled.
+Developer traces may still reference legacy `fast` / `deep` terms while the runtime converges on this model, but those are implementation diagnostics rather than a recommended public control surface.
 
 ---
 
-## Pre-Plan Evidence
+## Metadata Scout
 
-The pre-plan probe is the runtime's "case file" before planning begins.
+The metadata scout is the runtime's "case file" before iterative execution begins.
 
 ### Metadata probe
 
@@ -185,9 +171,9 @@ This stage is currently disabled for the active runtime contract. Historical tra
 
 ### Effective rule
 
-- `fast`: skip probe work
-- `deep`: use metadata reasoning and ranked semantic candidates as the effective probe
-- historical `deep-light` / `deep-heavy` artifacts should be interpreted as the same deep lane when reading old traces
+- one-shot-biased requests may skip most probe work
+- ambiguity-sensitive requests may use metadata reasoning and ranked semantic candidates before execution
+- historical `deep-light` / `deep-heavy` artifacts should be interpreted as legacy diagnostics when reading old traces
 
 ### Dual candidate pools
 
@@ -202,7 +188,7 @@ This distinction matters in a permissionless marketplace because the best execut
 
 ## Clarification Stage
 
-Clarification runs **after** tool selection and **after** the effective pre-plan probe is available, but **before** planning/execution.
+Clarification runs **after** tool selection and **after** the effective metadata scout is available, but **before** iterative execution.
 
 That makes it the last safe place to avoid committing to the wrong method path.
 
@@ -223,20 +209,14 @@ The core decision function can return:
 - `clarification_required`
 - `capability_miss`
 
-### Judge and validator model
+### Deterministic gate
 
-The runtime treats the LLM ambiguity judge as the primary deep-lane decision-maker, but only inside a deterministic safety envelope.
+The live runtime now uses a deterministic clarification gate backed by metadata-scout signals rather than a separate clarification-judge stage.
 
 1. Build grounded interpretation options from the ambiguity pool
-2. Ask the judge for strict structured output
-3. Validate the judge result deterministically
-4. Fall back safely when the judge is malformed, contradictory, or low-confidence
-
-The practical rule is:
-
-- prefer `clarification_required` when grounded ambiguity remains
-- prefer `capability_miss` when no grounded capability path remains
-- never silently answer just because the judge emitted a brittle `answer`
+2. Score those options with contributor-agnostic heuristics
+3. Return `answer`, `clarification_required`, or `capability_miss`
+4. When policy is `auto`, continue with the deterministic recommended option and record the assumption explicitly
 
 ### When each outcome should happen
 
@@ -278,18 +258,16 @@ If `deep` ever returns an empty skipped probe, clarification is being starved by
 
 ---
 
-## Planning, Execution, and Recovery
+## Iterative Execution and Recovery
 
-Once clarification has not triggered, or has been resolved, the runtime continues into planning and execution:
+Once clarification has not triggered, or has been resolved, the runtime continues into iterative execution:
 
-1. planner writes the MCP-call program
-2. execution runs the generated code
-3. cheap fixes / semantic retries may repair narrow failures
-4. completeness evaluation decides whether the result fully answers the request
-5. bounded rediscovery can run when policy allows it
-6. synthesis turns verified execution output into the final answer
+1. the executor reads the selected tools, metadata-scout evidence, and any clarification assumption
+2. it decides which tool calls to make inside the live tool loop, using method metadata to prefer collection/comparison methods, inspect coverage signals from returned sets, and choose endpoint-aware parallel fan-out only when contributor metadata allows it
+3. recovery and rediscovery happen inline through the same executor rather than as separate outer stages
+4. verified execution output is handed to synthesis for the final answer
 
-`deep` can use recovery logic without relying on a separate heavy sublane. The current runtime keeps planning focused and leaves external pre-plan Scout probing disabled.
+`deep` can use richer recovery without relying on a separate heavy sublane. The current runtime keeps external pre-execution Scout probing disabled while still letting the iterative executor recover inline.
 
 ---
 
@@ -312,8 +290,7 @@ When debugging the flow, the most useful artifacts/events are:
 - `scout-pre-plan-probe`
 - `clarification-decision-input`
 - `clarification-decision`
-- `planner-generated-code`
-- `completeness-evaluation`
+- `iterative-execution-trace`
 - `final-execution`
 - `internal-summarization`
 - `synthesis-context-selection`

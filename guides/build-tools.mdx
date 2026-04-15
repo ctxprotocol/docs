@@ -233,7 +233,7 @@ return JSON.stringify(allData);
   <Accordion title="Write Detailed Output Schemas (Performance Critical)" icon="bolt">
 Your `outputSchema` is the **single most impactful thing** you can do to reduce latency and cost for users.
 
-Context's agentic pipeline uses a **planning LLM** that reads your `outputSchema` to generate code that processes your tool's response. If your schema is vague, the LLM has to *guess* property names — and it will guess wrong. This triggers an automatic **self-healing retry loop** that:
+Context's agentic pipeline uses an **iterative execution model** that reads your `outputSchema` to decide how to call tools, interpret results, and recover from mistakes. If your schema is vague, the runtime has to *guess* property names — and it will guess wrong. This triggers inline recovery that:
 
 - Adds **~30-60 seconds** of latency per retry
 - Costs **~$0.02 extra** in model inference per retry
@@ -247,7 +247,7 @@ If your tool explicitly reports plan/tier capability limits (for example, "long/
 
 Expose capability flags in `structuredContent` (for example, `supportsLongShortThresholdCheck: false`) and include a human-readable `limitations` field to help the verifier distinguish true parsing bugs from plan constraints.
 
-**The planning LLM defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the LLM will generate `data.exchangeName` when your API returns `data.exchange_name` — triggering a retry every time.
+**The execution model defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the runtime may infer `data.exchangeName` when your API returns `data.exchange_name` — triggering recovery every time.
 
 ```typescript
 // ❌ Bad: Vague schema — LLM must guess property names
@@ -288,7 +288,7 @@ outputSchema: {
 - If the response is an **object** (not an array), say so — `{ type: "object" }` not `{ type: "array" }`
 - Document **wrapper properties** your handler adds (e.g., `fetchedAt`, `count`, `symbol`)
 
-For third-party APIs with strict quotas, publish pacing hints via `_meta.rateLimit`. These hints influence both planner pacing and bounded pre-plan probe caps. See [Tool Metadata](/guides/tool-metadata#rate-limit-hints). Reference implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
+For third-party APIs with strict quotas, publish pacing hints via `_meta.rateLimit`. These hints influence both metadata-scout pacing and iterative-execution call budgets. See [Tool Metadata](/guides/tool-metadata#rate-limit-hints). Reference implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
   </Accordion>
 </AccordionGroup>
 
@@ -526,7 +526,7 @@ Now that your tool is live, validate it works correctly through the marketplace 
   <Step title="Manual: Test via the SDK">
     Use the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference) to test both surfaces:
 
-    - **Query mode:** `client.query.run({ query: "...", tools: ["your-tool-id"], queryDepth: "deep", responseShape: "answer_with_evidence", includeDeveloperTrace: true })` — validates your tool can support the same premium answer contract the first-party chat uses
+    - **Query mode:** `client.query.run({ query: "...", tools: ["your-tool-id"], responseShape: "answer_with_evidence", includeDeveloperTrace: true })` — validates your tool can support the same premium answer contract the first-party chat uses
     - **Agent-facing Query mode:** rerun the same must-win prompt with `responseShape: "evidence_only"` and confirm the evidence package is still useful without prose synthesis
     - **Execute mode** (if enabled): `client.tools.execute({ toolId: "...", toolName: "...", args: {...} })` — validates per-method call responses match your declared schemas
   </Step>

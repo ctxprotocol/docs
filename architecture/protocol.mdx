@@ -74,24 +74,27 @@ While optional in vanilla MCP, Context requires structured outputs because:
 When a user asks a complex question (e.g., *"Is it profitable to arb Uniswap vs Aave?"*), the Agent:
 
 <Note>
-For the detailed server-managed flow across `/api/v1/query` and `/api/chat`, including lane routing (`fast` / `deep`), clarification, planning, synthesis, and the historical legacy deep aliases accepted in debug surfaces, see [Query and Chat Agentic Flow](/architecture/query-chat-agentic-flow).
+For the detailed server-managed flow across `/api/v1/query` and `/api/chat`, including lane routing (`fast` / `deep`), metadata scout, clarification, iterative execution, synthesis, and the historical legacy deep aliases accepted in debug surfaces, see [Query and Chat Agentic Flow](/architecture/query-chat-agentic-flow).
 </Note>
 
 <Steps>
   <Step title="Discover">
     Finds relevant tools from the marketplace (or uses pre-selected ones)
   </Step>
-  <Step title="Plan">
-    Creates a solution using composability
+  <Step title="Select">
+    Chooses the lane and method universe for this request
   </Step>
-  <Step title="Write Code">
-    Generates code to invoke the necessary paid Tools via `callMcpSkill()`
+  <Step title="Metadata Scout">
+    Builds the execution shortlist and ambiguity pool from tool metadata
   </Step>
-  <Step title="Execute">
-    Runs the code securely in our sandbox
+  <Step title="Clarify If Needed">
+    Returns `clarification_required`, auto-resolves the recommended option, or returns `capability_miss`
+  </Step>
+  <Step title="Iterative Execute">
+    Runs the managed tool loop with inline recovery, rediscovery, and verification
   </Step>
   <Step title="Synthesize">
-    Combines results into a coherent answer and streams it to the user
+    Combines verified results into a coherent answer and streams it to the user
   </Step>
   <Step title="Settle">
     After the response is delivered, payment is settled in the background via `ContextRouter` (deferred settlement — tool fees are waived if execution fails)
@@ -246,14 +249,14 @@ For tools that need access to user-specific data (e.g., *"Analyze my positions"*
 
 ## Tool Safety Limits
 
-Each tool invocation runs inside a **sandboxed code-execution environment**.
+Each Query turn runs inside a **managed execution environment** with bounded tool-call budgets, timeout enforcement, and deferred settlement.
 
 ### MCP Tools Limits
 
 | Limit | Value | Purpose |
 |-------|-------|---------|
 | Max calls per response turn | 100 | Prevent runaway loops in Query runtime |
-| VM timeout | 5000ms | Code execution limit |
+| Runtime timeout budget | 5000ms | Per-step safety guardrail inside managed execution |
 | **MCP execution timeout** | **~60 seconds** | Encourages pre-computed products |
 
 Every response-turn MCP call increments an internal counter. Once `executionCount >= 100`, the platform throws an error for that turn.
@@ -266,12 +269,12 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 
 ### Runtime Cancellation and Retry Semantics
 
-- Query execution timeouts now propagate cancellation to in-flight MCP calls, so requests do not continue burning API quota after the turn has timed out.
-- Infrastructure-style failures (for example: `429`, auth failures, upstream timeout/unavailable responses) are treated as non-healable for that turn and skip code-rewrite self-healing loops.
-- Self-healing retries are still used for likely code/data-shape issues (property mismatch, parsing errors), where retries can improve outcomes.
-- If completeness checks indicate a capability/tier constraint (for example: required metric is unavailable on the current plan), the platform avoids repeated same-tool rewrite loops and returns best-effort output with limitations.
-- Reflection retries are conservative for isolated nulls: a single non-critical null field (especially when outputs include capability-limit signals) does not trigger repeated code rewrites.
-- Tool contributors can publish pacing hints in `_meta.rateLimit` / `_meta.rateLimitHints` (`maxRequestsPerMinute`, `cooldownMs`, `maxConcurrency`, `supportsBulk`, `recommendedBatchTools`, `notes`), which are surfaced to planning prompts.
+- Query execution timeouts propagate cancellation to in-flight MCP calls, so requests do not continue burning API quota after the turn has timed out.
+- Infrastructure-style failures (for example: `429`, auth failures, upstream timeout/unavailable responses) are treated as non-healable for that turn and skip inline recovery loops.
+- The iterative executor still retries likely code/data-shape issues (property mismatch, parsing errors) when a recovery attempt can improve the answer.
+- If verification indicates a capability or tier constraint (for example: required metric is unavailable on the current plan), the platform avoids repeated same-tool loops and returns best-effort output with limitations or a structured `capability_miss`.
+- Isolated nulls are handled conservatively: a single non-critical null field (especially when outputs include capability-limit signals) does not trigger repeated recovery loops.
+- Tool contributors can publish pacing hints in `_meta.rateLimit` / `_meta.rateLimitHints` (`maxRequestsPerMinute`, `cooldownMs`, `maxConcurrency`, `supportsBulk`, `recommendedBatchTools`, `notes`), which are surfaced to metadata-scout and iterative-execution logic.
 - Runtime pacing now combines declared hints with adaptive feedback: on rate-limit/timeout/abort signals it increases cooldowns, and after stable successes it gradually relaxes back toward declared baselines.
 - Example implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
 - Implementation guide: [Tool Metadata](/guides/tool-metadata#rate-limit-hints).
@@ -307,7 +310,7 @@ The SDKs expose two modes, reflecting Context's role as both a response marketpl
 
 **Execute** is for precision — you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.
 
-**Query** is for intelligence — you ask a natural-language question, and the server handles tool discovery, multi-tool orchestration (up to 100 MCP calls per response turn), targeted self-healing retries, completeness checks, and synthesis. One flat fee, with a response contract that can stay backward-compatible (`answer`) or return structured evidence packages (`answer_with_evidence`, `evidence_only`). This is the same agentic pipeline that powers the client app.
+**Query** is for intelligence — you ask a natural-language question, and the server handles discovery, selection, metadata scout, clarification if needed, iterative multi-tool execution (up to 100 MCP calls per response turn), synthesis, and settlement. One flat fee, with a response contract that can stay backward-compatible (`answer`) or return structured evidence packages (`answer_with_evidence`, `evidence_only`). This is the same managed runtime that powers the client app.
 
 <Info>
 **Why offer both?** Different consumers have different needs. An agent building a custom trading strategy wants raw data and full control (Execute). An agent answering user questions wants curated intelligence without managing orchestration (Query). Context serves both.
