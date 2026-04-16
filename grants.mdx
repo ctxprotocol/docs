@@ -210,6 +210,13 @@ These are not invitations to clone entire products. They are examples of the spe
 
 **Highest priority right now.** This category is strongest when you unbundle terminal workflows built on public filings, estimates, ownership, or ETF-related market structure.
 
+We explicitly support two kinds of `Financial Markets` RFBs:
+
+- **Subscription-derived workflows**: estimate revisions, insider clustering, filing deltas, ETF flows
+- **Classic analyst workflows**: reverse DCF, valuation resets, earnings-quality checks, and peer-comp workflows
+
+The second class has a higher bar. Free data and generic LLMs can already do a mediocre version, so we only want products that turn public inputs into a genuinely decision-useful answer.
+
 | Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
 |-------------|---------------------|------|-------|------------------|----------|
 | **ETF flows + holdings + basis dislocation intelligence** | Bloomberg / FactSet | `Query` or `both` | macro desk / allocator | terminal + issuer pages + basis checks | **Highest** |
@@ -219,6 +226,14 @@ These are not invitations to clone entire products. They are examples of the spe
 | **Supply-chain shock exposure intelligence** | Bloomberg SPLC | `Query` | PM / corporate strategy | SPLC + manual risk triage | **High** |
 | **ETF flows / holdings normalizer** | Bloomberg / FactSet | `Execute` or `both` | macro workflow builder | stitching issuer disclosures and ETF dashboards into one schema | **High** |
 | **SEC filing sections + numeric fact normalizer** | FactSet / Capital IQ / Bloomberg workflows | `Execute` | internal finance agent / research workflow builder | brittle filing parsers and ad hoc extraction scripts | **High** |
+| **Reverse DCF / implied-expectations intelligence** | public filings + market data | `Query` or `both` | PM / value investor / equity analyst | manual reverse-DCF spreadsheets and sensitivity tabs | **High, stricter bar** |
+| **Post-earnings valuation reset analysis** | public filings + transcripts + market data | `Query` | PM / event-driven investor | manual model updates after earnings | **High, stricter bar** |
+| **Earnings-quality and accounting red-flag intelligence** | public filings | `Query` | equity analyst / short seller / PM | accrual checks, cash-conversion work, and footnote review | **High, stricter bar** |
+| **Comparable-company valuation gap analysis** | public filings + market data | `Query` or `both` | PM / analyst / investor | manual peer selection and multiple-comparison work | **Medium-High, stricter bar** |
+
+<Note>
+We do **not** want generic DCF calculators, generic stock screeners, or "analyze any stock" wrappers. Classic analyst workflows are only fundable when they beat a free LLM plus a basic spreadsheet by a meaningful margin.
+</Note>
 
 ### Business & Sales
 
