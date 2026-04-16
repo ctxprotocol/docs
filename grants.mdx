@@ -176,182 +176,370 @@ Your proposal should say: *"Developers integrating multiple exchange APIs spend 
 
 ## 📋 Request for Builders (RFB)
 
-We are no longer funding broad category wrappers like "crypto analytics" or "competitive intelligence."
-We fund **feature-level products** with explicit demand, explicit evidence, and an explicit surface contract.
-If you cannot explain why the buyer would rather pay through Context than own the workflow or integration themselves, the proposal is Tier B at best.
+We no longer fund broad category wrappers like "crypto analytics," "competitive intelligence," or "financial research."
 
-Every proposal should read like a product brief:
+We fund **feature-level products** with:
 
-| You must specify | Query mode answer product | Execute mode primitive product |
-|------------------|---------------------------|--------------------------------|
-| **Exact thing being unbundled** | The premium answer users currently pay for | The painful multi-source primitive developers currently normalize themselves |
-| **Exact paying persona + why they pay through Context** | Trader, analyst, seller, researcher, or operator, plus why a managed Query answer beats manual search, dashboards, or a generic chatbot | Agent builder, workflow engineer, quant, or internal tools team, plus why they would pay Context instead of owning the integration directly |
-| **5 must-win prompts** | Questions Context should answer materially better than a generic chatbot | Requests an agent can reliably compose into downstream logic |
-| **Demand proof** | Specific evidence that people pay for or complain about this exact answer workflow, not just the category | Specific evidence that developers struggle with this exact integration or normalization pain, not just the category |
-| **Expected evidence / schema** | Facts, source refs, freshness, confidence, artifact links, ideal view | Stable typed fields, pagination/filtering rules, error semantics |
-| **Ideal output surface** | `Query` with `answer_with_evidence`, and optionally `evidence_only` for external agents | `Execute` or `both`, with normalized typed outputs |
-| **Why Context wins vs DIY / free substitutes** | Dashboards, screenshots, docs, manual search, and generic chatbots are too slow or not machine-readable for the paid answer contract | Direct APIs, vendor SDKs, and in-house scripts have inconsistent schemas, auth models, missing normalization, or too much maintenance burden |
+- a clear buyer
+- a painful workflow
+- an expensive current substitute
+- a narrow, testable surface contract
+- an obvious reason to exist on Context instead of as a generic dashboard or API wrapper
+
+The best RFBs are not organized by protocol mode first. They are organized by **buyer pain and workflow**.
+
+Mode still matters, but it should usually be a property of the product:
+
+- `Query`: the buyer wants a premium answer with evidence
+- `Execute`: the buyer wants a narrow typed primitive
+- `Both`: the same underlying data can support both
 
 <Info>
 **The north star:** submit a premium feature, not a generic category.
 
-Good: "Exchange-flow intelligence with venue heatmaps, baseline comparison, and catalyst refs."
+Good: `BTC/ETH exchange-flow regime intelligence`
 
-Weak: "Crypto analytics."
+Weak: `Crypto analytics`
 
-Good: "Cross-exchange order book normalization with one schema and stable pagination."
+Good: `Cross-venue perp funding / OI / liquidation normalizer`
 
-Weak: "Exchange API wrapper."
+Weak: `Exchange API wrapper`
 </Info>
 
+### What Every Strong RFB Includes
+
+Every serious proposal should read like a product brief and answer all of the following:
+
+- **Buyer:** who pays for this answer or primitive?
+- **Pain:** what annoying or expensive workflow are they replacing?
+- **Current substitute:** which paid product, dashboard, terminal workflow, or internal script are you unbundling?
+- **Mode fit:** why should this be `Query`, `Execute`, or `both`?
+- **Must-win prompts or methods:** what are the 3-5 tests that prove the product works?
+- **Evidence or schema contract:** what fields, provenance, freshness, and output shape should review expect?
+- **Scope boundary:** what are you *not* trying to build in v1?
+- **Why Context wins:** why would the buyer rather pay through Context than do this manually or own the integration themselves?
+
+<Warning>
+**What weak applications still get wrong**
+
+- broad claims like "Bloomberg for AI" or "CoinGlass for agents"
+- no real buyer, just "this data is interesting"
+- no wedge versus free search, dashboards, or manual workflows
+- too many sources and too much normalization for a solo builder
+- products that are really alerting feeds or dashboard SaaS products
+- raw data wrappers with no evidence layer, no schema discipline, and no differentiation
+</Warning>
+
 ---
 
-## 🧠 Request for Builders: Query Mode Intelligence
+## 🔥 Current Priority Areas
 
-In Query mode, **Context is the librarian**. Your tool should help Context produce a premium answer contract for both:
+Right now, we are most excited about **premium crypto and financial-data workflows**.
 
-- first-party chat via `answer_with_evidence`
-- external agents via `evidence_only`
+Why? Because these markets already contain users who:
 
-That means your value is not just "the data exists." Your value is that the answer comes back with the right evidence fields, source refs, freshness, confidence, and a sensible render shape.
+- pay real money for better information
+- act on that information quickly
+- repeatedly reach for a few valuable features inside larger subscriptions
+- can justify paying per answer or per call if the workflow is narrow enough
 
-### Brief 1: Exchange-Flow Intelligence
+We are not asking you to clone CoinGlass, Glassnode, Hyblock, or Bloomberg.
 
-*Replaces: Coinglass dashboards + manual spreadsheets + ad hoc news search*
+We are asking you to **unbundle one premium feature users actually pay for**.
 
-- **Target user:** discretionary trader, research desk, exchange analyst
-- **Why they pay:** they want a venue-level flow answer they can act on immediately, not screenshots and tab-hopping
-- **Why free substitutes fail:** dashboards rarely produce a normalized ranking, baseline comparison, and explanation package in one machine-readable artifact
+### Approve First
+
+If you want to maximize your approval odds, start here. These are the types of products we are most likely to fund when they are executed well.
+
+| Rank | Opportunity | Source | Mode | Buyer | What it replaces | Likely outcome |
+|------|-------------|--------|------|-------|------------------|----------------|
+| 1 | **BTC / ETH exchange-flow regime intelligence** | CoinGlass | `Query` | discretionary trader / desk | CoinGlass flows + manual venue comparison | **Tier S** |
+| 2 | **Liquidation heatmap and squeeze-risk intelligence** | Hyblock / CoinGlass | `Query` | perp trader | heatmap screenshots + manual interpretation | **Tier S** |
+| 3 | **Funding / OI divergence screener** | CoinGlass / Hyblock | `Query` or `both` | trader / strategist | multi-tab perp positioning workflow | **Tier S** |
+| 4 | **SEC filing delta intelligence** | Bloomberg-style workflow | `Query` | equity analyst / investor | Bloomberg + manual 10-Q / 10-K reading | **Tier S** |
+| 5 | **Earnings estimate revision momentum** | Bloomberg-style workflow | `Query` or `both` | PM / analyst | Bloomberg EE + revision workflow | **Tier S** |
+| 6 | **Insider cluster-buy intelligence** | Bloomberg-style workflow | `Query` or `both` | small-cap / event-driven investor | insider screens + manual screening | **Tier A-S** |
+| 7 | **Whale accumulation and exchange-pressure intelligence** | Glassnode | `Query` | crypto macro / swing trader | Glassnode whale + exchange metrics | **Tier S** |
+| 8 | **LTH / STH supply regime-shift intelligence** | Glassnode | `Query` | BTC macro trader | Glassnode cohort dashboards | **Tier S** |
+| 9 | **Cross-venue perp funding / OI / liquidation normalizer** | CoinGlass / Hyblock | `Execute` | bot builder / quant | custom exchange adapters | **Tier S** |
+| 10 | **ETF flows + holdings + basis dislocation intelligence** | CoinGlass / Glassnode / Bloomberg-style workflow | `Query` or `both` | macro desk / allocator | terminal + issuer pages + basis checks | **Tier S** |
+| 11 | **Supply-chain shock exposure intelligence** | Bloomberg-style workflow | `Query` | PM / corporate strategy | SPLC + manual risk triage | **Tier A-S** |
+
+<Info>
+**How to read this list:** if your proposal does not clearly replace one painful paid workflow in a way that fits one row above, your approval odds are probably lower than you think.
+</Info>
+
+### Vendor Breakdown
+
+These are not invitations to clone entire products. They are examples of the specific slices inside premium subscriptions that buyers actually pay for.
+
+<CardGroup cols={2}>
+  <Card title="Hyblock" icon="chart-line">
+    Best unbundles are derivatives-native answer products: liquidation pressure, liquidity walls, and OI regime shifts. Do **not** pitch a Hyblock terminal clone or a backtesting lab clone.
+
+    | Feature slice | Mode | Replaces | Fund? |
+    |---------------|------|----------|-------|
+    | Liquidation heatmap and squeeze-risk intelligence | `Query` | liquidation maps + screenshots | **Yes** |
+    | Order-book imbalance / liquidity wall scanner | `both` | depth map + manual chart watching | **Yes** |
+    | OI cluster regime-shift intelligence | `Query` | OI charts + trader interpretation | **Yes** |
+    | CVD + aggression / large-trade pressure screener | `both` | order-flow charts | **Maybe** |
+    | Backtesting lab clone | N/A | Hyblock backtesting product | **No** |
+  </Card>
+
+  <Card title="CoinGlass" icon="chart-pie">
+    CoinGlass has the cleanest near-term RFB surface because traders already pay for exchange flows, ETF flows, funding, OI, and liquidation context. Unbundle the feature people act on, not the whole site.
+
+    | Feature slice | Mode | Replaces | Fund? |
+    |---------------|------|----------|-------|
+    | BTC / ETH exchange-flow regime intelligence | `Query` | spot inflow/outflow dashboards + spreadsheets | **Yes** |
+    | Funding / OI divergence screener | `Query` or `both` | funding + OI tabs across exchanges | **Yes** |
+    | Liquidation cascade risk answer product | `Query` | liquidation heatmaps | **Yes** |
+    | ETF flows + holdings intelligence | `both` | ETF flow dashboards + manual context gathering | **Yes** |
+    | Long / short crowding by venue and asset | `both` | sentiment / crowding dashboards | **Maybe** |
+  </Card>
+
+  <Card title="Glassnode" icon="database">
+    Glassnode is strongest when a builder turns dense on-chain metrics into one premium answer about positioning, accumulation, exchange pressure, or regime shift. Raw metric access alone is not enough.
+
+    | Feature slice | Mode | Replaces | Fund? |
+    |---------------|------|----------|-------|
+    | Whale accumulation and exchange-pressure intelligence | `Query` | whale + exchange dashboards | **Yes** |
+    | LTH / STH supply regime-shift intelligence | `Query` | cohort dashboards | **Yes** |
+    | MVRV / NUPL / SOPR market-regime composite | `Query` | cycle dashboards | **Yes** |
+    | Exchange net position + balance normalizer | `both` | manual API pulls + chart exports | **Yes** |
+    | Generic on-chain analytics wrapper | N/A | Glassnode API | **No** |
+  </Card>
+
+  <Card title="Bloomberg-Style Public Data Workflows" icon="building-columns">
+    Treat Bloomberg as a signal for which workflows are valuable, not as something to clone. The best unbundles are public-data workflows Bloomberg makes fast: filing deltas, revision momentum, insider conviction, and supply-chain shock exposure.
+
+    | Feature slice | Mode | Replaces | Fund? |
+    |---------------|------|----------|-------|
+    | SEC filing delta intelligence | `Query` | filing comparison workflow | **Yes** |
+    | Earnings estimate revision momentum | `Query` or `both` | EE / revision screens | **Yes** |
+    | Insider cluster-buy intelligence | `Query` or `both` | insider screening workflow | **Yes** |
+    | Supply-chain shock exposure intelligence | `Query` | SPLC + manual risk research | **Yes** |
+    | Full Bloomberg-for-agents clone | N/A | the terminal | **No** |
+  </Card>
+</CardGroup>
+
+---
+
+## 📌 RFBs We Actually Want
+
+### Crypto Market Structure
+
+#### 1. BTC / ETH Exchange-Flow Regime Intelligence
+
+- **Mode:** `Query`
+- **Buyer:** discretionary trader, research desk, exchange analyst
+- **Replaces:** CoinGlass spot inflow/outflow dashboards, spreadsheets, and manual venue comparison
+- **Why this belongs on Context:** the buyer wants one answer that says where flows are moving, whether the move is unusual versus baseline, and whether it looks like accumulation, distribution, or liquidity rotation
+- **What to deliver:** a premium answer contract with venue rankings, baseline comparison, and evidence-rich explanation
+- **Strong submissions:** start with BTC and ETH, a limited venue set, explicit evidence fields, and clear freshness targets
+- **Weak submissions:** "crypto analytics platform," generic dashboards, or trying to cover every exchange and every asset at once
 - **Must-win prompts:**
-  - `Is BTC flowing into or out of exchanges on Coinglass? Search for news explaining the flow.`
-  - `Which exchanges are seeing the largest BTC inflows and outflows over the last 24 hours? Give me a heatmap-style ranking with magnitude and share of total flow.`
-  - `Where is stablecoin liquidity rotating today? Rank exchanges by USDT and USDC net inflow, then compare the move with the prior 7-day baseline.`
-  - `Show me whether ETH exchange flows confirm or contradict current derivatives positioning. Compare net spot flows, open interest direction, and liquidations, and call out any venue-specific divergence.`
-  - `Did BTC exchange flows flip from accumulation to distribution in the last 48 hours? Summarize the regime change, the leading venues, and the evidence behind the shift.`
-- **Expected evidence fields:** `asset`, `assets`, `timeWindow`, `asOf`, `aggregateFlow`, `venueBreakdown`, `sourceRefs`, `confidence`, `assumptions`, `knownUnknowns`, plus baseline/catalyst/derivatives extensions when the prompt asks for them
-- **Ideal output surface:** `Query`; preferred response shapes are `answer_with_evidence` for chat and `evidence_only` for external agents; ideal views are `heatmap`, `timeseries`, `leaderboard`, or `table`
-- **Tier target:** **S**
+- `Which exchanges are seeing the largest BTC inflows and outflows over the last 24 hours, and is the move unusual versus the prior 7-day baseline?`
+- `Did ETH exchange flows flip from accumulation to distribution in the last 48 hours?`
+- `Where is stablecoin liquidity rotating today across major venues?`
+- **Why we'd fund this:** clear buyer, obvious willingness to pay, strong Query fit
 
-### Brief 2: Prediction-Market Liquidity Intelligence
+#### 2. Liquidation Heatmap and Squeeze-Risk Intelligence
 
-*Replaces: Polymarket/Kalshi browsing plus manual orderbook inspection*
-
-- **Target user:** trader, market maker, newsletter writer, sports/politics analyst
-- **Why they pay:** they need spread, depth, slippage, and venue comparison fast enough to trade or publish on it
-- **Why free substitutes fail:** raw market pages show pieces of the picture, but not a reusable liquidity verdict with comparable fields
+- **Mode:** `Query`
+- **Buyer:** perp trader, intraday trader, market commentator
+- **Replaces:** Hyblock or CoinGlass liquidation maps plus manual interpretation
+- **Why this belongs on Context:** traders do not just want the picture; they want the answer about where forced positioning is clustered and what price zones matter right now
+- **What to deliver:** a queryable answer about liquidation clusters, nearby pressure zones, and whether the setup favors squeeze risk
+- **Strong submissions:** transparent methodology, tight asset scope, venue and timestamp evidence
+- **Weak submissions:** black-box "AI liquidation levels" with no provenance or explainability
 - **Must-win prompts:**
-  - `Analyze liquidity for the World Cup winner market.`
-  - `Which active Kalshi markets can absorb a $5,000 position with less than 2 cents of slippage?`
-  - `Compare liquidity and pricing efficiency for the same event on Polymarket and Kalshi.`
-  - `What is the cheapest way to exit a large YES position in this market right now?`
-  - `Which active markets have the widest spread relative to their recent volume?`
-- **Expected evidence fields:** `eventId`, `marketId`, `venue`, `side`, `bestBid`, `bestAsk`, `spreadBps`, `depth`, `slippage`, `recentVolume`, `observedAt`, `sourceRefs`
-- **Ideal output surface:** `Query` or `both`; ideal views are `table`, `leaderboard`, and `heatmap`
-- **Tier target:** **S**
+- `Where are the largest nearby BTC liquidation clusters right now?`
+- `Is the current ETH setup more vulnerable to a long squeeze or short squeeze?`
+- `Which venue shows the most concentrated liquidation pressure in SOL today?`
+- **Why we'd fund this:** one of the clearest paid answer products in crypto
 
-### Brief 3: Filing and Earnings Delta Intelligence
+#### 3. Funding / Open-Interest Divergence Screener
 
-*Replaces: Bloomberg / FactSet / Capital IQ workflows built on top of raw filings and transcripts*
-
-- **Target user:** equity analyst, PM, founder, investor-relations advisor
-- **Why they pay:** they want structured risk changes and management deltas without reading long PDFs or transcripts manually
-- **Why free substitutes fail:** EDGAR is free, but extraction, comparison, and ranking are the premium layer
+- **Mode:** `Query` or `both`
+- **Buyer:** perp trader, strategist, newsletter writer
+- **Replaces:** CoinGlass or Hyblock funding and OI tabs across multiple exchanges
+- **Why this belongs on Context:** the buyer wants a ranked answer about crowded positioning, not ten exchange tabs
+- **What to deliver:** ranked divergence answers, and optionally normalized methods for funding, OI, and liquidation data
+- **Strong submissions:** narrow venue scope, explicit ranking logic, stable field names
+- **Weak submissions:** generic exchange wrapper with no opinionated product contract
 - **Must-win prompts:**
-  - `What changed in this company's risk factors versus the previous 10-K?`
-  - `Summarize the biggest guidance changes in the last two earnings calls.`
-  - `Which recent filings show the sharpest increase in supply-chain risk language?`
-  - `Compare management tone and guidance changes across three semiconductor companies this quarter.`
-  - `What are the three most important accounting or legal red flags in this filing?`
-- **Expected evidence fields:** `company`, `filingType`, `period`, `section`, `excerpt`, `changeType`, `changeMagnitude`, `sourceRefs`, `publishedAt`, `confidence`
-- **Ideal output surface:** `Query`; ideal views are `table`, `diff`, and `leaderboard`
-- **Tier target:** **S**
+- `Which assets have the strongest funding / OI divergence right now?`
+- `Show me assets where open interest is rising while funding is rolling over.`
+- `Which venues are most crowded long in BTC perps today?`
+- **Why we'd fund this:** strong Query fit and also a good `Execute` primitive if the schema is disciplined
 
-### Brief 4: App Download and Keyword-Share Intelligence
+#### 4. ETF Flows + Holdings + Basis Dislocation Intelligence
 
-*Replaces: SensorTower / Data.ai subscription slices where the user only needs one premium answer*
+- **Mode:** `both`
+- **Buyer:** crypto PM, allocator, macro desk
+- **Replaces:** Bloomberg terminal checks, issuer pages, ETF dashboards, and manual basis comparisons
+- **Why this belongs on Context:** the buyer wants one answer tying flows, holdings changes, and market structure together, or one typed method they can call in a workflow
+- **What to deliver:** ETF flow and holdings answers with context, and optionally a small set of normalized methods
+- **Strong submissions:** durable sources, explicit freshness, narrow ETF coverage to start
+- **Weak submissions:** daily ETF tables with no interpretation or basis context
+- **Must-win prompts or methods:**
+- `Which spot BTC ETFs saw the largest net inflows this week, and how does that compare to price and basis?`
+- `Did ETF demand confirm or contradict today's BTC move?`
+- `get_etf_flows`, `get_etf_holdings`, or similarly narrow typed methods
+- **Why we'd fund this:** durable demand, durable sources, obvious buyer
 
-- **Target user:** growth marketer, app founder, investor, product lead
-- **Why they pay:** they need one concrete market-intel answer before a pitch, launch, or budget decision
-- **Why free substitutes fail:** public app-store pages do not expose reliable download estimates, keyword-share trends, or competitor deltas
+### On-Chain Positioning
+
+#### 5. Whale Accumulation and Exchange-Pressure Intelligence
+
+- **Mode:** `Query`
+- **Buyer:** crypto macro trader, swing trader, on-chain researcher
+- **Replaces:** Glassnode whale dashboards plus manual interpretation of exchange balances and flows
+- **Why this belongs on Context:** the job is not "show me whale data"; the job is "tell me whether large holders are accumulating and whether supply pressure is building on exchanges"
+- **What to deliver:** an answer that combines large-holder behavior with exchange supply pressure and clear provenance
+- **Strong submissions:** explicit entity definitions, limited asset scope, evidence fields for balances, transfers, and time windows
+- **Weak submissions:** generic whale-alert feeds or unlabeled wallet theater
 - **Must-win prompts:**
-  - `Estimate downloads and revenue for this bundle ID over the last 30 days.`
-  - `Which competitors gained the most keyword share this week in this category?`
-  - `Compare download momentum for these three apps after the latest product launch.`
-  - `What is the fastest-growing finance app in Brazil this month and what evidence supports that call?`
-  - `Which ASO keywords matter most for this app and how did that change from last month?`
-- **Expected evidence fields:** `bundleId`, `country`, `timeWindow`, `downloadEstimate`, `revenueEstimate`, `keywordShare`, `rankChange`, `sourceRefs`, `freshness`, `confidence`
-- **Ideal output surface:** `Query`; ideal views are `leaderboard`, `timeseries`, and `table`
-- **Tier target:** **S**
+- `Are BTC whales accumulating or distributing right now?`
+- `Is exchange supply pressure rising or falling for ETH this week?`
+- `Do whale transfers support the current market move or contradict it?`
+- **Why we'd fund this:** strong buyer pain, strong premium-answer fit
+
+#### 6. LTH / STH Supply Regime-Shift Intelligence
+
+- **Mode:** `Query`
+- **Buyer:** BTC macro trader, allocator, content creator serving serious investors
+- **Replaces:** Glassnode cohort dashboards and manual cycle interpretation
+- **Why this belongs on Context:** users pay to understand whether long-term holders are distributing, whether short-term holders are trapped, and whether the market regime is changing
+- **What to deliver:** a regime answer contract grounded in holder-cohort metrics, not a raw metric dump
+- **Strong submissions:** one or two assets, clearly named regime states, cited evidence
+- **Weak submissions:** academic on-chain commentary with no decision usefulness
+- **Must-win prompts:**
+- `Are long-term holders distributing into this BTC rally?`
+- `Has short-term holder pain reached washout territory?`
+- `Did the market regime shift in the last 30 days based on holder behavior?`
+- **Why we'd fund this:** repeatable buyer value and strong differentiation from generic chatbots
+
+#### 7. MVRV / NUPL / SOPR Market-Regime Composite
+
+- **Mode:** `Query`
+- **Buyer:** crypto macro trader, allocator, serious retail analyst
+- **Replaces:** Glassnode cycle dashboards interpreted manually
+- **Why this belongs on Context:** this is useful only when turned into a verdict on regime, froth, capitulation, or distribution risk
+- **What to deliver:** a composite regime answer that explains how the underlying metrics line up and where confidence is low
+- **Strong submissions:** a narrow, opinionated framework with transparent evidence
+- **Weak submissions:** dumping 10 charts and calling it analysis
+- **Must-win prompts:**
+- `Is BTC overheated, neutral, or washed out based on cycle metrics right now?`
+- `Do current SOPR, NUPL, and MVRV readings support continuation or distribution risk?`
+- `How does today's regime compare to prior local tops or bottoms?`
+- **Why we'd fund this:** buyers already pay for this workflow; the value is the synthesis, not the chart
+
+### Public Markets and Document Workflows
+
+#### 8. SEC Filing Delta Intelligence
+
+- **Mode:** `Query`
+- **Buyer:** equity analyst, PM, founder, investor-relations advisor
+- **Replaces:** Bloomberg / FactSet workflows built on top of raw filings and transcripts
+- **Why this belongs on Context:** EDGAR is free, but diffing, extraction, ranking, and synthesis are the paid layer
+- **What to deliver:** structured deltas in risk factors, guidance language, legal exposure, or other decision-relevant sections
+- **Strong submissions:** deterministic section extraction, diffable evidence, clean citations
+- **Weak submissions:** generic filing summarizers with vague "AI insights"
+- **Must-win prompts:**
+- `What changed in this company's risk factors versus the previous 10-K?`
+- `What are the three most important new legal or accounting red flags in this filing?`
+- `Which recent semiconductor filings show the sharpest increase in supply-chain risk language?`
+- **Why we'd fund this:** durable public source, obvious premium workflow, strong reviewability
+
+#### 9. Earnings Estimate Revision Momentum
+
+- **Mode:** `Query` or `both`
+- **Buyer:** PM, analyst, event-driven investor
+- **Replaces:** Bloomberg EE and revision workflows
+- **Why this belongs on Context:** the buyer wants a compact answer about where revisions are moving and whether the move is broad-based, not a terminal screen
+- **What to deliver:** a ranked revision answer product, and optionally a typed primitive for revision data
+- **Strong submissions:** clear methodology, narrow sector or geography to start, evidence fields for estimate changes and time windows
+- **Weak submissions:** broad equity screener with vague "analyst sentiment"
+- **Must-win prompts or methods:**
+- `Which companies in semis saw the strongest positive earnings revisions over the last 30 days?`
+- `Where is estimate momentum collapsing ahead of earnings this quarter?`
+- `get_estimate_revisions` or similarly narrow methods
+- **Why we'd fund this:** direct buyer pain, high-value workflow, good Query and Execute fit
+
+#### 10. Insider Cluster-Buy Intelligence
+
+- **Mode:** `Query` or `both`
+- **Buyer:** small-cap investor, event-driven analyst
+- **Replaces:** Bloomberg insider screens plus manual Form 4 review
+- **Why this belongs on Context:** the buyer does not want every insider trade; they want the ones that matter, ranked by conviction and context
+- **What to deliver:** answers or methods that identify meaningful cluster buying, role importance, and surrounding company context
+- **Strong submissions:** explicit thresholds, role-aware ranking, provenance to the original filing
+- **Weak submissions:** noisy alert feeds, retail-pump framing, or undifferentiated insider scraping
+- **Must-win prompts:**
+- `Which U.S. small caps saw the strongest insider cluster buying this month?`
+- `Is this insider buying meaningful or just routine compensation noise?`
+- `Which recent insider-buy clusters coincide with improving fundamentals or estimate revisions?`
+- **Why we'd fund this:** strong buyer, narrow scope, very reviewable
+
+#### 11. Supply-Chain Shock Exposure Intelligence
+
+- **Mode:** `Query`
+- **Buyer:** PM, credit analyst, corporate strategy team
+- **Replaces:** Bloomberg SPLC plus manual tariff, sanctions, bankruptcy, or supplier-risk research
+- **Why this belongs on Context:** the buyer wants a fast answer about exposure to a real-world shock, not a giant supply-chain graph
+- **What to deliver:** a narrow exposure answer product around a specific risk class such as tariffs, sanctions, concentration risk, or supplier distress
+- **Strong submissions:** one shock type at a time, cited relationships, exposure scoring with assumptions clearly stated
+- **Weak submissions:** generic "supply-chain intelligence platform"
+- **Must-win prompts:**
+- `Which semiconductor names are most exposed to a Taiwan shock through critical suppliers?`
+- `Which U.S. industrials face the highest tariff exposure under this scenario?`
+- `Which companies are most exposed to a distressed supplier in this chain?`
+- **Why we'd fund this:** commercially sharp and much more valuable than generic news summarization
+
+### Execute Primitives We Also Want
+
+These are especially attractive when the buyer is using the SDK or a direct MCP integration:
+
+| Primitive | Replaces | Why we'd fund it |
+|-----------|----------|------------------|
+| **Cross-venue perp funding / OI / liquidation normalizer** | maintaining exchange-specific adapters for funding, open interest, and liquidation data | clear SDK demand, narrow scope, strong `Execute` fit |
+| **ETF flows / holdings normalizer** | stitching issuer disclosures and ETF dashboards into one typed schema | durable sources, obvious downstream usage |
+| **SEC filing sections + numeric fact normalizer** | brittle filing parsers and ad hoc extraction scripts | strong reviewability, strong enterprise workflow fit |
 
 <Note>
-**What Query proposals should look like:** a premium answer contract with must-win prompts, evidence fields, freshness targets, and a clear reason a user would pay for one answer instead of assembling it manually.
+**Important:** a good `Execute` primitive is still narrow. We do not want "all exchange market data" or "all company data." We want one painful primitive with one stable contract.
 </Note>
 
 ---
 
-## 🔌 Request for Builders: Execute Mode Infrastructure
+## 🚫 Ideas We Are Less Excited To Fund
 
-In Execute mode, **the developer's agent is the librarian**. The product is a normalized primitive contract, not a prose answer.
+We want fewer clever ideas and more fundable products. These patterns usually get rejected or down-ranked:
 
-You are selling:
+- vague AI wrappers
+- "X for agents" terminal clones
+- broad "crypto analytics" or "financial research" platforms
+- social sentiment, meme coin, rug-check, or generic narrative dashboards
+- pure monitoring feeds or alerting products
+- multi-source normalization monsters that a solo builder cannot maintain
+- generic wrappers over public APIs with no schema or evidence advantage
+- products with no obvious paying buyer
+- products better suited to a dashboard SaaS than Context `Query` or `Execute` mode
 
-- consistent field names
-- predictable pagination/filtering
-- stable method semantics
-- explicit execute pricing
-- fewer hours spent normalizing fragmented APIs
+| Weak pattern | Why we dislike it |
+|--------------|-------------------|
+| `Crypto analytics platform` | too broad, too saturated, and no clear review surface |
+| `Bloomberg for agents` | impossible scope, unclear buyer contract, guaranteed hand-waving |
+| generic public API wrapper | easy to replace, weak wedge, usually Tier B at best |
+| pure monitoring feed / alerts product | belongs in a dashboard SaaS, not a paid Context answer |
+| unscoped multi-source normalizer | too much maintenance for a solo builder and too much schema risk |
+| social sentiment / narrative dashboard | saturated, noisy, weak differentiation, poor reviewability |
 
-### Brief 1: Cross-Exchange Order Book and Price Normalizer
+If your pitch sounds like "I will aggregate everything and let the AI figure it out," it is almost certainly too broad.
 
-*Replaces: integrating Binance + Coinbase + Kraken + OKX + Bybit separately*
-
-- **Target user:** quant, execution bot builder, analytics engineer
-- **Why they pay:** they want one schema and one pagination/filter contract instead of maintaining exchange-specific adapters
-- **Must-win requests:**
-  - `get_prices` across multiple exchanges with one `{ exchange, pair, price, volume, timestamp }` shape
-  - `get_orderbook` with the same depth schema on every venue
-  - `get_funding_rates` with normalized exchange and contract identifiers
-  - `get_liquidations` with consistent timestamps and side labels
-  - `get_market_snapshot` that combines top-of-book, funding, and open interest into one typed response
-- **Expected schema fields:** `exchange`, `symbol`, `timestamp`, `bids`, `asks`, `price`, `volume`, `fundingRate`, `openInterest`, `latencyNote`
-- **Ideal output surface:** `Execute` or `both`
-- **Tier target:** **S**
-
-### Brief 2: Multi-Source Company Identity and Enrichment Normalizer
-
-*Replaces: integrating Crunchbase + PitchBook + LinkedIn + BuiltWith + SimilarWeb separately*
-
-- **Target user:** sales ops, internal tooling team, growth engineer
-- **Why they pay:** entity matching and schema cleanup are the expensive part, not fetching one record
-- **Must-win requests:**
-  - resolve one company from domain, name, and LinkedIn slug into a stable company ID
-  - fetch funding, employee, tech-stack, and traffic fields in one typed payload
-  - paginate comparable companies with the same schema regardless of source
-  - fetch hiring signals with normalized role/location fields
-  - return provenance per field so downstream systems can decide what to trust
-- **Expected schema fields:** `companyId`, `canonicalName`, `domain`, `sourceCoverage`, `employeeCount`, `funding`, `techStack`, `trafficEstimate`, `hiringSignals`, `provenance`
-- **Ideal output surface:** `Execute` or `both`
-- **Tier target:** **S**
-
-### Brief 3: Multi-Retailer Pricing and Review Feed
-
-*Replaces: integrating Amazon + Walmart + Target + Shopify endpoints separately*
-
-- **Target user:** pricing bot builder, catalog ops team, e-commerce analyst
-- **Why they pay:** they need reliable downstream joins and comparisons, not one-off scraping results
-- **Must-win requests:**
-  - compare one product across multiple retailers with one price schema
-  - fetch historical prices with aligned timestamps and currency handling
-  - normalize review counts, star ratings, and review text summaries
-  - paginate search results across retailers with stable product identifiers
-  - return structured availability and seller metadata
-- **Expected schema fields:** `retailer`, `productId`, `canonicalSku`, `price`, `currency`, `availability`, `seller`, `reviewSummary`, `timestamp`
-- **Ideal output surface:** `Execute` or `both`
-- **Tier target:** **A**
-
-<Note>
-**Execute-mode tools can also serve Query mode.** If you set `surface: "both"` and `queryEligible: true` in your `_meta`, Context can use your normalized data as a source for premium Query answers too. See [Choosing a Mode](/guides/tool-metadata#choosing-a-mode).
-</Note>
+If your pitch sounds like "I am unbundling this one paid workflow from a product serious users already buy," you are probably on the right track.
 
 ---
 
