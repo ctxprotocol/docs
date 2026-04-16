@@ -21,28 +21,14 @@ Context Protocol is a decentralized marketplace where AI agents pay for data. Bu
 </CardGroup>
 
 <Info>
-**🎯 North Star:** We fund MCP tools that deliver data people currently overpay for. That means two things:
+**What we fund:** feature-level MCP products that unbundle one paid workflow into either:
 
-- **Curated intelligence (Query mode):** Unbundle \$500/year subscriptions into \$0.10/response insights — Context is the librarian, your tool provides the analysis.
-- **Normalized data infrastructure (Execute mode):** Replace fragmented APIs with clean, typed, consistent data endpoints at \$0.001/call — the developer's agent is the librarian, your tool provides the building blocks.
+- **Curated intelligence (`Query`)**: a premium answer people would pay for on demand
+- **Normalized infrastructure (`Execute`)**: a narrow typed primitive developers would rather rent than build
 </Info>
 
-<Tip>
-**💡 Finding Unbundling Opportunities:** Use [Grok](https://grok.com) to search Twitter for users discussing premium subscriptions. Look for both frustrated users trying to cancel ("not worth it", "only use one feature") AND evangelists explaining exactly why they pay ("worth every penny because", "can't get this data anywhere else"). Both signals reveal the core value users extract from subscriptions giving you a roadmap for what to reverse engineer as a \$0.10/response MCP tool.
-</Tip>
-
 <Warning>
-**🚫 What We Don't Fund**
-
-We reject proposals that:
-
-- **Wrap a single public API without adding value**: Calling CoinGecko and returning the JSON isn't a product. For Query mode, add analysis, scoring, or synthesis. For Execute mode, normalize across multiple sources into a consistent typed schema — that's the value. If the likely buyer would rather own the integration than pay through Context, it is Tier B at best unless you add strong normalization, provenance, partial-failure handling, caching, rate-limit protection, or multi-source abstraction.
-- **Chase dead or saturated markets**: Meme coin tooling, yield aggregators, and rug checkers had their moment. The alpha is gone.
-- **Unbundle subscriptions that AI itself is killing**: SEO tools (SEMrush, Ahrefs, Moz), keyword research platforms, and backlink analyzers exist because Google Search exists. As users shift to AI chatbots, these subscriptions are in structural decline. We don't fund cheaper versions of dying products. Ask: "Is the subscription I'm unbundling itself being disrupted by AI?" If yes, don't apply.
-- **Compete with dominant free alternatives**: If Semantic Scholar, Etherscan, or Google News already does it for free, your tool needs a 10x differentiated angle.
-- **Lack evidence of demand**: "This would be useful" isn't enough. Show us the expensive subscription people are paying for (Query tools) or the fragmented APIs developers are struggling to normalize (Execute tools). The evidence must support the exact feature or primitive you are pitching, not just the broad vertical.
-
-**The bar:** Can you find real Twitter threads, forum posts, or Reddit threads of people complaining or evangelising about paying for this specific answer product — or developers complaining about the exact integration and normalization pain your Execute primitive solves? If not, don't apply.
+**What we don't fund:** broad wrappers, dead categories, generic public API proxies, or products with no clear buyer. If you cannot point to a paid workflow people already spend money on, or to a painful integration developers already complain about, do not apply.
 </Warning>
 
 ---
@@ -62,45 +48,13 @@ We're allocating **\$10,000 USD** to bootstrap the supply side of the Context Ma
 
 ## 🏆 Funding Tiers
 
-### What Makes a Tier S Tool?
-
-It depends on who you're building for.
-
-**For Query mode** (Context is the librarian — \$0.10/response):
-
-We pay for **answers**, not raw data dumps. Tier S Query tools do the heavy lifting so the AI can synthesize immediately.
-
-| Feature | Raw Dump (❌) | Curated Intelligence (✅) |
-|---------|--------------|--------------------------|
-| **Crypto** | "Here's the transaction list" | "Top 5 whales accumulating this token right now" |
-| **Finance** | "Here's the SEC filing PDF" | "Key risk factors extracted with sentiment score" |
-| **E-commerce** | "Here are Amazon search results" | "Estimated monthly revenue: \$47K, trending up 23%" |
-| **Competitive Intel** | "Here's their homepage HTML" | "Tech stack: Stripe, Vercel, Segment. 2.3M monthly visitors" |
-
-**For Execute mode** (developer's agent is the librarian — \$0.001/call):
-
-We pay for **normalized, typed, reliable data** that an agent can iterate over. Tier S Execute tools eliminate the pain of integrating fragmented APIs.
-
-| Feature | Single API Wrapper (❌) | Normalized Data Product (✅) |
-|---------|------------------------|------------------------------|
-| **Crypto** | "Here's Binance prices" | "Cross-exchange prices in unified `{ exchange, pair, price, volume }` schema" |
-| **Finance** | "Here's one SEC filing" | "Parsed 10-K/10-Q with structured metrics, comparable across companies" |
-| **E-commerce** | "Here's one retailer's data" | "Product pricing across Amazon, Walmart, Target in consistent format" |
-| **Competitive Intel** | "Here's one data source" | "Tech stack + traffic + hiring signals normalized per domain" |
-
----
-
 ### 🦄 Tier S: \$1,000 + Revenue Share
 
-**High-value tools that replace expensive subscriptions or fragmented API integrations.**
-
-For Query mode: complex pipelines, novel analysis, or hard-to-access sources that unlock data people currently pay \$500–\$20,000/year for. For Execute mode: normalized data infrastructure across multiple sources that eliminates painful multi-API integration for agent builders.
+**High-value tools that replace expensive subscriptions or painful integrations.**
 
 ### 🛠️ Tier A: \$500 + Revenue Share
 
-**High-utility tools agents use frequently.**
-
-For Query mode: reliable, well-documented tools with smart curation. For Execute mode: well-typed, single-source data endpoints with consistent schemas and good coverage.
+**High-utility tools with clear buyer value and good reliability.**
 
 ### 🚀 Tier B: Revenue Share Only
 
@@ -111,66 +65,6 @@ No upfront grant, but immediate listing. Start earning from day one.
 <Note>
 **All tiers earn revenue share.** Even Tier B tools generate USDC the moment agents use them. You keep 90% of every fee.
 </Note>
-
----
-
-## 🔍 How to Find Unbundling Opportunities
-
-Before pitching, do this research. Here's a real example of how to identify a fundable tool:
-
-### Example: Finding a SensorTower Unbundling Opportunity
-
-**Step 1: Search for frustrated paying users**
-
-Go to [Grok](https://grok.com) and search Twitter:
-- `"SensorTower" "pay" OR "subscription" OR "expensive"`
-- `"app analytics" "not worth" OR "canceled" OR "only need"`
-
-**Step 2: Find the specific pain point**
-
-You might find tweets like:
-> *"I pay \$400/month for SensorTower just to check competitor download estimates before investor calls. Everything else in the dashboard I never touch."*
-
-> *"SensorTower is worth it for the App Store keyword rankings alone. Rest is noise."*
-
-**Step 3: Isolate the \$0.10 response**
-
-From this research, you'd identify: **"App download estimates by bundle ID"** is the core value. Build a tool that delivers just that. The specific data point people are paying \$5K/year to access occasionally.
-
-**Step 4: Pitch with evidence**
-
-Your proposal should say: *"SensorTower charges \$5K/year. Users on Twitter report paying primarily for download estimates. Here's my tool that delivers that specific data point for \$0.10/response. Here are 3 tweets proving demand."*
-
-<Info>
-**This is the bar for Query-mode tools.** Every idea in the curated intelligence section has been evaluated against this standard.
-</Info>
-
-### Example: Finding an Execute-Mode Normalization Opportunity
-
-**Step 1: Search for frustrated developers**
-
-Go to [Grok](https://grok.com) and search Twitter, GitHub issues, or Reddit:
-- `"different schema" "exchange" OR "API" site:github.com`
-- `"normalize" "crypto" "API" "pain" OR "nightmare" OR "inconsistent"`
-
-**Step 2: Find the integration pain**
-
-You might find posts like:
-> *"Spent 3 days just getting Binance, Coinbase, and Kraken order book data into the same format. Every exchange returns depth differently."*
-
-> *"Why does every SEC filing parser return a completely different JSON structure? I just want balance sheet data in a consistent schema."*
-
-**Step 3: Isolate the \$0.001 method**
-
-From this research, you'd identify: **"normalized order book data across exchanges"** is the value. Build a tool where `get_orderbook("BTC/USDT", "binance")` and `get_orderbook("BTC/USDT", "kraken")` return the exact same typed schema. The developer pays fractions of a cent per call instead of building and maintaining the normalization themselves.
-
-**Step 4: Pitch with evidence**
-
-Your proposal should say: *"Developers integrating multiple exchange APIs spend days normalizing schemas. Here are 3 GitHub issues/tweets showing the pain. My tool provides unified typed data across 10 exchanges at \$0.001/call. Here's the schema."*
-
-<Info>
-**This is the bar for Execute-mode tools.** Show us the fragmented API landscape and the developers struggling with it.
-</Info>
 
 ---
 
@@ -206,18 +100,15 @@ Good: `Cross-venue perp funding / OI / liquidation normalizer`
 Weak: `Exchange API wrapper`
 </Info>
 
-### What Every Strong RFB Includes
+### Strong RFBs Include
 
-Every serious proposal should read like a product brief and answer all of the following:
-
-- **Buyer:** who pays for this answer or primitive?
-- **Pain:** what annoying or expensive workflow are they replacing?
-- **Current substitute:** which paid product, dashboard, terminal workflow, or internal script are you unbundling?
-- **Mode fit:** why should this be `Query`, `Execute`, or `both`?
-- **Must-win prompts or methods:** what are the 3-5 tests that prove the product works?
-- **Evidence or schema contract:** what fields, provenance, freshness, and output shape should review expect?
-- **Scope boundary:** what are you *not* trying to build in v1?
-- **Why Context wins:** why would the buyer rather pay through Context than do this manually or own the integration themselves?
+- **Buyer**
+- **Painful workflow**
+- **Paid current substitute**
+- **Mode fit**: `Query`, `Execute`, or `both`
+- **3-5 must-win prompts or methods**
+- **Evidence or schema contract**
+- **Tight scope boundary**
 
 <Warning>
 **What weak applications still get wrong**
@@ -234,18 +125,7 @@ Every serious proposal should read like a product brief and answer all of the fo
 
 ## 🔥 Current Priority Areas
 
-Right now, we are most excited about **premium crypto and financial-data workflows**.
-
-Why? Because these markets already contain users who:
-
-- pay real money for better information
-- act on that information quickly
-- repeatedly reach for a few valuable features inside larger subscriptions
-- can justify paying per answer or per call if the workflow is narrow enough
-
-We are not asking you to clone CoinGlass, Glassnode, Hyblock, or Bloomberg.
-
-We are asking you to **unbundle one premium feature users actually pay for**.
+Right now, we are most excited about **premium crypto and financial-data workflows** because users in those markets already pay for better information and can justify paying per answer or per call.
 
 ## 📋 Request for Builders by Marketplace Category
 
@@ -266,13 +146,25 @@ These categories match the ones contributors see in the submission form. Use the
 | **Cross-venue perp funding / OI / liquidation normalizer** | CoinGlass / Hyblock | `Execute` | bot builder / quant | custom exchange adapters | **Highest** |
 | **Cross-exchange order book / price normalizer** | CoinGlass / exchange-data suites | `Execute` | execution bot builder | exchange-by-exchange integration | **High** |
 
-### Priority Vendor Breakdown Across Crypto & Finance
+<AccordionGroup>
+  <Accordion title="How to research a strong unbundling idea" icon="search">
+Use [Grok](https://grok.com), Twitter, Reddit, forums, and GitHub issues to find:
 
+- people complaining they pay for one feature inside an expensive subscription
+- people saying a specific feature is the only reason they keep paying
+- developers complaining about a specific normalization or integration pain
+
+The goal is to isolate one paid workflow, not one broad category.
+
+**Query example:** Sensor Tower users paying mainly for app download estimates or keyword-share data.
+
+**Execute example:** developers losing days normalizing order book or filing schemas across sources.
+  </Accordion>
+
+  <Accordion title="Why these crypto and finance examples are credible" icon="database">
 These are not invitations to clone entire products. They are examples of the specific slices inside premium subscriptions that buyers actually pay for.
 
-#### Hyblock
-
-Best unbundles are derivatives-native answer products: liquidation pressure, liquidity walls, and OI regime shifts. Do **not** pitch a Hyblock terminal clone or a backtesting lab clone.
+**Hyblock**
 
 | Feature slice | Mode | Replaces | Fund? |
 |---------------|------|----------|-------|
@@ -282,9 +174,7 @@ Best unbundles are derivatives-native answer products: liquidation pressure, liq
 | CVD + aggression / large-trade pressure screener | `both` | order-flow charts | **Maybe** |
 | Backtesting lab clone | N/A | Hyblock backtesting product | **No** |
 
-#### CoinGlass
-
-CoinGlass has the cleanest near-term RFB surface because traders already pay for exchange flows, ETF flows, funding, OI, and liquidation context. Unbundle the feature people act on, not the whole site.
+**CoinGlass**
 
 | Feature slice | Mode | Replaces | Fund? |
 |---------------|------|----------|-------|
@@ -294,9 +184,7 @@ CoinGlass has the cleanest near-term RFB surface because traders already pay for
 | ETF flows + holdings intelligence | `both` | ETF flow dashboards + manual context gathering | **Yes** |
 | Long / short crowding by venue and asset | `both` | sentiment / crowding dashboards | **Maybe** |
 
-#### Glassnode
-
-Glassnode is strongest when a builder turns dense on-chain metrics into one premium answer about positioning, accumulation, exchange pressure, or regime shift. Raw metric access alone is not enough.
+**Glassnode**
 
 | Feature slice | Mode | Replaces | Fund? |
 |---------------|------|----------|-------|
@@ -306,9 +194,7 @@ Glassnode is strongest when a builder turns dense on-chain metrics into one prem
 | Exchange net position + balance normalizer | `both` | manual API pulls + chart exports | **Yes** |
 | Generic on-chain analytics wrapper | N/A | Glassnode API | **No** |
 
-#### Bloomberg-Style Public Data Workflows
-
-Treat Bloomberg as a signal for which workflows are valuable, not as something to clone. The best unbundles are public-data workflows Bloomberg makes fast: filing deltas, revision momentum, insider conviction, and supply-chain shock exposure.
+**Bloomberg-style public-data workflows**
 
 | Feature slice | Mode | Replaces | Fund? |
 |---------------|------|----------|-------|
@@ -317,6 +203,8 @@ Treat Bloomberg as a signal for which workflows are valuable, not as something t
 | Insider cluster-buy intelligence | `Query` or `both` | insider screening workflow | **Yes** |
 | Supply-chain shock exposure intelligence | `Query` | SPLC + manual risk research | **Yes** |
 | Full Bloomberg-for-agents clone | N/A | the terminal | **No** |
+  </Accordion>
+</AccordionGroup>
 
 ### Financial Markets
 
