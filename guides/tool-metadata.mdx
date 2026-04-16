@@ -5,9 +5,9 @@ description: "Configure _meta on your MCP tools to declare rate-limit hints, con
 
 Every MCP tool definition supports a `_meta` field for platform-level configuration that sits alongside `inputSchema` and `outputSchema`. This guide covers the three `_meta` capabilities:
 
-- **[Rate-Limit Hints](#rate-limit-hints)** — tell the metadata scout and execution runtime how to pace calls to your API
-- **[Context Injection](#context-injection)** — declare what user-specific data the platform should inject into your tool's arguments
-- **[Pricing & Execute Mode Eligibility](#pricing-&-execute-mode-eligibility)** — control where your methods appear and set per-call execute pricing
+- **[Rate-Limit Hints](#rate-limit-hints)**: tell the metadata scout and execution runtime how to pace calls to your API
+- **[Context Injection](#context-injection)**: declare what user-specific data the platform should inject into your tool's arguments
+- **[Pricing & Execute Mode Eligibility](#pricing-&-execute-mode-eligibility)**: control where your methods appear and set per-call execute pricing
 
 <Info>
 Optional contributor-side search helpers are **not** a new `_meta` contract in this rollout. If your venue needs the LLM-backed pattern described in [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers), keep that logic and any helper-private state inside the contributor. Standardized helper evidence now rides in contributor `searchMetadata` payloads and developer traces, not in ad hoc `_meta.searchHelper` fields.
@@ -104,8 +104,8 @@ These hints are not a substitute for server-side protections. Keep your own upst
 
 ### Rate-Limit Reference Implementations
 
-- TypeScript: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor) — rate limit hints + per-method pricing
-- TypeScript: [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider) — Execute-mode data broker with background ingestion, `inputSchema` `default`/`examples`, and zero upstream rate limits
+- TypeScript: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor), rate limit hints + per-method pricing
+- TypeScript: [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider), Execute-mode data broker with background ingestion, `inputSchema` `default`/`examples`, and zero upstream rate limits
 - Python: [Hummingbot contributor server](https://github.com/ctxprotocol/sdk-python/tree/main/examples/server/hummingbot-contributor)
 - Additional large-surface example: [Polymarket contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor)
 
@@ -115,12 +115,12 @@ These hints are not a substitute for server-side protections. Keep your own upst
 
 The **Context Injection** pattern enables MCP tools to receive user-specific data without handling authentication or credentials:
 
-- **Portfolio Data** — Hyperliquid positions, balances, P&L
-- **Prediction Markets** — Polymarket positions and orders
-- **Wallet Data** — EVM addresses and token balances
+- **Portfolio Data:** Hyperliquid positions, balances, P&L
+- **Prediction Markets:** Polymarket positions and orders
+- **Wallet Data:** EVM addresses and token balances
 
 <Info>
-**Why "Context Injection"?** The platform fetches user data client-side and injects it directly into your tool's arguments. Your server never sees private keys or credentials — just structured data ready to analyze.
+**Why "Context Injection"?** The platform fetches user data client-side and injects it directly into your tool's arguments. Your server never sees private keys or credentials, just structured data ready to analyze.
 </Info>
 
 ### When to Use Context Injection
@@ -132,7 +132,7 @@ The **Context Injection** pattern enables MCP tools to receive user-specific dat
 | Wallet insights | `"wallet"` | "What tokens do I hold on Base?" |
 
 <Tip>
-**User-specific vs. Public Data**: Use Context Injection when your tool needs to answer "my" questions. For public data (e.g., "What's the ETH price?"), you don't need context injection — just fetch it directly.
+**User-specific vs. Public Data**: Use Context Injection when your tool needs to answer "my" questions. For public data (e.g., "What's the ETH price?"), you don't need context injection, just fetch it directly.
 </Tip>
 
 ### Quick Start (TypeScript)
@@ -285,7 +285,7 @@ async def handle_tool(name: str, arguments: dict):
 
 ### Supported Context Types
 
-#### `"hyperliquid"` — Perpetuals & Spot
+#### `"hyperliquid"`: Perpetuals & Spot
 
 Hyperliquid portfolio data for perpetual and spot positions.
 
@@ -318,7 +318,7 @@ Hyperliquid portfolio data for perpetual and spot positions.
 **Data Source**: Fetched from the public Hyperliquid Info API using the user's linked wallet address.
 </Info>
 
-#### `"polymarket"` — Prediction Markets
+#### `"polymarket"`: Prediction Markets
 
 Polymarket positions, orders, and market data.
 
@@ -342,7 +342,7 @@ Polymarket positions, orders, and market data.
 }
 ```
 
-#### `"wallet"` — Generic EVM Wallet
+#### `"wallet"`: Generic EVM Wallet
 
 Basic wallet data for any EVM-compatible chain.
 
@@ -402,7 +402,7 @@ Your tool can request multiple context types:
   </Accordion>
 
   <Accordion title="Handle empty portfolios gracefully" icon="inbox">
-    A linked wallet with no positions is valid — don't treat it as an error:
+    A linked wallet with no positions is valid, don't treat it as an error:
 
     ```typescript
     if (positions.length === 0) {
@@ -577,7 +577,7 @@ app.listen(3000);
 ## Pricing & Execute Mode Eligibility
 
 <Info>
-**Most contributors start here:** If you just want your tool available in the Context app (Query mode), you don't need to configure anything in this section — set a listing response price when you register and you're done. This section is for contributors who also want SDK developers to call their methods directly with per-call pricing (Execute mode).
+**Most contributors start here:** If you just want your tool available in the Context app (Query mode), you don't need to configure anything in this section, set a listing response price when you register and you're done. This section is for contributors who also want SDK developers to call their methods directly with per-call pricing (Execute mode).
 </Info>
 
 ### How Query and Execute Work
@@ -613,7 +613,7 @@ Add these fields to each method definition under `_meta`:
 **Hard gate:** A method is Execute-eligible **only** when it has an explicit `_meta.pricing.executeUsd` value. There is no fallback to listing-level pricing for Execute calls.
 
 - Methods **with** `_meta.pricing.executeUsd` → visible in both Query and Execute (depending on `surface` field)
-- Methods **without** `_meta.pricing.executeUsd` → **Query-only**, invisible to SDK Execute discovery
+- Methods **without** `_meta.pricing.executeUsd` → **Query-only:** invisible to SDK Execute discovery
 </Warning>
 
 ### Default Execute Price (Contributor Shortcut)
@@ -724,7 +724,7 @@ TOOLS = [
 - **No execute price → invisible in Execute.** Methods without `_meta.pricing.executeUsd` will not appear in SDK Execute discovery (`client.tools.execute()`). They remain Query-only.
 - **Execute-only → invisible in Query.** Methods with `surface: "execute"` and `queryEligible: false` will not appear in the Context app or `client.query.run()`. The runtime will never select them for answer synthesis. They are SDK-only.
 
-Design your `surface` and `queryEligible` settings intentionally — they control where your tool shows up.
+Design your `surface` and `queryEligible` settings intentionally, they control where your tool shows up.
 </Warning>
 
 ### Pricing Guidance

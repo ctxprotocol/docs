@@ -94,7 +94,7 @@ If your upstream venue already exposes reliable search and candidate selection, 
     - Audits latency metadata for correctness
     - Fixes issues and retests in a loop until everything passes
     - Generates the optimal marketplace description (with proven "Try asking" prompts)
-    - Pushes the description directly to your listing via the SDK — no manual copy-paste
+    - Pushes the description directly to your listing via the SDK, with no manual copy-paste
     
     ```
     Load the mcp-tool-optimization-skill.md from context-sdk/docs/.
@@ -197,8 +197,8 @@ return {
 <Tip>
 Use standard JSON Schema keys in `inputSchema` properties to guide argument generation:
 
-- **`default`** — fallback value the AI uses when the user doesn't specify one (e.g., `"default": "BTC"`)
-- **`examples`** — sample values the AI references to understand valid inputs (e.g., `"examples": ["BTC", "ETH", "SOL"]`)
+- **`default`:** fallback value the AI uses when the user doesn't specify one (e.g., `"default": "BTC"`)
+- **`examples`:** sample values the AI references to understand valid inputs (e.g., `"examples": ["BTC", "ETH", "SOL"]`)
 
 The platform reads these fields during orchestration to generate correct arguments for your methods. In the active unified `deep` lane, they improve metadata-first planning, clarification grounding, and method selection before execution. Historical traces may still mention `deep-light` or `deep-heavy`, but those legacy labels now normalize to the same `deep` runtime path. Without strong schema hints, the AI must guess valid values from the description alone, leading to more retries and lower first-pass success rates.
 
@@ -233,7 +233,7 @@ return JSON.stringify(allData);
   <Accordion title="Write Detailed Output Schemas (Performance Critical)" icon="bolt">
 Your `outputSchema` is the **single most impactful thing** you can do to reduce latency and cost for users.
 
-Context's agentic pipeline uses an **iterative execution model** that reads your `outputSchema` to decide how to call tools, interpret results, and recover from mistakes. If your schema is vague, the runtime has to *guess* property names — and it will guess wrong. This triggers inline recovery that:
+Context's agentic pipeline uses an **iterative execution model** that reads your `outputSchema` to decide how to call tools, interpret results, and recover from mistakes. If your schema is vague, the runtime has to *guess* property names, and it will guess wrong. This triggers inline recovery that:
 
 - Adds **~30-60 seconds** of latency per retry
 - Costs **~$0.02 extra** in model inference per retry
@@ -247,10 +247,10 @@ If your tool explicitly reports plan/tier capability limits (for example, "long/
 
 Expose capability flags in `structuredContent` (for example, `supportsLongShortThresholdCheck: false`) and include a human-readable `limitations` field to help the verifier distinguish true parsing bugs from plan constraints.
 
-**The execution model defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the runtime may infer `data.exchangeName` when your API returns `data.exchange_name` — triggering recovery every time.
+**The execution model defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the runtime may infer `data.exchangeName` when your API returns `data.exchange_name`, triggering recovery every time.
 
 ```typescript
-// ❌ Bad: Vague schema — LLM must guess property names
+// ❌ Bad: Vague schema; LLM must guess property names
 outputSchema: {
   type: "object",
   properties: {
@@ -283,9 +283,9 @@ outputSchema: {
 **Output schema checklist:**
 
 - Document **every property name** in the response, especially if they're `snake_case`
-- Include **`items.properties`** for arrays — don't just say `{ type: "array" }`
+- Include **`items.properties`** for arrays, don't just say `{ type: "array" }`
 - Add **descriptions** that explain what values mean (units, ranges, interpretation)
-- If the response is an **object** (not an array), say so — `{ type: "object" }` not `{ type: "array" }`
+- If the response is an **object** (not an array), say so, `{ type: "object" }` not `{ type: "array" }`
 - Document **wrapper properties** your handler adds (e.g., `fetchedAt`, `count`, `symbol`)
 
 For third-party APIs with strict quotas, publish pacing hints via `_meta.rateLimit`. These hints influence both metadata-scout pacing and iterative-execution call budgets. See [Tool Metadata](/guides/tool-metadata#rate-limit-hints). Reference implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
@@ -367,7 +367,7 @@ The AI will include your image URL in its response, and users can click to view.
 
 | Tool Type | Security Middleware | Rationale |
 |-----------|---------------------|-----------|
-| **Free Tools ($0.00)** | **Optional** | Great for distribution and adoption — anyone can call your endpoint |
+| **Free Tools ($0.00)** | **Optional** | Great for distribution and adoption, anyone can call your endpoint |
 | **Paid Tools ($0.01+)** | **Mandatory** | We cannot route payments to insecure endpoints |
 
 If you're building a free tool, you can skip the middleware entirely. However, if you ever want to charge for your tool, you'll need to add it.
@@ -450,7 +450,7 @@ Deploy to any platform: Vercel, Railway, Render, AWS, or your own infrastructure
 
 ## Step 5: Set a Price
 
-Set a **listing response price** — this is what users pay per response when your tool is used in the Context app or via `client.query.run()`.
+Set a **listing response price.** This is what users pay per response when your tool is used in the Context app or via `client.query.run()`.
 
 <Info>
 **Two pricing surfaces:** Your listing response price (~\$0.10) covers Query mode, where Context is the librarian. If you also want SDK developers calling your methods directly, enable Execute pricing at ~1/100 of your response price (~\$0.001/call). See [Enable Execute Pricing](#enable-execute-pricing) below.
@@ -458,8 +458,8 @@ Set a **listing response price** — this is what users pay per response when yo
 
 | Price | What happens |
 |-------|-------------|
-| **\$0.00** | Free — great for adoption and getting discovered |
-| **\$0.01+** | Paid — you earn 90% of each response fee |
+| **\$0.00** | Free, great for adoption and getting discovered |
+| **\$0.01+** | Paid, you earn 90% of each response fee |
 
 <Note>
 Response fees are paid **once per chat turn**. The runtime may call your methods up to 100 times within that turn as a safety-capped orchestration limit.
@@ -467,8 +467,8 @@ Response fees are paid **once per chat turn**. The runtime may call your methods
 
 <Warning>
 **Security requirement depends on price:**
-- **Free tools**: Security middleware is **optional** — your endpoint works without JWT verification
-- **Paid tools**: Security middleware is **mandatory** — see [Secure Your Endpoint](#secure-your-endpoint)
+- **Free tools:** Security middleware is **optional**; your endpoint works without JWT verification
+- **Paid tools:** Security middleware is **mandatory**. See [Secure Your Endpoint](#secure-your-endpoint)
 </Warning>
 
 <Note>
@@ -493,7 +493,7 @@ Stakes are **fully refundable** with a 7-day withdrawal delay. This creates acco
 
 ---
 
-## Step 7: You're Live! 🎉
+## Step 7: You're Live!
 
 Your MCP Tool is now available on the marketplace. Users can discover and use your tool through the Context app or `client.query.run()` in the SDK.
 
@@ -503,7 +503,7 @@ Your MCP Tool is now available on the marketplace. Users can discover and use yo
 
 ## Validate Your Tool
 
-Now that your tool is live, validate it works correctly through the marketplace — not just on your local server.
+Now that your tool is live, validate it works correctly through the marketplace, not just on your local server.
 
 <Steps>
   <Step title="Recommended: Full Optimization Skill">
@@ -526,14 +526,14 @@ Now that your tool is live, validate it works correctly through the marketplace 
   <Step title="Manual: Test via the SDK">
     Use the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference) to test both surfaces:
 
-    - **Query mode:** `client.query.run({ query: "...", tools: ["your-tool-id"], responseShape: "answer_with_evidence", includeDeveloperTrace: true })` — validates your tool can support the same premium answer contract the first-party chat uses
+    - **Query mode:** `client.query.run({ query: "...", tools: ["your-tool-id"], responseShape: "answer_with_evidence", includeDeveloperTrace: true })`, validates your tool can support the same premium answer contract the first-party chat uses
     - **Agent-facing Query mode:** rerun the same must-win prompt with `responseShape: "evidence_only"` and confirm the evidence package is still useful without prose synthesis
-    - **Execute mode** (if enabled): `client.tools.execute({ toolId: "...", toolName: "...", args: {...} })` — validates per-method call responses match your declared schemas
+    - **Execute mode** (if enabled): `client.tools.execute({ toolId: "...", toolName: "...", args: {...} })`, validates per-method call responses match your declared schemas
   </Step>
 </Steps>
 
 <Tip>
-**Lightweight QA alternative:** For a quick protocol-compliance check without full optimization, use the **[Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md)**. It validates your server against the Context Protocol docs, tests both surfaces, and provides actionable fixes. Use this when you just want to confirm things work — use the optimization skill when you want to prove your tool is worth paying for.
+**Lightweight QA alternative:** For a quick protocol-compliance check without full optimization, use the **[Deep Validation System Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-contributor-deep-validation-system-prompt.md)**. It validates your server against the Context Protocol docs, tests both surfaces, and provides actionable fixes. Use this when you just want to confirm things work, use the optimization skill when you want to prove your tool is worth paying for.
 </Tip>
 
 <Note>
@@ -559,7 +559,7 @@ When you add new endpoints, modify schemas, or change your tool's functionality:
   
   <Step title="Update Description (if needed)">
     If you've added significant new tools, update your description. Two options:
-    - **Recommended:** Re-run the [Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md) — it regenerates and pushes the description automatically via the SDK
+    - **Recommended:** Re-run the [Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md), it regenerates and pushes the description automatically via the SDK
     - **Programmatic:** Use `client.developer.updateTool(toolId, { description: "..." })` directly from the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference)
     - **Manual:** Edit your tool in the Developer Tools page
   </Step>
@@ -637,7 +637,7 @@ app.listen(3000, () => {
 
 ## Enable Execute Pricing
 
-By default, your tool is available in **Query mode** — users ask questions and Context handles orchestration for a flat per-response fee. If you also want SDK developers to call your methods directly with per-call pricing (Execute mode):
+By default, your tool is available in **Query mode:** users ask questions and Context handles orchestration for a flat per-response fee. If you also want SDK developers to call your methods directly with per-call pricing (Execute mode):
 
 <Steps>
   <Step title="Set a default execute price">
@@ -691,7 +691,7 @@ See [Tool Metadata](/guides/tool-metadata#pricing--execute-mode-eligibility) for
 
 <AccordionGroup>
   <Accordion title="Schema Accuracy & Dispute Resolution" icon="gavel">
-Your `outputSchema` isn't just documentation — **it's a contract**.
+Your `outputSchema` isn't just documentation, **it's a contract**.
 
 Context uses automated schema validation as part of our crypto-native dispute resolution system:
 
@@ -716,19 +716,19 @@ Unlike Web2 "star ratings" that can be gamed by bots, Context disputes require *
   </Accordion>
 
   <Accordion title="Execution Limits & Product Design" icon="clock">
-**Critical**: MCP tool execution on the Context platform has a **~60 second timeout per call**. This applies to both Query and Execute mode. It shapes the marketplace toward high-quality data products — but what "high-quality" means depends on which mode you're designing for.
+**Critical**: MCP tool execution on the Context platform has a **~60 second timeout per call**. This applies to both Query and Execute mode. It shapes the marketplace toward high-quality data products, but what "high-quality" means depends on which mode you're designing for.
 
 **Where the Timeout Comes From**
 
-The timeout is enforced by the **platform infrastructure** (and in standard MCP setups like Claude Desktop, by the LLM client itself). When your tool is called, the system waits for a response — if it doesn't arrive in ~60 seconds, execution fails.
+The timeout is enforced by the **platform infrastructure** (and in standard MCP setups like Claude Desktop, by the LLM client itself). When your tool is called, the system waits for a response, if it doesn't arrive in ~60 seconds, execution fails.
 
 When a timeout is hit, the runtime propagates cancellation to in-flight MCP calls to avoid post-timeout "zombie" traffic. Tool authors should still return explicit failure/degraded states quickly so agents can recover gracefully.
 
-This isn't an MCP protocol limitation — SSE connections can stay open indefinitely. The timeout exists at the application layer and serves as a **quality forcing function** for both modes.
+This isn't an MCP protocol limitation, SSE connections can stay open indefinitely. The timeout exists at the application layer and serves as a **quality forcing function** for both modes.
 
 **Designing for Query Mode**
 
-In Query mode, Context is the librarian. Your tool output feeds into a synthesized response that costs the user ~$0.10. The user expects curated intelligence — not raw data dumps.
+In Query mode, Context is the librarian. Your tool output feeds into a synthesized response that costs the user ~$0.10. The user expects curated intelligence, not raw data dumps.
 
 The timeout forces you to **pre-compute insights** rather than running heavy queries at request time:
 
@@ -739,7 +739,7 @@ The timeout forces you to **pre-compute insights** rather than running heavy que
 | "Scan all whale wallets" | "Whale Alert Feed" |
 | Timeout after 60s ❌ | Instant response ✅ |
 
-The best data businesses don't sell raw database access. They sell curated, **pre-computed insights**. This is exactly how Bloomberg, Nansen, Arkham, and Messari work — and it's the right model for Query mode.
+The best data businesses don't sell raw database access. They sell curated, **pre-computed insights**. This is exactly how Bloomberg, Nansen, Arkham, and Messari work, and it's the right model for Query mode.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -766,7 +766,7 @@ The best data businesses don't sell raw database access. They sell curated, **pr
 
 In Execute mode, the developer's agent is the librarian. The agent makes many sequential calls within a session, iterating over structured data to build its own analysis. The user pays ~$0.001 per call.
 
-Here, **normalized data endpoints ARE the product**. The value isn't in pre-digested insights — it's in clean, typed, consistent data that an agent can iterate over without parsing 15 different exchange APIs.
+Here, **normalized data endpoints ARE the product**. The value isn't in pre-digested insights, it's in clean, typed, consistent data that an agent can iterate over without parsing 15 different exchange APIs.
 
 The timeout still applies per-call (a single normalized price lookup shouldn't take 60 seconds), but the design principles are different:
 
@@ -803,18 +803,18 @@ The timeout still applies per-call (a single normalized price lookup shouldn't t
 **Product Tiers by Mode**
 
 *Query mode tiers:*
-- **Real-time curated (< 60s)** — Direct API calls that return analyzed results quickly (portfolio risk score, gas price recommendation)
-- **Pre-computed intelligence (instant)** — Heavy analysis run offline via cron, insights served instantly (smart money wallets, whale alerts, trending signals)
+- **Real-time curated (< 60s):** direct API calls that return analyzed results quickly (portfolio risk score, gas price recommendation)
+- **Pre-computed intelligence (instant):** heavy analysis run offline via cron, insights served instantly (smart money wallets, whale alerts, trending signals)
 
 *Execute mode tiers:*
-- **Normalized data endpoints** — Clean, typed, paginated data across multiple sources with a consistent schema (cross-exchange prices, historical time-series, order book snapshots). The value is in the normalization and reliability.
-- **Specialized computation methods** — One method does one calculation well (risk score for a wallet, correlation between two assets, signal detection). The developer chains these together.
+- **Normalized data endpoints:** clean, typed, paginated data across multiple sources with a consistent schema (cross-exchange prices, historical time-series, order book snapshots). The value is in the normalization and reliability.
+- **Specialized computation methods:** one method does one calculation well (risk score for a wallet, correlation between two assets, signal detection). The developer chains these together.
 
 **What if my analysis takes longer than 60 seconds?**
 
 For Query mode: pre-compute it. Run heavy analysis offline, store results in your database, serve instantly through MCP.
 
-For Execute mode: break it into smaller methods. Instead of one method that analyzes all wallets, expose `get_wallet_activity` per wallet — let the agent iterate.
+For Execute mode: break it into smaller methods. Instead of one method that analyzes all wallets, expose `get_wallet_activity` per wallet, let the agent iterate.
 
 ```typescript
 // ❌ BAD (either mode): Long-running analysis at request time
@@ -874,16 +874,16 @@ Check out these complete working examples:
 
 <CardGroup cols={2}>
   <Card title="Blocknative" icon="gas-pump" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/blocknative-contributor">
-    **Query mode** — Gas price API (3 tools), great starting point for your first tool
+    **Query mode:** Gas price API (3 tools), great starting point for your first tool
   </Card>
   <Card title="Hyperliquid" icon="chart-line" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/hyperliquid-contributor">
-    **Query mode** — DeFi analytics (16+ tools, includes handshake example)
+    **Query mode:** DeFi analytics (16+ tools, includes handshake example)
   </Card>
   <Card title="Polymarket" icon="chart-pie" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor">
-    **Query mode** — Prediction market intelligence
+    **Query mode:** prediction market intelligence
   </Card>
   <Card title="Normalized Data Provider" icon="database" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider">
-    **Execute mode** — reference with background ingestion, `_meta` pricing, and multi-exchange normalization
+    **Execute mode:** reference with background ingestion, `_meta` pricing, and multi-exchange normalization
   </Card>
 </CardGroup>
 
@@ -891,7 +891,7 @@ Check out these complete working examples:
 
 <CardGroup cols={2}>
   <Card title="Hummingbot Market Intel" icon="python" href="https://github.com/ctxprotocol/sdk-python/tree/main/examples/server/hummingbot-contributor">
-    **Query mode** — Multi-exchange market data (6 tools): prices, order books, funding rates, trade impact analysis
+    **Query mode:** multi-exchange market data (6 tools): prices, order books, funding rates, trade impact analysis
   </Card>
 </CardGroup>
 

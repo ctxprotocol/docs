@@ -7,12 +7,12 @@ description: "Enable your MCP tools to request user actions: signatures, transac
 
 The **Handshake Architecture** enables MCP tools to request user interaction for actions that require explicit approval:
 
-- **Signature Requests** — EIP-712 typed data signing (Hyperliquid, dYdX)
-- **Transaction Proposals** — Direct on-chain transactions (Uniswap, NFT mints)
-- **OAuth Requests** — External service authentication (Discord, Twitter)
+- **Signature Requests:** EIP-712 typed data signing (Hyperliquid, dYdX)
+- **Transaction Proposals:** direct on-chain transactions (Uniswap, NFT mints)
+- **OAuth Requests:** external service authentication (Discord, Twitter)
 
 <Info>
-**Why "Handshake"?** The tool proposes an action, the user approves it, and the result is returned to the tool — a secure handshake between AI and human.
+**Why "Handshake"?** The tool proposes an action, the user approves it, and the result is returned to the tool. That is the secure handshake between AI and human.
 </Info>
 
 ---
@@ -215,7 +215,7 @@ type SignatureRequest = {
 ```
 
 <Info>
-**Gasless & Chain-Agnostic**: EIP-712 signatures don't require gas or network switching. The `chainId` in the domain is purely informational — signing works from any network.
+**Gasless & Chain-Agnostic:** EIP-712 signatures don't require gas or network switching. The `chainId` in the domain is purely informational: signing works from any network.
 </Info>
 
 ### Transaction Proposal
@@ -690,14 +690,14 @@ The card displays:
 </Warning>
 
 <Info>
-**No Private Keys**: The user's wallet signs the data client-side. Your tool never sees private keys — only the resulting signature.
+**No Private Keys**: The user's wallet signs the data client-side. Your tool never sees private keys, only the resulting signature.
 </Info>
 
 ---
 
 ## Platform Philosophy
 
-The Context marketplace supports authentication flows that are **generalizable** — where solving the problem once enables infinite integrations.
+The Context marketplace supports authentication flows that are **generalizable**, so solving the problem once enables infinite integrations.
 
 | Flow Type | Support | Rationale |
 |-----------|---------|-----------|

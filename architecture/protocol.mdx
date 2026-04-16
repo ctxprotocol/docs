@@ -9,11 +9,11 @@ Context is built on a **code-execution paradigm**. Instead of rigid "tool callin
 
 The architecture consists of five layers:
 
-1. **The Marketplace** — Supply of tools from developers
-2. **The Agent** — Demand from users and developers via Query + Execute modes
-3. **The Handshake Layer** — Secure user-approval flow for signatures, transactions, and OAuth ([guide](/guides/handshake-architecture))
-4. **The Protocol** — Settlement layer on Base
-5. **Context Injection** — User data for personalized tools
+1. **The Marketplace:** supply of tools from developers
+2. **The Agent:** demand from users and developers via Query + Execute modes
+3. **The Handshake Layer:** secure user-approval flow for signatures, transactions, and OAuth ([guide](/guides/handshake-architecture))
+4. **The Protocol:** settlement layer on Base
+5. **Context Injection:** user data for personalized tools
 
 ---
 
@@ -41,7 +41,7 @@ Developers register **Tools** (the marketplace listing) powered by standard Mode
 ## The Data Broker Standard
 
 <Warning>
-Context is not a text-based chat platform — it is a **Structured Data Marketplace**. We treat your tool like a financial API, not a conversational bot.
+Context is not a text-based chat platform. It is a **Structured Data Marketplace**. We treat your tool like a financial API, not a conversational bot.
 </Warning>
 
 ### Why `outputSchema` and `structuredContent` Matter
@@ -64,7 +64,7 @@ While optional in vanilla MCP, Context requires structured outputs because:
 - **Dispute Resolution**: Schema mismatches can be auto-adjudicated on-chain without manual review.
 
 <Info>
-**Result:** You are not just a "Prompt Engineer" — you are a **Data Broker** selling verifiable information on-chain.
+**Result:** You are not just a "Prompt Engineer." You are a **Data Broker** selling verifiable information on-chain.
 </Info>
 
 ---
@@ -97,7 +97,7 @@ For the detailed server-managed flow across `/api/v1/query` and `/api/chat`, inc
     Combines verified results into a coherent answer and streams it to the user
   </Step>
   <Step title="Settle">
-    After the response is delivered, payment is settled in the background via `ContextRouter` (deferred settlement — tool fees are waived if execution fails)
+    After the response is delivered, payment is settled in the background via `ContextRouter` (deferred settlement, tool fees are waived if execution fails)
   </Step>
 </Steps>
 
@@ -133,10 +133,10 @@ All value flows through `ContextRouter.sol` on Base, with mode-specific settleme
 
 For **Query mode**:
 
-1. User sets a **spending cap** (ERC-20 allowance on ContextRouter) — one-time setup
-2. Before execution, the server performs a **read-only pre-flight check** (balance + allowance) — no gas cost
+1. User sets a **spending cap** (ERC-20 allowance on ContextRouter) as a one-time setup
+2. Before execution, the server performs a **read-only pre-flight check** (balance + allowance) with no gas cost
 3. Tools execute and the AI response is streamed to the user
-4. **After the response is fully delivered**, the server settles payment in the background via the operator wallet
+4. **After the response is fully delivered:** the server settles payment in the background via the operator wallet
 5. If settlement fails, it is retried automatically (up to 5 attempts with exponential backoff)
 
 For **Execute mode**:
@@ -198,8 +198,8 @@ If you're building a free tool, you can skip security middleware entirely. But f
 
 | Approach | Result |
 |----------|--------|
-| Without Auth | A toy — anyone can `curl` your endpoint |
-| With Shared Secrets | A security liability secrets can leak |
+| Without Auth | A toy: anyone can `curl` your endpoint |
+| With Shared Secrets | A security liability: secrets can leak |
 | With Asymmetric Signing | Professional infrastructure (like Stripe/Visa) |
 
 ### How It Works
@@ -233,7 +233,7 @@ app.use("/mcp", createContextMiddleware());
 
 ## Context Injection (User Data)
 
-For tools that need access to user-specific data (e.g., *"Analyze my positions"* or *"Check my balances"*), Context uses a **Context Injection** pattern. The platform fetches user data client-side and injects it directly into your tool's arguments — your server never sees private keys or credentials.
+For tools that need access to user-specific data (e.g., *"Analyze my positions"* or *"Check my balances"*), Context uses a **Context Injection** pattern. The platform fetches user data client-side and injects it directly into your tool's arguments. Your server never sees private keys or credentials.
 
 | Context Type | Description |
 |--------------|-------------|
@@ -286,7 +286,7 @@ See [Build & List Your Tool](/guides/build-tools#execution-limits--product-desig
 | Free tools (\$0.00) | Can be used immediately without payment |
 | Query mode | Pay-per-response (~\$0.10), query-eligible method selection, up to 100 MCP calls per turn, automatic payment after delivery |
 | Execute mode | Per-call method pricing (~\$0.001) inside execute sessions, automatic payment in deferred batches |
-| Unpriced execute methods | **Query-only** — invisible in Execute mode until `_meta.pricing.executeUsd` is set |
+| Unpriced execute methods | **Query-only:** invisible in Execute mode until `_meta.pricing.executeUsd` is set |
 | Settlement fails | Retried automatically (up to 5 attempts), then platform absorbs |
 
 <Info>
@@ -308,9 +308,9 @@ The SDKs expose two modes, reflecting Context's role as both a response marketpl
 | **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Per execute call | Session accrual + automatic batch payment | Raw data + explicit spending limit |
 | **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | Managed librarian output: `answer`, `answer_with_evidence`, or `evidence_only` from the full agentic pipeline |
 
-**Execute** is for precision — you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.
+**Execute** is for precision: you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.
 
-**Query** is for intelligence — you ask a natural-language question, and the server handles discovery, selection, metadata scout, clarification if needed, iterative multi-tool execution (up to 100 MCP calls per response turn), synthesis, and settlement. One flat fee, with a response contract that can stay backward-compatible (`answer`) or return structured evidence packages (`answer_with_evidence`, `evidence_only`). This is the same managed runtime that powers the client app.
+**Query** is for intelligence: you ask a natural-language question, and the server handles discovery, selection, metadata scout, clarification if needed, iterative multi-tool execution (up to 100 MCP calls per response turn), synthesis, and settlement. One flat fee, with a response contract that can stay backward-compatible (`answer`) or return structured evidence packages (`answer_with_evidence`, `evidence_only`). This is the same managed runtime that powers the client app.
 
 <Info>
 **Why offer both?** Different consumers have different needs. An agent building a custom trading strategy wants raw data and full control (Execute). An agent answering user questions wants curated intelligence without managing orchestration (Query). Context serves both.

@@ -22,7 +22,7 @@ The first-party chat app is just a client of the same Query contract external SD
 
 ### Option 1: Query API (Recommended)
 
-The simplest path — let Context's server handle everything:
+The simplest path is to let Context's server handle everything:
 
 <CodeGroup>
 ```typescript TypeScript
@@ -61,7 +61,7 @@ See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Py
 If you want full control over tool selection, argument construction, and result synthesis, follow the **Discovery → Schema → Execution** loop below (typically in Execute mode with spending limits).
 
 <Info>
-This pattern enables your agent to find and use tools it has **never seen before** — true autonomous capability discovery at runtime.
+This pattern enables your agent to find and use tools it has **never seen before**, with true autonomous capability discovery at runtime.
 </Info>
 
 ---
@@ -124,7 +124,7 @@ const executeTools = await client.discovery.search({
 
 ## Phase 2: Inspect Schemas
 
-Feed the discovered tool schemas (`inputSchema`) directly to your LLM's system prompt. This allows the LLM to understand exactly how to format the arguments — **just like reading a manual**.
+Feed the discovered tool schemas (`inputSchema`) directly to your LLM's system prompt. This allows the LLM to understand exactly how to format the arguments, **just like reading a manual**.
 
 ```typescript
 const systemPrompt = `

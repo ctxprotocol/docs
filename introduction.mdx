@@ -32,16 +32,16 @@ description: "The Monetization Layer for MCP: Connect Users, Builders, and Devel
 
 ## Why use Context?
 
-- 🔌 **One Interface, Everything:** Stop integrating APIs one by one. Use a single SDK to access any tool in the marketplace.
-- 🧠 **Zero-Ops:** We're a gateway to the best MCP tools. Just send the JSON and get the result.
-- ⚡️ **Agentic Discovery:** Your Agent can search the marketplace at runtime to find tools it didn't know it needed.
-- 💸 **Simple Pricing:** Pay per response for curated intelligence, or pay per call for raw data — your choice.
+- **One Interface, Everything:** Stop integrating APIs one by one. Use a single SDK to access any tool in the marketplace.
+- **Zero-Ops:** We're a gateway to the best MCP tools. Just send the JSON and get the result.
+- **Agentic Discovery:** Your Agent can search the marketplace at runtime to find tools it didn't know it needed.
+- **Simple Pricing:** Pay per response for curated intelligence, or pay per call for raw data. Your choice.
 
 ---
 
 ## The Ecosystem
 
-Context is not just a chatbot — it's an **economic engine for the AI era**. We connect three distinct groups in a decentralized marketplace for [Model Context Protocol (MCP)](https://modelcontextprotocol.io) tools.
+Context is not just a chatbot. It's an **economic engine for the AI era**. We connect three distinct groups in a decentralized marketplace for [Model Context Protocol (MCP)](https://modelcontextprotocol.io) tools.
 
 Build a standard MCP server, paste your endpoint URL, set a price, and get paid in USDC when agents use your tool.
 
@@ -56,7 +56,7 @@ Stop switching tabs. Context gives you an AI agent with **real-time, read/write 
     Ask *"Find the best yield on Base"* and the Agent autonomously searches the marketplace, buys the necessary data tools, analyzes the returns, and presents the answer.
   </Card>
   <Card title="One Wallet" icon="wallet">
-    Pay for everything — from gas data to premium stock analysis — using a single USDC balance. No subscriptions, just pay-per-response.
+    Pay for everything (from gas data to premium stock analysis) using a single USDC balance. No subscriptions, just pay-per-response.
   </Card>
 </CardGroup>
 
@@ -88,7 +88,7 @@ Every API you integrate means reading docs, managing auth keys, handling rate li
     Your agent can search the marketplace at runtime: `client.discovery.search("gas prices")`. It finds tools it didn't know existed and uses them without human intervention.
   </Step>
   <Step title="Schema Inspection">
-    Every tool exposes full Input/Output schemas. Your LLM can self-construct arguments and execute tools it has never seen before — no hardcoded integrations.
+    Every tool exposes full Input/Output schemas. Your LLM can self-construct arguments and execute tools it has never seen before, with no hardcoded integrations.
   </Step>
   <Step title="Session Budgets, Not Blank Checks">
     Give your agent a spending limit (`maxSpendUsd: "2.00"`) and let it explore. You control exactly how much it can spend per session.
@@ -129,7 +129,7 @@ asyncio.run(main())
 </CodeGroup>
 
 <Info>
-**Want more control?** The SDK also supports [Execute mode](/sdk/reference#tools-execute-mode) for per-call pricing with spending limits — ideal for custom agent pipelines. See the [Agentic Pattern](/sdk/agentic-pattern) guide or the [SDK Reference](/sdk/reference).
+**Want more control?** The SDK also supports [Execute mode](/sdk/reference#tools-execute-mode) for per-call pricing with spending limits, which fits custom agent pipelines. See the [Agentic Pattern](/sdk/agentic-pattern) guide or the [SDK Reference](/sdk/reference).
 </Info>
 
 <CardGroup cols={3}>

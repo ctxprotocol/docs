@@ -43,14 +43,14 @@ curl -X POST http://localhost:3000/mcp \
 
 The `tools/call` method requires a valid JWT from the Context Platform. Options for testing:
 
-1. **Test tool logic directly** — Write test files that call your tool handler functions directly, bypassing the MCP transport
-2. **Temporarily bypass middleware** — Comment out `verifyContextAuth` during development:
+1. **Test tool logic directly:** write test files that call your tool handler functions directly, bypassing the MCP transport
+2. **Temporarily bypass middleware:** comment out `verifyContextAuth` during development:
    ```typescript
    // Development: bypass auth for testing
    // app.post("/mcp", verifyContextAuth, async (req, res) => { ... });
    app.post("/mcp", async (req, res) => { ... });
    ```
-3. **Test on deployed server** — SSH into your server and test against localhost after deployment
+3. **Test on deployed server:** SSH into your server and test against localhost after deployment
 
 <Warning>
 **Remember to re-enable the middleware before going live!** Without it, anyone can call your tools for free.
@@ -59,9 +59,9 @@ The `tools/call` method requires a valid JWT from the Context Platform. Options 
 #### End-to-End Testing
 
 For full end-to-end testing through the Context Platform:
-1. **Deploy to HTTPS** — Use Railway, Vercel, or set up Caddy/nginx
-2. **Register on marketplace** — Go to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute)
-3. **Test through the Context app** — Ask the agent to use your tool
+1. **Deploy to HTTPS:** use Railway, Vercel, or set up Caddy/nginx
+2. **Register on marketplace:** go to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute)
+3. **Test through the Context app:** ask the agent to use your tool
 
 ---
 
@@ -94,8 +94,8 @@ You deployed new endpoints but they're not showing up in the marketplace.
 
 #### Also Consider
 
-- **Update your description** — If you added significant new functionality, use the [MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md) to generate an updated description
-- **Verify deployment** — Make sure your new code is actually deployed (check health endpoint, test `tools/list` via curl)
+- **Update your description:** if you added significant new functionality, use the [MCP Server Analysis Prompt](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-server-analysis-prompt.md) to generate an updated description
+- **Verify deployment:** make sure your new code is actually deployed (check health endpoint, test `tools/list` via curl)
 
 ---
 
@@ -171,10 +171,10 @@ Understanding which methods require authentication:
 | MCP Method | Auth Required | Why |
 |------------|---------------|-----|
 | `initialize` | ❌ No | Session setup |
-| `tools/list` | ❌ No | Discovery — agents need to see your schemas |
+| `tools/list` | ❌ No | Discovery: agents need to see your schemas |
 | `resources/list` | ❌ No | Discovery |
 | `prompts/list` | ❌ No | Discovery |
-| `tools/call` | ✅ **Yes** | **Execution — costs money, runs your code** |
+| `tools/call` | ✅ **Yes** | **Execution: costs money, runs your code** |
 
 <Info>
 Discovery methods are intentionally open so AI agents can find your tools. Only execution (`tools/call`) requires payment verification through the Context Platform JWT.
@@ -271,7 +271,7 @@ Click **"Copy All"** to copy the complete debug log. You can then:
   <Accordion title="Missing structuredContent">
     **Symptom**: AI can't parse your response, retries multiple times
     
-    **Check**: Look at the raw result in "Tool Call History" — is it structured data or just text?
+    **Check**: Look at the raw result in "Tool Call History", is it structured data or just text?
     
     **Fix**: Always return `structuredContent` with your tool results:
     
@@ -290,7 +290,7 @@ Click **"Copy All"** to copy the complete debug log. You can then:
   <Accordion title="Poor Tool Descriptions">
     **Symptom**: AI picks the wrong tool or passes incorrect arguments
     
-    **Check**: Review the initial code — is the AI using your tool correctly?
+    **Check**: Review the initial code, is the AI using your tool correctly?
     
     **Fix**: Write clear, specific tool descriptions:
     

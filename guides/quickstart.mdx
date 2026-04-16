@@ -21,9 +21,9 @@ When you move from this toy example to real third-party APIs, add `_meta.rateLim
 
 Before starting, ensure you have:
 
-- **Node.js 18+** — Check with `node --version`
-- **pnpm** (recommended) — Install with `npm install -g pnpm`
-- **A code editor** — VS Code, Cursor, etc.
+- **Node.js 18+:** check with `node --version`
+- **pnpm** (recommended): install with `npm install -g pnpm`
+- **A code editor:** VS Code, Cursor, etc.
 
 ---
 
@@ -223,14 +223,14 @@ app.get("/mcp", async (req: Request, res: Response) => {
 // Start server
 const PORT = Number(process.env.PORT || 3000);
 app.listen(PORT, () => {
-  console.log(`🚀 My First MCP Server running on http://localhost:${PORT}`);
-  console.log(`📡 MCP endpoint: http://localhost:${PORT}/mcp`);
-  console.log(`💚 Health check: http://localhost:${PORT}/health`);
+  console.log(`My First MCP Server running on http://localhost:${PORT}`);
+  console.log(`MCP endpoint: http://localhost:${PORT}/mcp`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
 });
 ```
 
 <Tip>
-This toy tool has no parameters, but real tools should add `default` and `examples` to `inputSchema` properties. The AI reads these during orchestration to generate correct arguments — without them, it guesses from the description alone, leading to more retries. See [Build & List Your Tool](/guides/build-tools) for the full pattern.
+This toy tool has no parameters, but real tools should add `default` and `examples` to `inputSchema` properties. The AI reads these during orchestration to generate correct arguments. Without them, it guesses from the description alone, leading to more retries. See [Build & List Your Tool](/guides/build-tools) for the full pattern.
 </Tip>
 
 ---
@@ -246,9 +246,9 @@ pnpm dev
 You should see:
 
 ```
-🚀 My First MCP Server running on http://localhost:3000
-📡 MCP endpoint: http://localhost:3000/mcp
-💚 Health check: http://localhost:3000/health
+My First MCP Server running on http://localhost:3000
+MCP endpoint: http://localhost:3000/mcp
+Health check: http://localhost:3000/health
 ```
 
 **Test the health endpoint:**
@@ -325,7 +325,7 @@ app.get("/mcp", verifyContextAuth, async (req: Request, res: Response) => {
 </Warning>
 
 <Tip>
-After adding the middleware, `tools/call` will return `{"error":"Unauthorized"}` when tested locally. This is expected — it means security is working. You can always comment out `verifyContextAuth` temporarily for local testing.
+After adding the middleware, `tools/call` will return `{"error":"Unauthorized"}` when tested locally. This is expected: it means security is working. You can always comment out `verifyContextAuth` temporarily for local testing.
 </Tip>
 
 ---
@@ -497,7 +497,7 @@ For a complete list of common errors and solutions, see the [Troubleshooting Gui
   <Accordion title="Tool not discovered on Context">
     - Verify your `/health` endpoint returns 200
     - Test `initialize` and `tools/list` with curl (these don't require auth)
-    - **Ensure HTTPS URL** — HTTP endpoints will not work
+    - **Ensure HTTPS URL:** HTTP endpoints will not work
   </Accordion>
 </AccordionGroup>
 

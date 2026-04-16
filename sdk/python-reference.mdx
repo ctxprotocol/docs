@@ -1,6 +1,6 @@
 ---
 title: "Python SDK Reference"
-description: "Complete API reference for ctxprotocol (Python) — installation, configuration, methods, and types"
+description: "Complete API reference for ctxprotocol (Python): installation, configuration, methods, and types"
 ---
 
 ## Installation
@@ -90,9 +90,9 @@ The SDK offers two payment models:
 | **Execute** | `client.tools.execute()` | Per call (with spending limit) | Deterministic pipelines, raw outputs, explicit cost control |
 
 <Info>
-**You have access to both modes — pick the one that fits your use case.**
+**You have access to both modes. Pick the one that fits your use case.**
 
-- Use **Query** (`client.query.run()`) when you want a managed librarian contract — Context handles discovery/orchestration (up to 100 MCP calls per response turn) and can return plain `answer`, `answer_with_evidence`, or `evidence_only`. Pay-per-response (~$0.10).
+- Use **Query** (`client.query.run()`) when you want a managed librarian contract where Context handles discovery/orchestration (up to 100 MCP calls per response turn) and can return plain `answer`, `answer_with_evidence`, or `evidence_only`. Pay-per-response (~$0.10).
 - Use **Execute** (`client.tools.execute()`) when your app/agent is the librarian and you want per-call pricing with spending limits (~$0.001/call).
 
 Most developers start with Query and add Execute later for specific pipelines that need raw data or explicit cost control. You can use both in the same application.
@@ -147,7 +147,7 @@ A future major release can add response-named aliases (for example, `price_per_r
 
 | Option | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
-| `api_key` | `str` | Yes | — | Your Context Protocol API key |
+| `api_key` | `str` | Yes | - | Your Context Protocol API key |
 | `base_url` | `str` | No | `https://ctxprotocol.com` | API base URL (for development) |
 
 ```python
@@ -313,7 +313,7 @@ print(closed.session.status)  # closed
 ### Query (Pay-Per-Response)
 
 <Info>
-The Query API is Context's **response marketplace** — instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a managed answer contract backed by discovery, metadata scouting, iterative execution, and synthesis.
+The Query API is Context's **response marketplace**. Instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a managed answer contract backed by discovery, metadata scouting, iterative execution, and synthesis.
 </Info>
 
 #### `client.query.run(query, tools?, favorites_only?, answer_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, idempotency_key?)`
@@ -917,8 +917,8 @@ Context supports two settlement timings:
 
 ## Links
 
-- [Context Protocol](https://ctxprotocol.com) — Main website
+- [Context Protocol](https://ctxprotocol.com)
 - [PyPI Package](https://pypi.org/project/ctxprotocol/)
 - [GitHub (Python SDK)](https://github.com/ctxprotocol/sdk-python)
-- [TypeScript SDK](/sdk/reference) — For Node.js
+- [TypeScript SDK](/sdk/reference)
 
