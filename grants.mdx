@@ -7,7 +7,7 @@ description: "$10,000 Grant Program - Build MCP tools, earn upfront grants + ong
 
 **What \$500/year subscription could YOUR tool replace for \$0.10/response? What fragmented API mess could YOUR tool normalize for \$0.001/call?**
 
-Bloomberg. SensorTower. SEMrush. ZoomInfo. PitchBook. These companies gatekeep data behind enterprise contracts. You can unbundle them, as curated intelligence for the Context app, as normalized data for SDK developers, or both.
+CoinGlass. Glassnode. Hyblock. BamSEC. These prosumer subscriptions gatekeep one or two premium features that power users actually pay for every month. You can unbundle any single one of those features, as curated intelligence for the Context app, as normalized data for SDK developers, or both.
 
 Context Protocol is a decentralized marketplace where AI agents pay for data. Build an MCP tool that delivers value, and you earn **90% of usage fees** (Query responses and eligible Execute calls).
 
@@ -51,6 +51,10 @@ We're allocating **\$10,000 USD** to bootstrap the supply side of the Context Ma
 ### Tier S: \$1,000 + Revenue Share
 
 **High-value tools that replace expensive subscriptions or painful integrations.**
+
+<Info>
+**Tier S marketing support (conditional).** If we judge your tool to be genuinely high-value, the kind we would personally pay for and recommend to a buyer, we will feature it in our demand-side demo library and help market it to our first cohort of paying users. This is not automatic for every Tier S grant. Most funded tools to date do not clear this bar. If you want yours to, pick a premium slice that unambiguously beats free chat, ship it cleanly, and we will do the rest.
+</Info>
 
 ### Tier A: \$500 + Revenue Share
 
@@ -127,24 +131,32 @@ Weak: `Exchange API wrapper`
 
 Right now, we are most excited about **premium crypto and financial-data workflows** because users in those markets already pay for better information and can justify paying per answer or per call.
 
+<Warning>
+**Before you apply: the agent-native sanity check.**
+
+A strong RFB unbundles a slice of a premium subscription into an answer an agent would naturally be asked. Before you build, write down the exact sentence a buyer would type into an agent to get this answer. If that sentence feels awkward, if the workflow is really someone scrolling a dashboard or scanning a feed, if a free LLM with browsing could plausibly fake the answer, or if the real buyer is already on an enterprise contract (Bloomberg, FactSet, 6sense) they will not leave for \$0.10 micropayments, the slice is not agent-native yet. Pick a different slice.
+
+The pattern that works: prosumer subscriptions (CoinGlass, Glassnode, Hyblock, BamSEC) where real users already ask actual questions in natural language. The pattern that fails: enterprise terminal workflows where buyers scroll dashboards inside a contract they won't cancel.
+</Warning>
+
 ## Request for Builders by Marketplace Category
 
 These categories match the ones contributors see in the submission form. Use the category that best matches the buyer workflow you are unbundling.
 
 ### Crypto & DeFi
 
-**Highest priority right now.** This is the strongest current fit for grants because users already pay for better crypto market structure, derivatives, and on-chain positioning data.
+**Highest priority right now.** This is the strongest current fit for grants because prosumer crypto traders already pay monthly for better market structure, derivatives, and on-chain positioning data, and the workflows map cleanly to natural-language questions an agent would be asked.
 
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **BTC / ETH exchange-flow regime intelligence** | CoinGlass / Glassnode | `Query` | discretionary trader / desk | CoinGlass flows + manual venue comparison | **Highest** |
-| **Liquidation heatmap and squeeze-risk intelligence** | Hyblock / CoinGlass | `Query` | perp trader | heatmap screenshots + manual interpretation | **Highest** |
-| **Funding / OI divergence screener** | CoinGlass / Hyblock | `Query` or `both` | trader / strategist | multi-tab perp positioning workflow | **Highest** |
-| **Whale accumulation and exchange-pressure intelligence** | Glassnode | `Query` | crypto macro / swing trader | Glassnode whale + exchange metrics | **Highest** |
-| **LTH / STH supply regime-shift intelligence** | Glassnode | `Query` | BTC macro trader | Glassnode cohort dashboards | **Highest** |
-| **MVRV / NUPL / SOPR market-regime composite** | Glassnode | `Query` | crypto macro trader / allocator | Glassnode cycle dashboards | **High** |
-| **Cross-venue perp funding / OI / liquidation normalizer** | CoinGlass / Hyblock | `Execute` | bot builder / quant | custom exchange adapters | **Highest** |
-| **Cross-exchange order book / price normalizer** | CoinGlass / exchange-data suites | `Execute` | execution bot builder | exchange-by-exchange integration | **High** |
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **BTC / ETH exchange-flow regime intelligence** | CoinGlass / Glassnode | `Query` | discretionary trader / small desk | *"Are exchanges seeing net BTC inflows or outflows this week, and does that match the price action?"* | **Highest** |
+| **Liquidation cluster and squeeze-risk intelligence** | Hyblock / CoinGlass | `Query` | perp trader | *"Where is the most stacked long-liquidation zone on ETH right now, and how likely is a hunt before Friday?"* | **Highest** |
+| **Funding / OI divergence screener** | CoinGlass / Hyblock | `Query` or `both` | perp trader / strategist | *"Which perp venues are showing the biggest funding vs OI divergence on ETH right now and what does that imply?"* | **Highest** |
+| **Whale accumulation and exchange-pressure intelligence** | Glassnode | `Query` | crypto macro / swing trader | *"Are whales accumulating or distributing BTC from exchanges this week?"* | **Highest** |
+| **LTH / STH supply regime-shift intelligence** | Glassnode | `Query` | BTC macro trader | *"Are long-term holders starting to distribute, or is the supply regime still tight?"* | **Highest** |
+| **Cross-venue perp funding / OI / liquidation normalizer** | CoinGlass / Hyblock | `Execute` | bot builder / quant | *(Execute primitive: developer-facing typed schema, not a natural-language query)* | **Highest** |
+| **MVRV / NUPL / SOPR market-regime composite** | Glassnode | `Query` | crypto macro trader / allocator | *"Where are we in the BTC cycle based on MVRV and NUPL right now?"* | **High** |
+| **Cross-exchange order book / price normalizer** | CoinGlass / exchange-data suites | `Execute` | execution bot builder | *(Execute primitive: keep scope narrow, not every venue)* | **High** |
 
 <AccordionGroup>
   <Accordion title="How to research a strong unbundling idea" icon="search">
@@ -181,7 +193,7 @@ These are not invitations to clone entire products. They are examples of the spe
 | BTC / ETH exchange-flow regime intelligence | `Query` | spot inflow/outflow dashboards + spreadsheets | **Yes** |
 | Funding / OI divergence screener | `Query` or `both` | funding + OI tabs across exchanges | **Yes** |
 | Liquidation cascade risk answer product | `Query` | liquidation heatmaps | **Yes** |
-| ETF flows + holdings intelligence | `both` | ETF flow dashboards + manual context gathering | **Yes** |
+| ETF flows + holdings intelligence | `both` | ETF flow dashboards + manual context gathering | **No** (see `Future Categories`) |
 | Long / short crowding by venue and asset | `both` | sentiment / crowding dashboards | **Maybe** |
 
 **Glassnode**
@@ -199,140 +211,126 @@ These are not invitations to clone entire products. They are examples of the spe
 | Feature slice | Mode | Replaces | Fund? |
 |---------------|------|----------|-------|
 | SEC filing delta intelligence | `Query` | filing comparison workflow | **Yes** |
-| Earnings estimate revision momentum | `Query` or `both` | EE / revision screens | **Yes** |
+| Earnings estimate revision momentum | `Query` or `both` | EE / revision screens | **No** (see `Future Categories`) |
 | Insider cluster-buy intelligence | `Query` or `both` | insider screening workflow | **Yes** |
-| Supply-chain shock exposure intelligence | `Query` | SPLC + manual risk research | **Yes** |
+| Supply-chain shock exposure intelligence | `Query` | SPLC + manual risk research | **No** (see `Future Categories`) |
 | Full Bloomberg-for-agents clone | N/A | the terminal | **No** |
   </Accordion>
 </AccordionGroup>
 
 ### Financial Markets
 
-**Highest priority right now.** This category is strongest when you unbundle terminal workflows built on public filings, estimates, ownership, or ETF-related market structure.
+**High priority, with a sharper filter than before.** This category is strongest when you unbundle a workflow that a prosumer investor (FinTwit, small-cap community, independent analyst, value investor, short seller) would naturally ask as a question and pay to have answered with evidence. It does not work when the real buyer is a desk analyst on Bloomberg, FactSet, or Capital IQ, because those buyers will not switch to \$0.10 per answer.
 
 We explicitly support two kinds of `Financial Markets` RFBs:
 
-- **Subscription-derived workflows**: estimate revisions, insider clustering, filing deltas, ETF flows
-- **Classic analyst workflows**: reverse DCF, valuation resets, earnings-quality checks, and peer-comp workflows
+- **Prosumer-anchored public-filing workflows**: filing deltas, insider clusters, reverse DCF, accounting red flags
+- **Narrow developer-facing primitives** for normalizing painful public data (filings, ETF disclosures)
 
-The second class has a higher bar. Free data and generic LLMs can already do a mediocre version, so we only want products that turn public inputs into a genuinely decision-useful answer.
+The classic analyst workflow lines (reverse DCF, earnings quality, comp valuation) still carry a stricter bar because free LLMs already produce a mediocre version.
 
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **ETF flows + holdings + basis dislocation intelligence** | Bloomberg / FactSet | `Query` or `both` | macro desk / allocator | terminal + issuer pages + basis checks | **Highest** |
-| **SEC filing delta intelligence** | Bloomberg / FactSet / Capital IQ | `Query` | equity analyst / investor | Bloomberg + manual 10-Q / 10-K reading | **Highest** |
-| **Earnings estimate revision momentum** | Capital IQ Pro / FactSet / Bloomberg | `Query` or `both` | PM / analyst | estimate-revision workflow in terminal products | **Highest** |
-| **Insider cluster-buy intelligence** | Bloomberg / Capital IQ | `Query` or `both` | small-cap / event-driven investor | insider screens + manual screening | **High** |
-| **Supply-chain shock exposure intelligence** | Bloomberg SPLC | `Query` | PM / corporate strategy | SPLC + manual risk triage | **High** |
-| **ETF flows / holdings normalizer** | Bloomberg / FactSet | `Execute` or `both` | macro workflow builder | stitching issuer disclosures and ETF dashboards into one schema | **High** |
-| **SEC filing sections + numeric fact normalizer** | FactSet / Capital IQ / Bloomberg workflows | `Execute` | internal finance agent / research workflow builder | brittle filing parsers and ad hoc extraction scripts | **High** |
-| **Reverse DCF / implied-expectations intelligence** | public filings + market data | `Query` or `both` | PM / value investor / equity analyst | manual reverse-DCF spreadsheets and sensitivity tabs | **High, stricter bar** |
-| **Post-earnings valuation reset analysis** | public filings + transcripts + market data | `Query` | PM / event-driven investor | manual model updates after earnings | **High, stricter bar** |
-| **Earnings-quality and accounting red-flag intelligence** | public filings | `Query` | equity analyst / short seller / PM | accrual checks, cash-conversion work, and footnote review | **High, stricter bar** |
-| **Comparable-company valuation gap analysis** | public filings + market data | `Query` or `both` | PM / analyst / investor | manual peer selection and multiple-comparison work | **Medium-High, stricter bar** |
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **SEC filing delta intelligence** | BamSEC / Capital IQ (prosumer slice) | `Query` | independent analyst / FinTwit / newsletter writer | *"What actually changed between Palantir's last 10-Q and this one in the risk factors and revenue footnotes?"* | **Highest** |
+| **Insider cluster-buy intelligence** | OpenInsider (free, raw) / Capital IQ | `Query` or `both` | small-cap / event-driven / FinTwit investor | *"Any notable cluster insider buys in small-cap industrials this week, and what's the context?"* | **Highest** |
+| **Reverse DCF / implied-expectations intelligence** | public filings + market data | `Query` or `both` | value investor / FinTwit analyst | *"What growth does AAPL's current price imply, and is that realistic given its last four quarters?"* | **High, stricter bar** |
+| **Post-earnings valuation reset analysis** | public filings + transcripts + market data | `Query` | prosumer PM / event-driven investor | *"Should my expectations for NFLX change after Q3, and in which direction?"* | **High, stricter bar** |
+| **Earnings-quality and accounting red-flag intelligence** | public filings | `Query` | equity analyst / short seller / FinTwit | *"Any accrual or cash-conversion red flags in TSLA's latest 10-Q?"* | **High, stricter bar** |
+| **SEC filing sections + numeric fact normalizer** | EDGAR (free, painful) / FactSet parsers | `Execute` | internal finance agent / research workflow builder | *(Execute primitive: developer-facing typed schema)* | **High** |
+| **ETF flows / holdings normalizer** | issuer disclosures (fragmented) / FactSet | `Execute` | workflow builder | *(Execute primitive: no Query surface)* | **Medium** |
+| **Comparable-company valuation gap analysis** | public filings + market data | `Query` or `both` | prosumer analyst / investor | *"How does ROKU's valuation compare to its streaming peers right now, and is the gap justified?"* | **Medium, stricter bar** |
 
 <Note>
-We do **not** want generic DCF calculators, generic stock screeners, or "analyze any stock" wrappers. Classic analyst workflows are only fundable when they beat a free LLM plus a basic spreadsheet by a meaningful margin.
+We do **not** want generic DCF calculators, generic stock screeners, or "analyze any stock" wrappers. Classic analyst workflows are only fundable when they beat a free LLM plus a basic spreadsheet by a meaningful margin. If your pitch's real buyer has a Bloomberg terminal, the buyer will not switch, and the line is not a fit for this program.
 </Note>
-
-### Business & Sales
-
-Selective category. We want narrow business workflows, not broad enrichment platforms. The best anchors here are premium sales-intelligence subscriptions such as ZoomInfo, 6sense, Similarweb, and BuiltWith.
-
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **Buyer-intent and trigger-event intelligence** | 6sense / ZoomInfo / Bombora-style products | `Query` or `both` | founder / GTM lead / outbound team | account research tabs plus manual signal gathering | **Medium-High** |
-| **Technographic change and migration intelligence** | BuiltWith | `Query` or `both` | sales team / partner team | manual tech-stack checks and brittle monitoring scripts | **Medium** |
-
-<Note>
-We are **not** excited about generic lead databases, CRM enrichment wrappers, or "ZoomInfo for agents." In this category, the best submissions usually focus on one high-signal workflow: buyer intent, trigger events, or technographic change.
-</Note>
-
-### Marketing & SEO
-
-Selective category. We do **not** want generic SEO tools or broad AI marketing wrappers. We only want expensive subscription slices with a clear buyer. Ad-intelligence and app-intelligence subscriptions are much stronger anchors than broad SEO suites.
-
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **Winning ad creative and landing-page intelligence** | BigSpy / AdSpy | `Query` | media buyer / e-commerce operator | ad-spy dashboards plus manual copy/paste research | **High** |
-| **Affiliate offer and landing-page intelligence** | AdSpy | `Query` or `both` | affiliate marketer / performance marketer | deep Facebook-ad filtering and landing-page inspection | **Medium-High** |
-| **App download and keyword-share intelligence** | Sensor Tower / data.ai | `Query` | growth marketer / app founder / investor | SensorTower or data.ai slices | **High** |
-| **App-store estimate and ranking methods** | Sensor Tower / data.ai | `Execute` or `both` | growth workflow builder / internal tools team | manual app-store research + expensive app-intel subscriptions | **Medium** |
-
-### Legal & Regulatory
-
-Selective category. We fund legal and regulatory tools when they produce a narrow decision workflow with clean provenance, not vague AI legal analysis.
-
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **Regulatory bill / rule delta intelligence** | FiscalNote PolicyNote / Lexis State Net | `Query` | compliance analyst / policy team / operator | regulatory tracking consoles and manual redlines | **High** |
-| **Litigation analytics on judges, courts, and counsel** | Lex Machina / Westlaw Litigation Analytics | `Query` | litigation team / investor / legal ops | legal database workflows and spreadsheeted court research | **High** |
-| **Docket movement and case-summary intelligence** | Bloomberg Law / Westlaw / Lexis | `Query` | legal ops / investor / regulatory watcher | docket pages and manual case monitoring | **Medium-High** |
-
-<Note>
-This category only works when the output is grounded in primary sources, docket records, or tracked rule changes. We do **not** want vague legal copilots, general legal advice bots, or unverifiable "AI compliance" products.
-</Note>
-
-### Real World
-
-Selective category. This category only works when the product is operationally useful, not just a feed. The strongest premium anchors here are weather-intelligence platforms and enterprise sports-data subscriptions.
-
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **Hyperlocal weather impact intelligence** | Tomorrow.io / DTN / AccuWeather for Business | `Query` | logistics / field ops / commodity workflow | weather dashboards plus manual operational triage | **Medium-High** |
-| **Asset-level weather risk and threshold alerts primitive** | Tomorrow.io / DTN | `Execute` or `both` | custom alerting and route/site-risk scripts | **Medium-High** |
-
-<Note>
-`Real World` is easy to get wrong. Good submissions here usually replace an expensive operational workflow. Weak submissions are just feeds: weather feeds, sports feeds, news feeds, or location feeds with no decision layer.
-</Note>
-
-### Developer Tools
-
-Selective category. Good submissions here replace real engineering toil, not generic wrappers for tools developers already use directly.
-
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **Reachable dependency-risk intelligence** | Snyk / Semgrep Supply Chain / GitHub Advanced Security | `Query` or `both` | engineering team / security lead | dashboards plus manual CVE/package triage | **Medium-High** |
-| **AI remediation workflow for code or dependency findings** | Semgrep / Snyk | `Query` or `both` | manual fix drafting and repetitive remediation work | **Medium** |
-
-<Note>
-We are **not** looking for generic wrappers around GitHub, Datadog, or code-search APIs. The only fundable ideas here are the ones that compress expensive developer toil into one high-signal answer or one narrow primitive.
-</Note>
-
-### Research & Academia
-
-Lower priority. This category is only fundable when the tool answers a painful paid workflow better than free search and generic chat.
-
-| Opportunity | Source subscription | Mode | Buyer | What it replaces | Priority |
-|-------------|---------------------|------|-------|------------------|----------|
-| **Research funding and grant-landscape intelligence** | Web of Science Research Intelligence | `Query` | researcher / grants team / university admin | funding database workflows and manual grant landscape research | **Medium-High** |
-| **Citation benchmarking and collaborator intelligence** | Web of Science / Scopus / InCites-style products | `Query` or `both` | citation dashboards and spreadsheet benchmarking | **Medium** |
-| **Clinical trial site-selection intelligence** | Cortellis Clinical Trials Intelligence | `Query` or `both` | trial planning terminals and manual site-feasibility research | **Medium-High** |
-
-<Note>
-This category is weaker than it looks because free paper search is already very good. The strongest exceptions are grants intelligence, institutional benchmarking, and clinical workflow products with proprietary structured data.
-</Note>
-
-### Utility
-
-Lower priority. Utility is where a lot of weak applications hide. The tool needs a very strong wedge.
-
-There are premium utility subscriptions, but we currently do **not** have many public RFB examples here that meet the same clean "premium feature users repeatedly pay for" standard as crypto, finance, or app intelligence.
-
-If you pitch `Utility`, the bar is very high. In practice, most utility ideas drift into one of two weak buckets:
-
-- generic wrappers over infrastructure APIs
-- dashboards and alerting products that do not belong on Context
-
-If you do have a strong utility idea, it should usually replace a premium incident, cost, or infrastructure workflow from products like Datadog, Dynatrace, New Relic, or Honeycomb and have a much clearer wedge than "search" or "compute."
 
 ### Other
 
-Use this only when your idea clearly fits the grant bar but not the marketplace categories above. If you pick `Other`, the burden on your demand proof and scoping is higher.
+If your idea clearly fits the grant bar but is not `Crypto & DeFi` or `Financial Markets`, see the `Future Categories (On Ice)` section below. We are not currently grant-funding those categories, but the research is preserved there and you can still ship permissionless and earn 90% revenue share.
+
+---
+
+## Future Categories (On Ice)
 
 <Note>
-Outside `Crypto & DeFi` and `Financial Markets`, the bar is higher: the scope needs to be tighter, the buyer needs to be clearer, and the source quality needs to be stronger.
+We are **not currently grant-funding** the categories below because we are focused on bootstrapping `Crypto & DeFi` and `Financial Markets` supply first. The research is preserved here because we plan to reopen these as the marketplace expands.
+
+You are welcome to ship permissionless in any of these categories today and earn 90% revenue share. If real paying demand shows up on one of these workflows, we will revisit and reopen grants for it.
+
+Lines listed as `on ice` are the ones that survived the agent-native sanity check. Lines that failed it (ETF basis dislocation, earnings estimate revisions, Bloomberg SPLC clones, Cortellis clones, AI code-remediation) are not listed because they would not convert at \$0.10 per answer regardless of grant status.
 </Note>
+
+<AccordionGroup>
+  <Accordion title="Business & Sales (on ice)">
+The bar when we reopen this category will be narrow question-shaped workflows for founders and small GTM operators who have no enterprise sales-intelligence budget. Enterprise 6sense / ZoomInfo / BuiltWith customers will not migrate to micropayments, so lines anchored to that audience are not fundable.
+
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **Buyer-intent and trigger-event intelligence for founders** | 6sense / Bombora (enterprise-priced) | `Query` or `both` | founder / seed-stage GTM / solo outbound operator | *"Any trigger events at my target accounts this week suggesting they'd buy?"* | Medium-High |
+| **Technographic stack and migration normalizer** | BuiltWith / Wappalyzer / StackShare | `Execute` | dev building outbound tooling | *(Execute primitive: fragmented tech-stack detection)* | Medium |
+
+Not funded even when reopened: generic lead databases, CRM enrichment wrappers, "ZoomInfo for agents," enterprise-GTM-anchored lines.
+  </Accordion>
+
+  <Accordion title="Marketing & SEO (on ice)">
+When we reopen this category, ad-spy and app-intelligence workflows survive only if reshaped from "scroll this feed" into "answer this decision question."
+
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **App download and keyword-share intelligence** | Sensor Tower / data.ai | `Query` | app founder / growth marketer / small investor | *"How many downloads did BeReal get last month and what keywords drove its installs?"* | High |
+| **Winning ad creative decision intelligence** | BigSpy / AdSpy | `Query` | solo media buyer / DTC operator | *"What creative hooks are actually converting for DTC skincare right now and why?"* | Medium-High |
+| **Affiliate offer decision intelligence** | AdSpy | `Query` or `both` | affiliate marketer / performance marketer | *"Which CPA offers in the weight-loss vertical are actually converting on Facebook this month?"* | Medium-High |
+| **App-store estimate and ranking primitives** | Sensor Tower / data.ai | `Execute` or `both` | growth workflow builder | *(Execute primitive: app-store research)* | Medium |
+
+Not funded even when reopened: generic SEO suites, broad AI marketing wrappers, "browse this feed of ads" products.
+  </Accordion>
+
+  <Accordion title="Legal & Regulatory (on ice)">
+When we reopen this category, it will only fund tools where the buyer is an investor or operator asking a decision question grounded in primary sources. Litigators on Westlaw and enterprise compliance teams on FiscalNote will not switch to micropayments.
+
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **Litigation analytics for investors** | Lex Machina / Westlaw Litigation Analytics | `Query` | event-driven investor / activist / litigation-exposure analyst | *"Who is currently suing TSLA and what is the historical outcome rate in similar cases?"* | High |
+| **Regulatory bill / rule delta for operators** | FiscalNote / Lexis State Net | `Query` | founder / operator affected by a specific rule area | *"What new state data-privacy bills affect my SaaS this quarter?"* | Medium |
+
+Not funded even when reopened: vague legal copilots, general legal-advice bots, unverifiable "AI compliance" products, docket-monitoring feeds where CourtListener already covers the free case.
+  </Accordion>
+
+  <Accordion title="Real World (on ice)">
+When we reopen this category, it will only fund tools that give a small operator a decision, not a feed.
+
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **Operator-facing hyperlocal weather impact intelligence** | Tomorrow.io / DTN / AccuWeather for Business | `Query` | small logistics operator / farmer / field-crew lead | *"What's the weather risk for my LA-to-Phoenix trucking route tomorrow?"* | Medium-High |
+| **Asset-level weather threshold primitive** | Tomorrow.io / DTN | `Execute` | dev building site-risk or route-risk workflows | *(Execute primitive: not an alerting SaaS)* | Medium-High |
+
+Not funded even when reopened: weather feeds, sports feeds, news feeds, or location feeds with no decision layer.
+  </Accordion>
+
+  <Accordion title="Developer Tools (on ice)">
+When we reopen this category, it will only fund tools that compress expensive developer toil for solo or small-team devs who have no Snyk / GHAS budget.
+
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **Reachable dependency-risk intelligence for small teams** | Snyk / Semgrep Supply Chain / GitHub Advanced Security | `Query` or `both` | solo dev / small eng team with no enterprise security budget | *"Is this CVE actually reachable in my codebase, and what's the fastest safe fix?"* | Medium-High |
+
+Not funded even when reopened: generic wrappers around GitHub, Datadog, code-search APIs, or AI code-remediation (Cursor and Claude Code already do this for free with repo context).
+  </Accordion>
+
+  <Accordion title="Research & Academia (on ice)">
+When we reopen this category, it will only fund tools that beat free paper search for a painful paid workflow.
+
+| Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
+|-------------|---------------------|------|-------|---------------------|----------|
+| **Research funding and grant-landscape intelligence** | Web of Science Research Intelligence / Pivot-RP | `Query` | independent researcher / early-career PI / small lab | *"What active NIH grants are available for oncology research at small institutions this cycle?"* | Medium-High |
+
+Not funded even when reopened: citation benchmarking (Google Scholar and Semantic Scholar already cover this), clinical-trial site-selection (Cortellis buyers are enterprise biopharma on contracts).
+  </Accordion>
+
+  <Accordion title="Utility and Other (on ice)">
+`Utility` and `Other` remain very high bar. Most submissions historically drift into generic infrastructure wrappers or dashboard-alerting products that do not belong on Context. When we reopen these, we will list specific fundable slices here. Until then, if you have a strong utility idea that replaces a premium incident, cost, or infrastructure workflow (Datadog, Dynatrace, New Relic, Honeycomb) with a question-shaped buyer, you can still ship permissionless and earn 90% revenue share; contact us if the tool picks up real paid usage and we will consider a retroactive grant.
+  </Accordion>
+</AccordionGroup>
 
 ---
 
