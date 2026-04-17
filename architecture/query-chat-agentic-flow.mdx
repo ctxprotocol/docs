@@ -1,454 +1,95 @@
 ---
-title: "Query and Chat Agentic Flow"
-description: "Source of truth for `/api/v1/query` and `/api/chat`: discover, select, metadata scout, clarify if needed, iterative execute, synthesize, and settle"
+title: "Query and Chat Runtime"
+description: "The public contract behind `/api/v1/query` and `/api/chat`: inputs, response shapes, and the guarantees the managed runtime provides."
 ---
 
-## What this document is for
+## What this page is for
 
-Use this page as the canonical mental model for how Context's server-managed agentic flow works across both public Query surfaces:
+Use this page as the **public contract** for Context's managed query runtime. Both of Context's public Query surfaces route through the same runtime:
 
-- `/api/v1/query` for SDK/API callers
-- `/api/chat` for the first-party chat UI
+- `/api/v1/query` — the SDK / API surface for programmatic callers
+- `/api/chat` — the first-party conversational surface
 
-The two routes are not separate orchestration systems. They are two entry surfaces over the same core flow:
-
-1. Normalize the request
-2. Discover or accept selected tools
-3. Select the execution policy and method universe
-4. Run the metadata scout
-5. Decide whether to answer, clarify, or capability-miss
-6. Iteratively execute with inline recovery
-7. Synthesize and settle
+You should expect identical answer behavior across both. Transport, streaming, and session state differ by surface; the managed runtime that produces the answer does not.
 
 ---
 
-## Shared Mental Model
+## What the runtime guarantees
 
-The simplest way to reason about the runtime is:
-
-- **Discovery decides the candidate tool universe**
-- **Selection plus metadata scout decide what the runtime knows before execution**
-- **Method reasoning produces both an execution track and an ambiguity track**
-- **Clarification decides whether the user must disambiguate before iterative execution**
-- **Iterative execution owns recovery, rediscovery, and completeness inline**
-
-That placement is intentional. Clarification is a gate **between metadata scout and iterative execution**, not a post-execution UX patch.
-
-```mermaid
-flowchart LR
-  A[Request arrives] --> B[Discover]
-  B --> C[Select tools and lane]
-  C --> D[Metadata scout]
-  D --> E{Clarify if needed}
-  E -->|answer path| F[Iterative execute]
-  E -->|clarification_required| G[Return options or auto-select]
-  E -->|capability_miss| H[Return capability miss]
-  F --> I[Synthesize]
-  I --> J[Deferred settlement]
-```
+<CardGroup cols={2}>
+  <Card title="Grounded answers" icon="anchor">
+    Every paid response is assembled from tool results the runtime actually retrieved. If the marketplace can't answer, the runtime returns `capability_miss` instead of fabricating numbers.
+  </Card>
+  <Card title="Honest ambiguity" icon="question">
+    If a prompt has multiple materially different interpretations, the runtime either returns `clarification_required` with options or (in `auto` mode) proceeds with the best option and discloses the assumption it made.
+  </Card>
+  <Card title="Full collection preservation" icon="list-check">
+    Comparison queries return the complete relevant set rather than a cherry-picked subset, so your model can reason over the whole collection.
+  </Card>
+  <Card title="Per-response settlement" icon="coins">
+    Paid responses settle in USDC on Base after the answer is delivered. Failed executions do not trigger a charge.
+  </Card>
+</CardGroup>
 
 ---
 
-## Route Responsibilities
+## Public controls
 
-### `/api/v1/query`
+Both surfaces expose the same underlying runtime through different wire shapes. The public controls that actually affect answer behavior are:
 
-This is the SDK/API surface. It accepts things like:
+| Control | Surface | Description |
+| --- | --- | --- |
+| `query` | `/api/v1/query` | Natural-language question to answer |
+| `tools` | `/api/v1/query` | Optional pinned tool shortlist (overrides marketplace discovery) |
+| `responseShape` | `/api/v1/query` | `answer`, `answer_with_evidence`, or `evidence_only` |
+| `clarificationPolicy` | `/api/v1/query`, `/api/chat` | `return` (surface clarifications to the caller) or `auto` (server picks the best option and discloses the assumption) |
+| `answerModelId` | `/api/v1/query` | Public model knob for the final synthesis step |
+| `selectedChatModel` | `/api/chat` | Same role as `answerModelId`, on the chat wire format |
+| `includeDeveloperTrace` | `/api/v1/query` | Opt in to structured diagnostics for your own debugging |
 
-- `query`
-- pinned `tools`
-- `clarificationPolicy`
-- `includeDeveloperTrace`
-
-It is the best surface for precise regression testing because it exposes the most explicit controls.
-
-### `/api/chat`
-
-This is the first-party conversational surface. It adds chat-session state and UI behavior, but it still uses the same depth/scout/clarification core.
-
-The main clarification-specific difference is policy mapping:
-
-- chat toggle off -> `clarificationPolicy = "return"`
-- chat toggle on -> `clarificationPolicy = "auto"`
-
-That mapping is implemented through shared clarification policy logic so the chat route does not invent a separate ambiguity system.
-
-## Product Hierarchy
-
-Organize the company and codebase around this hierarchy:
-
-- **SDK/MCP is the product of record.** The canonical runtime contract is what external SDK/API callers and marketplace tools can rely on.
-- **The browser app is the showcase and operator console.** It should expose the same managed query behavior, but its transport and session wrapper can stay product-specific.
-- **Parity means shared core behavior, not identical wrappers.** Discovery, scout, clarification, iterative execution, final answer assembly, and envelope semantics should match; chat-specific streaming and persistence can differ.
-- **If Query passes and chat fails, suspect the chat adapter first.** The default debugging posture should be "shared core is correct, browser wrapper may be drifting" unless the traces prove otherwise.
-
-```mermaid
-flowchart LR
-  SDK[SDK / API callers] --> Q[/api/v1/query adapter]
-  CHAT[First-party browser chat] --> C[/api/chat adapter]
-  Q --> CORE[Shared managed runtime core]
-  C --> CORE
-  CORE --> DISC[Discover + select + scout + clarify + execute]
-  DISC --> ANSWER[Shared final answer assembly]
-  ANSWER --> QE[Query envelope / SDK payload]
-  ANSWER --> CS[Chat streaming + persistence]
-```
-
-## What Must Match Vs What May Differ
-
-Must match across `/api/v1/query` and `/api/chat`:
-
-- discovery and selection policy
-- metadata scout and clarification decisions
-- iterative execution and completeness behavior
-- deterministic response guards
-- final answer assembly and `answer_with_evidence` semantics
-
-May differ by surface:
-
-- authentication and session state
-- transport shape (JSON response vs streamed UI events)
-- browser-only presentation and persistence helpers
-- chat-only controls such as auto-clarify toggles, as long as they map into the shared clarification policy contract
-
-### Answer-Model Semantics
-
-Both entry surfaces now expose only one public model knob: the **answer model** used for final synthesis.
-
-- Chat keeps the legacy wire field name `selectedChatModel`, but it is interpreted as the answer model for the final response.
-- `/api/v1/query` exposes `answerModelId` for the same purpose.
-- If `responseShape="evidence_only"`, synthesis is skipped and no answer model runs.
-- Internal stages such as tool selection, metadata scout, clarification, iterative execution, and edge-case internal summarization stay on the managed portfolio rather than inheriting the public answer-model choice.
-
-## Contributor Retrieval Boundary
-
-The runtime on this page is responsible for marketplace-generic discovery, selection, metadata scout, clarification, iterative execution, and synthesis. It is **not** responsible for venue-specific candidate resolution inside contributor methods.
-
-If a contributor adopts the optional pattern described in [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers):
-
-- the helper stays contributor-side and optional
-- the contributor still owns upstream retrieval, local reranking, provenance, and schema validation
-- any LLM judge stays inside a deterministic safety envelope
-- the runtime may surface standardized diagnostics such as `QueryDeveloperTraceDiagnostics.contributorSearches`, but it must not absorb venue-specific retrieval logic or contributor provider credentials
+All other runtime behavior — discovery, selection, ambiguity resolution, execution, and retrieval — is managed by the server. Callers do not pick between internal lanes or budgets.
 
 ---
 
-## Demand-Side Wedge Contract
+## Response shapes
 
-The generic runtime contract on this page is no longer the only promotion gate for future Query changes.
+| Shape | Who it's for | Contents |
+| --- | --- | --- |
+| `answer` | Backward-compatible callers | A single natural-language answer string |
+| `answer_with_evidence` | First-party chat, agents that want both | Natural-language answer **plus** structured evidence, freshness, confidence, and optional view payloads |
+| `evidence_only` | External agents that don't need prose | Structured evidence package without a synthesized answer |
 
-The current demand-side source of truth is the `liquidity heatmap / exchange-flow intelligence` wedge contract:
-
-- [Liquidity Heatmap and Exchange-Flow Wedge Contract](/architecture/liquidity-heatmap-exchange-flow-wedge-contract)
-
-Use that document for:
-
-- the locked must-win prompts
-- the exact evidence fields premium Query answers must expose
-- the initial response-shape targets: `answer`, `answer_with_evidence`, `evidence_only`
-- the freshness windows, ambiguity rules, and failure criteria future runtime changes must beat
-
-The existing ambiguity/capability anchors in this document remain necessary compatibility checks, but they are no longer sufficient evidence by themselves for promoting new Query behavior.
-
-For rollout decisions, treat the wedge as green only when all of these hold together:
-
-- the required wedge prompts pass locally
-- the same required prompts pass on the deployed runtime
-- first-party chat still renders the shared `answer_with_evidence` Query envelope cleanly
-- external agent callers can consume both `answer_with_evidence` and `evidence_only`
-- the shared envelope still exposes typed public controller fields such as `stopReason`, `issueClass`, and `actionsTaken`
-- wedge answers still carry machine-readable `marketIntelligence` payloads plus `view.rows` / `view.columns` for the premium venue-ranking surface
-- the public SDK/docs surfaces still describe the same response-shape contract
+When the runtime returns `capability_miss` or `clarification_required`, the response still carries typed fields your client can branch on — no prose-parsing required.
 
 ---
 
-## Managed Execution Policy
+## How the two surfaces differ
 
-The runtime now exposes one managed executor surface to public callers.
-SDK/API users do not choose between `fast` and `deep`; the server derives a bounded execution policy from the query itself.
+The runtime contract is identical across surfaces. What differs:
 
-The important distinctions now live in internal policy knobs rather than public lane selection:
+| Property | `/api/v1/query` | `/api/chat` |
+| --- | --- | --- |
+| Transport | JSON response | Streamed UI events |
+| Session state | Caller-managed | Server-managed chat thread |
+| Auth | API key | User wallet session |
+| Clarification default | `return` | Configurable toggle: off → `return`, on → `auto` |
 
-- step budget
-- ambiguity handling
-- metadata-scout effort
-- whether one-shot preservation is still appropriate
-
-Developer traces may still reference legacy `fast` / `deep` terms while the runtime converges on this model, but those are implementation diagnostics rather than a recommended public control surface.
-
----
-
-## Metadata Scout
-
-The metadata scout is the runtime's "case file" before iterative execution begins.
-
-### Metadata probe
-
-This is the cheap pass. It ranks candidate methods from selected tools using:
-
-- method names
-- descriptions
-- input/output schemas
-- method metadata
-- optional tool-selection context
-
-It produces:
-
-- `querySafeCandidateSet`
-- `rankedMethods`
-- `executionShortlist`
-- `ambiguityPool`
-- `llmSelectionCandidates`
-- `adequacy`
-- `confidenceScore`
-- optional `missingCapabilitySignal`
-
-### External Scout probe
-
-This stage is currently disabled for the active runtime contract. Historical traces and temporary debug inputs may still mention `deep-heavy`, but current routing normalizes legacy deep aliases to the same `deep` lane and keeps `externalProbeEnabled=false`.
-
-### Effective rule
-
-- one-shot-biased requests may skip most probe work
-- ambiguity-sensitive requests may use metadata reasoning and ranked semantic candidates before execution
-- historical `deep-light` / `deep-heavy` artifacts should be interpreted as legacy diagnostics when reading old traces
-
-### Dual candidate pools
-
-The runtime must not reuse the execution shortlist as the ambiguity pool.
-
-- **Execution shortlist** is optimized for "what should I try to execute?"
-- **Ambiguity pool** is optimized for "what materially different interpretations still survive?"
-
-This distinction matters in a permissionless marketplace because the best execution method and the best clarification choices are not always the same set.
+If an answer renders correctly through `/api/v1/query` but breaks in chat, the chat adapter is usually the first place to look — the shared runtime is the same on both sides.
 
 ---
 
-## Clarification Stage
+## Debugging with developer traces
 
-Clarification runs **after** tool selection and **after** the effective metadata scout is available, but **before** iterative execution.
+Pass `includeDeveloperTrace: true` to `/api/v1/query` to receive a structured diagnostics payload alongside the answer. Traces are the supported public way to inspect what the runtime did on a given request.
 
-That makes it the last safe place to avoid committing to the wrong method path.
-
-### Inputs to clarification
-
-The clarification decision uses:
-
-- the user query
-- the effective pre-plan probe
-- the ambiguity pool
-- selected tool/method schemas
-- optional tool selection context
-- the active clarification policy
-
-The core decision function can return:
-
-- `answer`
-- `clarification_required`
-- `capability_miss`
-
-### Deterministic gate
-
-The live runtime now uses a deterministic clarification gate backed by metadata-scout signals rather than a separate clarification-judge stage.
-
-1. Build grounded interpretation options from the ambiguity pool
-2. Score those options with contributor-agnostic heuristics
-3. Return `answer`, `clarification_required`, or `capability_miss`
-4. When policy is `auto`, continue with the deterministic recommended option and record the assumption explicitly
-
-### When each outcome should happen
-
-- `answer`: exactly one grounded interpretation survives
-- `clarification_required`: multiple materially different viable interpretations survive
-- `capability_miss`: no grounded query-safe capability path survives
-
-### `recommendedOptionId`
-
-When clarification triggers, the runtime still picks a deterministic best option. That becomes `recommendedOptionId`.
-
-This is used for:
-
-- stable SDK payloads
-- chat auto-select mode
-- deterministic testing and telemetry
-
-### `autoResolved`
-
-When `clarificationPolicy="auto"` is active, the server may continue with the deterministic recommended option instead of returning a clarification card. That is reported explicitly through `assumptionMade`/`autoResolved` metadata; it is not treated as disagreement telemetry.
+The trace is intentionally a typed, stable surface — internal intermediate diagnostics can change across rollouts without breaking it.
 
 ---
 
-## Why Clarification Is Not Tied To External Probing
-
-This is the most common point of confusion.
-
-External probing is a switch for **expensive Scout behavior**, not for ambiguity handling.
-
-Clarification only needs enough grounded evidence to compare candidate interpretations safely. Cheap metadata evidence is often enough for that, especially in `deep`.
-
-So the intended invariants are:
-
-- `fast` can skip clarification evidence because it is intentionally one-shot
-- `deep` should still surface metadata shortlist evidence for clarification
-- legacy `deep-light` / `deep-heavy` labels should be read as aliases, not as separate active contracts
-
-If `deep` ever returns an empty skipped probe, clarification is being starved by the lane contract rather than by the user's request.
-
----
-
-## Iterative Execution and Recovery
-
-Once clarification has not triggered, or has been resolved, the runtime continues into iterative execution:
-
-1. the executor reads the selected tools, metadata-scout evidence, and any clarification assumption
-2. it decides which tool calls to make inside the live tool loop, using method metadata to prefer collection/comparison methods, inspect coverage signals from returned sets, and choose endpoint-aware parallel fan-out only when contributor metadata allows it
-3. recovery and rediscovery happen inline through the same executor rather than as separate outer stages
-4. verified execution output is handed to synthesis for the final answer
-
-`deep` can use richer recovery without relying on a separate heavy sublane. The current runtime keeps external pre-execution Scout probing disabled while still letting the iterative executor recover inline.
-
----
-
-## Retrieval-First and Synthesis
-
-After execution, the server can assemble a retrieval-first synthesis context from verified outputs. This helps keep final answer generation grounded in structured execution artifacts rather than letting the model re-infer facts from scratch.
-
-This stage is shared across the Query surfaces and is independent from whether clarification triggered earlier.
-
-For the rare deep-query edge case where the retrieval pack plus execution summary still stays too large or already carries truncation markers, the runtime can run a managed `internal-summarization` stage before final answer synthesis. That stage compresses the evidence pack, preserves explicit gap/truncation caveats, and keeps the public answer-model choice focused on the final user-facing response.
-
----
-
-## Observability and Debugging
-
-When debugging the flow, the most useful artifacts/events are:
-
-- `depth-decision`
-- `scout-contract`
-- `scout-pre-plan-probe`
-- `clarification-decision-input`
-- `clarification-decision`
-- `iterative-execution-trace`
-- `final-execution`
-- `internal-summarization`
-- `synthesis-context-selection`
-
-For live request traces, start with:
-
-- `query-depth-decision`
-- `query-depth-router-contract`
-- `query-scout-rollout-contract`
-- `query-clarification-input`
-- `query-clarification-decision`
-
-`query-clarification-input` is the best field-by-field snapshot of what the clarification stage actually received.
-
-For ambiguity debugging, the most important diagnostics are usually:
-
-- `scoutProbeAmbiguityPoolCount`
-- `decisionReasonCode`
-- `decisionStrategy`
-- `judgeOutcomeType`
-- `judgeConfidence`
-- `validatorReason`
-- `fallbackReason`
-- `assumptionMade`
-
----
-
-## Rollout And Validation
-
-The rollout source of truth is the SDK validator:
-
-```bash
-pnpm validate:ambiguity-rollout
-```
-
-`pnpm validate:clarification-live` remains as a compatibility alias.
-
-The current rollout-gated anchors are:
-
-- World Cup `clarificationPolicy="return"` -> `clarification_required`
-- World Cup `clarificationPolicy="auto"` -> `answer` with explicit assumption metadata
-- Bybit `clarificationPolicy="return"` -> `capability_miss`
-
-The validator emits gate metrics for:
-
-- `ambiguityRecall`
-- `capabilityMissRecall`
-- `answerHoldRate`
-- `silentAnswerRate`
-- `fallbackRate`
-- `judgeDisagreementRate`
-- observed rollout stages
-
-As of the latest green localhost validation rerun on `2026-03-20T19:13:23Z`, the required gate cases are all passing on `http://localhost:3000` with pinned Polymarket:
-
-- `ambiguityRecall: 1`
-- `capabilityMissRecall: 1`
-- `answerHoldRate: 1`
-- `silentAnswerRate: 0`
-- `fallbackRate: 0`
-- `judgeDisagreementRate: 0`
-- `gates.passed: true`
-
-The extra precise-market prompt is still tracked as coverage-only telemetry. It currently over-clarifies, but it is not part of the rollout gate.
-
----
-
-## Current Caveats
-
-### Metadata quality still matters, but should not define correctness
-
-Clarification quality still improves when method metadata is explicit and truthful.
-
-In particular, query-safe filtering is only as good as the method surface signals:
-
-- `_meta.surface`
-- `_meta.queryEligible`
-- `_meta.latencyClass`
-
-If tools omit or under-specify those fields, some methods may default to appearing more query-safe than they really are. In practice that can cause:
-
-- too many candidate methods entering clarification
-- execute-style methods surfacing in query-mode ambiguity handling
-- unsupported requests downgrading from `capability_miss` into low-quality clarification choices
-
-But the permissionless ambiguity architecture is designed so contributor metadata is additive, not the correctness boundary.
-
-So there are two separate questions during debugging:
-
-1. **Did the lane provide clarification with enough evidence?**
-2. **Was that evidence itself clean and query-safe?**
-
-The first question is about lane semantics (`fast` vs `deep`).
-The second is about method metadata quality and read-only filtering.
-
-### Multi-family live proof is still narrower than deterministic eval coverage
-
-The rollout validator currently pins Polymarket for the live localhost proof. Broader multi-family coverage exists in deterministic eval/test coverage rather than in one end-to-end localhost run.
-
-### The World Cup clarification path is still slow
-
-The anchor prompt is now correct, but it remains expensive on localhost. Expect repeated pre-promotion proof runs to be accurate but slow.
-
----
-
-## Practical Rules of Thumb
-
-- If a live `deep` request shows `prePlanProbeStatus: "skipped"` with no shortlist, that is a lane-contract bug.
-- If `deep` shows a healthy shortlist but clarification still looks wrong, inspect the ambiguity pool and then inspect method metadata/query-safe filtering.
-- If a request should clearly fail but instead asks a weird clarification question, check whether execute-style or weakly described methods leaked into the candidate pool.
-- If a request answers directly when you expected ambiguity, inspect `viableCandidateCount`, `decisionReasonCode`, and `judgeOutcomeType` first.
-- If the judge says `answer` but the final outcome still clarifies or capability-misses, inspect `validatorReason` and `fallbackReason`.
-
----
-
-## Related Docs
+## Related docs
 
 - [Protocol Architecture](/architecture/protocol)
-- [Liquidity Heatmap and Exchange-Flow Wedge Contract](/architecture/liquidity-heatmap-exchange-flow-wedge-contract)
-- [Optional Contributor Search Helpers](/guides/optional-contributor-search-helpers)
 - [The Agentic Pattern](/sdk/agentic-pattern)
 - [SDK Reference](/sdk/reference)
 - [Handshake Architecture](/guides/handshake-architecture)
+- [Grounded vs. Synthetic: Free LLM Comparison](/why-context/free-llm-comparison)

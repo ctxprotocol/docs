@@ -300,12 +300,12 @@ console.log(closed.session.status); // closed
 ### Query (Pay-Per-Response)
 
 <Info>
-The Query API is Context's **response marketplace**. Instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a managed answer contract backed by discovery, metadata scouting, iterative execution, and synthesis.
+The Query API is Context's **response marketplace**. Instead of buying raw API calls, you're buying curated intelligence. Ask a question, pay once, and get a grounded, managed answer.
 </Info>
 
 #### `client.query.run(options)`
 
-Run an agentic query. The server applies the live librarian pipeline (`discover -> select -> metadata scout -> clarify if needed -> iterative execute -> synthesize -> settle`) with up to 100 MCP calls per response turn as a runtime safety cap, then returns the selected Query response contract (`answer`, `answer_with_evidence`, or `evidence_only`). Query billing is pay-per-response with automatic payment after delivery.
+Run an agentic query. The managed runtime handles tool discovery, ambiguity resolution, multi-tool execution (up to 100 MCP calls per response turn as a safety cap), and grounding — and returns the selected Query response contract (`answer`, `answer_with_evidence`, or `evidence_only`). Query billing is pay-per-response with automatic payment after delivery.
 
 **Parameters:**
 | Option | Type | Required | Description |
@@ -329,7 +329,7 @@ const answer = await client.query.run("What are the top whale movements on Base?
 console.log(answer.response);     // response text or summary
 console.log(answer.toolsUsed);    // [{ id, name, skillCalls }]
 console.log(answer.cost);         // { modelCostUsd, toolCostUsd, totalCostUsd }
-console.log(answer.orchestrationMetrics); // Optional first-pass / rediscovery metrics
+console.log(answer.orchestrationMetrics); // Optional orchestration diagnostics
 ```
 
 ```typescript
@@ -365,8 +365,7 @@ Current platform IDs: `kimi-model-thinking`, `glm-model`, `gemini-flash-model`, 
 The query runtime now exposes a single managed executor surface.
 The server decides internal budgets, ambiguity handling, and exploration policy from the query itself instead of asking SDK callers to choose a lane.
 
-`includeDeveloperTrace` and `orchestrationMetrics` are optional diagnostics.
-Selection diagnostics can still show internal policy decisions such as `selectedPolicy`, `oneShotBias`, Scout probe adequacy, bounded pre-plan probe call counts, and whether pre-plan evidence changed the initial plan.
+`includeDeveloperTrace` and `orchestrationMetrics` are optional diagnostic surfaces. Their inner fields are typed but may evolve across rollouts as the managed runtime changes, so treat them as debugging signals rather than a stable execution contract.
 </Info>
 
 #### Structured Response Shapes
@@ -688,7 +687,7 @@ const TOOLS = [{
 ```
 
 <Info>
-**Why `_meta` at the tool level?** The `_meta` field is part of the [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool-definition) for arbitrary tool metadata. The Context platform reads `_meta.contextRequirements` for context injection and `_meta.rateLimit` / `_meta.rateLimitHints` for metadata-scout and execution pacing behavior. This is preserved through MCP transport because it's a standard field.
+**Why `_meta` at the tool level?** The `_meta` field is part of the [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool-definition) for arbitrary tool metadata. The Context platform reads `_meta.contextRequirements` for context injection and `_meta.rateLimit` / `_meta.rateLimitHints` for runtime pacing behavior. This is preserved through MCP transport because it's a standard field.
 </Info>
 
 <Info>

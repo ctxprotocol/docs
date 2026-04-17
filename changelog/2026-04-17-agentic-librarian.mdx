@@ -1,0 +1,199 @@
+---
+title: "The Agentic Librarian: How Context Answers Complex Queries"
+description: "We rebuilt our query runtime to keep answers inside the question's domain and preserve complete collections. Here's what changed, and the before/after numbers."
+---
+
+<Note>
+  **Release — April 17, 2026.** Every paid query on `/api/v1/query` and
+  `/api/chat` now runs through the new agentic librarian flow. No client
+  changes required.
+</Note>
+
+## TL;DR
+
+<CardGroup cols={2}>
+  <Card title="Answers stay on-domain" icon="bullseye">
+    Multi-hop questions no longer drift. Ask for an NBA Polymarket
+    market and you get NBA markets — not soccer, not baseball.
+  </Card>
+  <Card title="Full collections preserved" icon="list-check">
+    Comparison queries return the whole relevant set instead of a
+    cherry-picked top-N, so your model can reason over complete data.
+  </Card>
+  <Card title="Fast / Deep modes" icon="sliders">
+    The runtime picks a direct-lookup mode for narrow questions and a
+    deeper exploratory mode for comparisons or rediscovery. Buyers pay
+    only for the depth their question actually requires.
+  </Card>
+  <Card title="Honest capability misses" icon="shield">
+    When the marketplace genuinely cannot answer, the runtime says so.
+    No synthetic numbers. No invented URLs. No confidently-wrong answer.
+  </Card>
+</CardGroup>
+
+---
+
+## The story
+
+Last month the system failed on one question that should have been
+trivial:
+
+> *"I want to make a 10k bet on something in the NBA Polymarket markets
+> — what is an obvious bet with a decent return that I can make right
+> now?"*
+
+The old runtime returned **soccer and baseball markets**. Not because
+Polymarket didn't have NBA markets — it did — but because the old
+runtime couldn't recover from a bad first step. It planned once,
+executed once, and shipped whatever fell out.
+
+That query is the reason we rebuilt the execution layer.
+
+---
+
+## What was broken
+
+The old runtime treated every question as a **single plan, single
+execution** problem:
+
+- **Bad first plans never self-corrected.** If the first step landed on
+  the wrong slice of the marketplace, the rest of the pipeline
+  faithfully produced the wrong answer.
+- **Soft failures forced full restarts.** One empty page from a paid
+  tool could cost you a second full run.
+- **Coverage was lossy.** Collection queries got cherry-picked top-N
+  answers because the runtime preferred summarization over
+  completeness.
+
+---
+
+## What changed
+
+The new runtime treats every query as a **bounded, step-by-step
+conversation** between the model and the marketplace:
+
+- At each step, the runtime checks whether the question's scope is
+  actually covered before deciding what to do next.
+- If a tool returns the complete relevant collection, the whole
+  collection is preserved through synthesis — no cherry-picking.
+- If the initial tool selection turns out to be wrong-domain, the
+  runtime is allowed to **rediscover** against the marketplace before
+  falling back to a partial answer.
+- Paginated results are stitched transparently so a collection question
+  doesn't burn through budget chasing pages.
+
+Buyers experience this as: **fewer off-topic answers, fewer partial
+answers, and a clear "I can't answer that" signal when the marketplace
+genuinely can't help.**
+
+---
+
+## Validation: before vs. after
+
+Three queries from our regression suite, run post-migration against the
+live runtime on April 16:
+
+<AccordionGroup>
+  <Accordion title="NBA — '10k bet on something with a decent return'" icon="basketball">
+    **Before:** answer drifted into soccer and baseball markets, ignoring
+    the explicit "NBA" constraint.
+
+    **After:**
+
+    | Metric | Value |
+    | --- | --- |
+    | Outcome | `answer` — `pass-with-caveats` |
+    | Duration | 252s |
+    | Tool calls | 5 |
+    | Cost | $0.32 |
+
+    > *"As of April 16, 2026, the primary NBA markets on Polymarket
+    > with sufficient liquidity for a $10,000 bet are centered on long-term
+    > outcomes like the 2026 NBA Champion and Western Conference Champion.
+    > Among the active contracts, the **San Antonio Spurs** and **Denver
+    > Nuggets** represent the most liquid options…"*
+
+    The answer stays inside NBA/Polymarket, surfaces the liquid
+    contracts, and explicitly flags that daily game lines weren't part
+    of the returned data instead of hallucinating them.
+  </Accordion>
+
+  <Accordion title="NBA Champion — 'best returns but highest probability'" icon="trophy">
+    **After:**
+
+    | Metric | Value |
+    | --- | --- |
+    | Outcome | `answer` — `pass-with-caveats` |
+    | Duration | 86s |
+    | Tool calls | 2 |
+    | Cost | $0.12 |
+
+    The runtime returned the **full 18-outcome collection** and then
+    recommended **Oklahoma City Thunder** (43.5% implied probability,
+    $7M volume). The old flow would have cherry-picked a "top 5" and
+    lost the long tail.
+  </Accordion>
+
+  <Accordion title="BTC + news — mixed-intent query" icon="bitcoin-sign">
+    **After:**
+
+    | Metric | Value |
+    | --- | --- |
+    | Outcome | `answer` — `pass` |
+    | Duration | 64s |
+    | Tool calls | 3 |
+    | Cost | $0.06 |
+
+    The runtime combined an on-chain exchange-flow tool with a news
+    search tool and produced a single grounded answer covering the
+    outflow data *and* the supporting news context. Six cents.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  **Want the demand-side story?** See
+  [Grounded vs. Synthetic: Free LLM Comparison](/why-context/free-llm-comparison)
+  for a side-by-side benchmark of 10 crypto queries against raw Gemini
+  — the short version is that free LLMs confidently invent live numbers,
+  and Context doesn't.
+</Tip>
+
+---
+
+## What this means for buyers
+
+<CardGroup cols={2}>
+  <Card title="Per-response pricing is durable" icon="dollar-sign">
+    A direct lookup answers in seconds for pennies. A deep comparative
+    question takes longer and costs more. You pay only for the path
+    your question actually required — not a flat subscription.
+  </Card>
+  <Card title="Pay for data, not for subscriptions" icon="credit-card">
+    No $500/year lock-in to access Polymarket analysis, Coinglass
+    flow data, or news search. Your agent buys the response, pays in
+    USDC, and moves on.
+  </Card>
+  <Card title="Agents don't need KYC" icon="robot">
+    Wallet-native payment means your agent can actually transact — no
+    credit-card form, no account provisioning, no human in the loop.
+  </Card>
+  <Card title="Grounded beats eloquent" icon="anchor">
+    The win isn't "more polished prose." It's **grounded live retrieval
+    vs. confident synthetic narration**. See the comparison page for
+    side-by-side receipts.
+  </Card>
+</CardGroup>
+
+---
+
+## What's next
+
+- **Variance reduction.** We're tightening when the runtime decides
+  coverage is complete so similar queries produce more predictable cost
+  profiles.
+- **Smarter planning hints.** Tool metadata already carries
+  bulk-capable / paginated signals; the next pass feeds those into the
+  planner so efficient retrieval patterns are picked by default.
+- **Canonical payload retention.** The full tool output is persisted
+  and passed through to synthesis in the common case, so decorative
+  fields like market URLs and source links survive end-to-end.

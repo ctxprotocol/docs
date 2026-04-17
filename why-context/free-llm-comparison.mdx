@@ -1,0 +1,377 @@
+---
+title: "Grounded vs. Synthetic: Free LLM Comparison"
+description: "Side-by-side benchmark of 10 live crypto queries against raw Gemini. Free LLMs confidently invent current market numbers. Context returns grounded data with source trails. Here are the receipts."
+---
+
+<Note>
+  **Benchmark date:** April 2026 · **Sample:** 10 live crypto queries ·
+  **Context side:** production `ContextClient.query.run()` on the live
+  marketplace · **Baseline:** raw Gemini web chat with no tools and no
+  browsing.
+</Note>
+
+## The one-sentence version
+
+**Free LLMs don't refuse questions they can't ground. They answer
+them anyway — with confident, plausible, specific numbers that look
+live and aren't.** Context returns grounded answers with a verifiable
+source trail, or it says it can't.
+
+---
+
+## Why this matters more than "LLMs are stale"
+
+<CardGroup cols={2}>
+  <Card title="The usual pitch" icon="circle-xmark" color="#d48a8a">
+    *"Generic LLMs can't access live data."*
+
+    True, but weak. Every AI company says this. Buyers have heard it
+    a thousand times and it doesn't prove you're different — just that
+    your competitor shipped a tool-use loop.
+  </Card>
+  <Card title="The real pitch" icon="circle-check" color="#10B981">
+    *"Generic LLMs will confidently make up live market data rather than
+    refuse. Context won't — it either returns grounded numbers or it
+    tells you the marketplace can't answer."*
+
+    That's a trust argument, not a capability argument. And it's the
+    argument agents actually care about when they're settling payments
+    against a response.
+  </Card>
+</CardGroup>
+
+---
+
+## Headline result
+
+<CardGroup cols={3}>
+  <Card title="High differentiation" icon="chart-line" color="#10B981">
+    **6 / 10** queries
+
+    Context returned a grounded answer with exact numbers, source
+    venues, or verifiable URLs. Raw Gemini produced synthetic-looking
+    "current" market narration with no grounding.
+  </Card>
+  <Card title="Moderate" icon="chart-simple" color="#f59e0b">
+    **1 / 10** queries
+
+    Both answered, but Context was safer — it surfaced
+    `insufficient_data` rather than overclaim, where Gemini produced
+    a confident-but-ungrounded liquidation narrative.
+  </Card>
+  <Card title="Low / gap" icon="chart-line-down" color="#6b7280">
+    **3 / 10** queries
+
+    Venue-specific Hyperliquid prompts where Context's current
+    marketplace coverage returned `capability_miss`. These are
+    carry-forward targets, not shipped wins.
+  </Card>
+</CardGroup>
+
+<Info>
+  The 6 high-differentiation wins are where you should see the wedge
+  clearly. The 3 capability-misses are where the marketplace still
+  needs to expand. We ship both numbers because the gaps are as
+  informative as the wins.
+</Info>
+
+---
+
+## Side-by-side: every query
+
+<AccordionGroup>
+  <Accordion title="1. BTC flows + news context" icon="bitcoin-sign" defaultOpen>
+    **Prompt**
+
+    > *"Is BTC flowing into or out of exchanges on Coinglass? Search for
+    > news explaining the flow."*
+
+    <Tabs>
+      <Tab title="Context">
+        Grounded answer combining an on-chain flow tool with a news
+        search tool:
+
+        - `+1,599.54 BTC` 1-day net inflow
+        - `+4,703.98 BTC` 7-day net inflow
+        - `-19,768.55 BTC` 30-day net outflow
+        - News context explaining the shift in the 7-day trend
+      </Tab>
+      <Tab title="Raw Gemini">
+        A confident April 2026 market narrative with specific claims and
+        no grounded source trail. No live-data disclaimer, no way to
+        verify the numbers.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `High`** — This is the cleanest "impossible
+    without us" example. Context is a single answer with live flow
+    data *and* supporting news. The baseline is vibes.
+  </Accordion>
+
+  <Accordion title="2. Exchange balance pressure (bullish vs. bearish)" icon="scale-balanced">
+    **Prompt**
+
+    > *"Analyze exchange balance pressure for BTC and tell me whether
+    > flows look bullish or bearish right now."*
+
+    <Tabs>
+      <Tab title="Context">
+        `bearish_distribution_pressure` verdict, score `35/100`, with
+        concrete 1d / 7d / 30d flow metrics and exchange concentration
+        data.
+      </Tab>
+      <Tab title="Raw Gemini">
+        Confident synthetic "current" analysis with no live grounding
+        and no real-time disclaimer.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `High`**
+  </Accordion>
+
+  <Accordion title="3. Crypto derivatives market overview" icon="chart-mixed">
+    **Prompt**
+
+    > *"Give me a crypto derivatives market overview right now,
+    > including sentiment and key risk signals."*
+
+    <Tabs>
+      <Tab title="Context">
+        Multi-tool answer with a concrete `RISK_OFF` regime call,
+        Fear & Greed `11`, active liquidation hazard, crowding metrics,
+        and trigger-level recommendations.
+      </Tab>
+      <Tab title="Raw Gemini">
+        A plausible derivatives overview with specific live-looking
+        numbers — but unsupported synthetic snapshot.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `High`**
+  </Accordion>
+
+  <Accordion title="4. Cross-asset OI divergence scan" icon="magnifying-glass-chart">
+    **Prompt**
+
+    > *"Scan BTC, ETH, SOL, and XRP for open-interest divergence and
+    > tell me which setup looks the most stretched."*
+
+    <Tabs>
+      <Tab title="Context">
+        Grounded OI divergence scan with explicit per-asset deltas and
+        a clear conclusion: **SOL** was the most actionable stretched
+        setup at the time of the run.
+      </Tab>
+      <Tab title="Raw Gemini">
+        A detailed comparative scan with precise-looking figures, but
+        the numbers were ungrounded and looked synthetic.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `High`** — Context does real scan-and-rank
+    retrieval. The baseline mimics the format.
+  </Accordion>
+
+  <Accordion title="5. Multi-indicator BTC valuation score" icon="chart-line">
+    **Prompt**
+
+    > *"Give me a BTC valuation score using AHR999, rainbow chart,
+    > stock-to-flow, and bubble indicators."*
+
+    <Tabs>
+      <Tab title="Context">
+        Grounded answer with a `8/10` valuation score, explicit AHR999,
+        Fear & Greed, Puell Multiple, and Bubble Index values —
+        **plus** an explicit note that Rainbow Chart and Stock-to-Flow
+        values were not found in the retrieved dataset.
+      </Tab>
+      <Tab title="Raw Gemini">
+        A smoother all-indicator narrative with specific cycle claims
+        and valuations, but without real grounding.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `High`** — Context was *more conservative* than
+    Gemini by flagging missing data. That conservatism is the trust
+    signal.
+  </Accordion>
+
+  <Accordion title="6. Live Polymarket liquidity filter" icon="list-check">
+    **Prompt**
+
+    > *"Find live crypto markets on Polymarket with total volume above
+    > $10M and liquidity above $100k."*
+
+    <Tabs>
+      <Tab title="Context">
+        One live qualifying market identified:
+
+        - Market: **What price will Bitcoin hit in 2026?**
+        - Total volume: exact dollar figure
+        - Liquidity: exact dollar figure
+        - 24h volume: exact dollar figure
+        - Direct URL returned
+      </Tab>
+      <Tab title="Raw Gemini">
+        Never returned a usable answer. The raw session hung on the
+        live-market discovery ask.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `High`** — The most commercial prompt in the
+    set: answer a real market-discovery question with a tradable venue
+    and URL, or don't.
+  </Accordion>
+
+  <Accordion title="7. HYPE orderbook slippage estimate" icon="triangle-exclamation">
+    **Prompt**
+
+    > *"For HYPE on Hyperliquid, show the current orderbook depth and
+    > estimate slippage for a 50,000 dollar sell order."*
+
+    <Tabs>
+      <Tab title="Context">
+        Returned `capability_miss` — the current marketplace coverage
+        could not resolve venue-specific Hyperliquid orderbook data.
+      </Tab>
+      <Tab title="Raw Gemini">
+        Produced a confident slippage estimate and live-looking
+        orderbook commentary — but it appeared synthetic with no
+        verifiable source.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `Low`** — This is an active gap. Context's
+    honest "I can't answer that" is arguably safer than Gemini's
+    synthetic answer, but a capability-miss isn't a win.
+  </Accordion>
+
+  <Accordion title="8. ETH funding arbitrage — Hyperliquid vs. Binance" icon="arrow-right-arrow-left">
+    **Prompt**
+
+    > *"Compare current ETH funding on Hyperliquid versus Binance and
+    > say whether there is a funding arbitrage spread right now."*
+
+    <Tabs>
+      <Tab title="Context">
+        Venue-scoped `capability_miss` for Hyperliquid.
+      </Tab>
+      <Tab title="Raw Gemini">
+        Did not render a stable answer — the session repeatedly hung
+        on the prompt.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `Low`**
+  </Accordion>
+
+  <Accordion title="9. HYPE liquidation cascade risk" icon="fire">
+    **Prompt**
+
+    > *"Is HYPE at risk of a liquidation cascade right now based on open
+    > interest and funding?"*
+
+    <Tabs>
+      <Tab title="Context">
+        Partially grounded. Did not claim a confirmed cascade, surfaced
+        `insufficient_data` for the venue-specific part, but returned
+        concrete OI and funding signals from the data that *was*
+        available.
+      </Tab>
+      <Tab title="Raw Gemini">
+        A much stronger-sounding liquidation-cascade narrative with
+        specific live-looking liquidation levels and unlock figures —
+        but with no grounding.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `Moderate`** — Context was safer by refusing to
+    overclaim. Gemini sounded more confident but had nothing behind it.
+  </Accordion>
+
+  <Accordion title="10. HYPE trade-tape flow analysis" icon="scroll">
+    **Prompt**
+
+    > *"Show recent HYPE trades on Hyperliquid and tell me whether buyers
+    > or sellers are in control over the last few prints."*
+
+    <Tabs>
+      <Tab title="Context">
+        `capability_miss`.
+      </Tab>
+      <Tab title="Raw Gemini">
+        No stable answer — the raw session hung on the prompt.
+      </Tab>
+    </Tabs>
+
+    **Differentiation: `Low`**
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## What this proves
+
+<CardGroup cols={2}>
+  <Card title="The biggest win mode is trust, not eloquence" icon="handshake">
+    Free LLMs answer live-data questions **confidently and
+    synthetically** rather than refusing. Context refuses when it can't
+    ground an answer — and that refusal is the feature. Agents that
+    settle USDC against a response need grounded data, not prose.
+  </Card>
+  <Card title="The wedge is real on the wins" icon="chart-line-up">
+    The 6 high-differentiation cases aren't marginal. They're
+    live-venue market discovery, exact liquidity / flow / funding
+    requests, and multi-source synthesis where fresh numbers matter.
+    These are queries that agents genuinely can't answer from their
+    training data.
+  </Card>
+</CardGroup>
+
+---
+
+## Where the wedge is still weak
+
+<Warning>
+  We are shipping honest numbers here. Three Hyperliquid venue-specific
+  prompts (`7`, `8`, `10`) returned `capability_miss` because the
+  marketplace doesn't yet have the contributor coverage for those exact
+  live surfaces. Query `9` was safer than Gemini but also didn't fully
+  close the venue-specific liquidation-cascade ask.
+
+  These are **carry-forward quality gaps**, not reasons the wedge
+  doesn't exist. Use the 6 high-differentiation prompts as the PMF
+  story; treat the 3 Hyperliquid gaps as the roadmap.
+</Warning>
+
+---
+
+## Try it yourself
+
+The queries above are reproducible. Every Context-side answer above
+came from the same public SDK surface your agent can hit today:
+
+```ts
+import { ContextClient } from "@ctxprotocol/sdk";
+
+const client = new ContextClient({ apiKey: process.env.CONTEXT_API_KEY });
+
+const result = await client.query.run({
+  query:
+    "Is BTC flowing into or out of exchanges on Coinglass? Search for news explaining the flow.",
+});
+
+console.log(result.answer);
+```
+
+Your agent pays per response in USDC. No subscription, no KYC, no
+invented numbers.
+
+<CardGroup cols={2}>
+  <Card title="Start with the SDK" icon="code" href="/sdk/mcp">
+    Drop the Lite MCP into your agent in one config block.
+  </Card>
+  <Card title="How the runtime works" icon="gears" href="/changelog/2026-04-17-agentic-librarian">
+    See the full architectural story behind the grounded answers above.
+  </Card>
+</CardGroup>

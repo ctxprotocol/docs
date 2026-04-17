@@ -200,7 +200,7 @@ Use standard JSON Schema keys in `inputSchema` properties to guide argument gene
 - **`default`:** fallback value the AI uses when the user doesn't specify one (e.g., `"default": "BTC"`)
 - **`examples`:** sample values the AI references to understand valid inputs (e.g., `"examples": ["BTC", "ETH", "SOL"]`)
 
-The platform reads these fields during orchestration to generate correct arguments for your methods. In the active unified `deep` lane, they improve metadata-first planning, clarification grounding, and method selection before execution. Historical traces may still mention `deep-light` or `deep-heavy`, but those legacy labels now normalize to the same `deep` runtime path. Without strong schema hints, the AI must guess valid values from the description alone, leading to more retries and lower first-pass success rates.
+The platform reads these fields when generating arguments for your methods, when grounding clarifications, and when selecting the right method for a query. Without strong schema hints, the runtime has to guess valid values from the description alone, leading to more retries and lower first-pass success rates.
 
 Do not add custom `_meta.inputExamples`; `_meta` should only carry tool metadata such as pricing, context requirements, and rate-limit hints.
 </Tip>
@@ -233,15 +233,15 @@ return JSON.stringify(allData);
   <Accordion title="Write Detailed Output Schemas (Performance Critical)" icon="bolt">
 Your `outputSchema` is the **single most impactful thing** you can do to reduce latency and cost for users.
 
-Context's agentic pipeline uses an **iterative execution model** that reads your `outputSchema` to decide how to call tools, interpret results, and recover from mistakes. If your schema is vague, the runtime has to *guess* property names, and it will guess wrong. This triggers inline recovery that:
+Context's managed runtime reads your `outputSchema` to decide how to call tools, interpret results, and recover from mistakes. If your schema is vague, the runtime has to *guess* property names, and it will guess wrong. Each guess triggers a retry that:
 
-- Adds **~30-60 seconds** of latency per retry
-- Costs **~$0.02 extra** in model inference per retry
-- Wastes retry budget (capped at 8 total iterations)
+- Adds **~30-60 seconds** of latency
+- Costs **~$0.02 extra** in model inference
+- Consumes retry budget within the turn
 
 The #1 cause of these retries? **Property name mismatches** between what the LLM generates and what your tool actually returns.
 
-Self-healing retries target likely code/data-shape issues. Infrastructure failures (rate limits, auth failures, upstream timeouts) are treated as non-healable for that turn.
+The runtime retries likely code/data-shape issues. Infrastructure failures (rate limits, auth failures, upstream timeouts) are treated as non-healable for that turn.
 
 If your tool explicitly reports plan/tier capability limits (for example, "long/short ratio unavailable on current tier"), the platform treats that as a constraint signal and returns best-effort output plus limitations instead of looping.
 
@@ -288,7 +288,7 @@ outputSchema: {
 - If the response is an **object** (not an array), say so, `{ type: "object" }` not `{ type: "array" }`
 - Document **wrapper properties** your handler adds (e.g., `fetchedAt`, `count`, `symbol`)
 
-For third-party APIs with strict quotas, publish pacing hints via `_meta.rateLimit`. These hints influence both metadata-scout pacing and iterative-execution call budgets. See [Tool Metadata](/guides/tool-metadata#rate-limit-hints). Reference implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
+For third-party APIs with strict quotas, publish pacing hints via `_meta.rateLimit`. The runtime uses these hints to pace calls to your API. See [Tool Metadata](/guides/tool-metadata#rate-limit-hints). Reference implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
   </Accordion>
 </AccordionGroup>
 

@@ -8,7 +8,7 @@ description: "How to build autonomous AI agents using the Discovery -> Schema ->
 The most powerful way to use the Context SDK is to **let your LLM do the driving**. Context provides one marketplace with two modes (Query + Execute), and there are two primary approaches:
 
 <Note>
-If you want the server-managed source of truth for how Context itself runs Query and chat requests, see [Query and Chat Agentic Flow](/architecture/query-chat-agentic-flow). This page focuses on the developer-facing pattern for building your own agent loop.
+If you want the public contract for Context's managed Query runtime (inputs, response shapes, debugging surfaces), see [Query and Chat Runtime](/architecture/query-chat-agentic-flow). This page focuses on the developer-facing pattern for building your own agent loop.
 </Note>
 
 ### Choose The Contract First
@@ -46,13 +46,13 @@ print(answer.evidence.facts if answer.evidence else None)
 ```
 </CodeGroup>
 
-The server discovers query-eligible tools, runs the full managed librarian pipeline (`discover -> select -> metadata scout -> clarify if needed -> iterative execute -> synthesize -> settle`), and returns either:
+The managed runtime handles tool discovery, ambiguity resolution, multi-tool execution, and grounding. It returns either:
 
 - a backward-compatible prose `answer`
 - `answer_with_evidence` for human-facing premium answers
 - `evidence_only` for agent-facing evidence packages without depending on prose synthesis
 
-For wedge-style premium answers, the structured envelope can also include `marketIntelligence`, `view.rows`, `view.columns`, and the public controller fields `stopReason`, `issueClass`, `actionsTaken`, and `controller`.
+The structured envelope can also include `marketIntelligence`, `view.rows`, `view.columns`, and the public controller fields `stopReason`, `issueClass`, `actionsTaken`, and `controller`.
 
 See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
 

@@ -31,6 +31,12 @@
             ]
           },
           {
+            "group": "Why Context",
+            "pages": [
+              "why-context/free-llm-comparison"
+            ]
+          },
+          {
             "group": "Build a Tool",
             "pages": [
               "guides/quickstart",
@@ -58,7 +64,19 @@
           {
             "group": "Architecture",
             "pages": [
-              "architecture/protocol"
+              "architecture/protocol",
+              "architecture/query-chat-agentic-flow"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "2026",
+            "pages": [
+              "changelog/2026-04-17-agentic-librarian"
             ]
           }
         ]
