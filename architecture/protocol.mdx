@@ -5,7 +5,7 @@ description: "How the marketplace, settlement layer, and safety model work toget
 
 ## Overview
 
-Context is built on a **code-execution paradigm**. Instead of rigid "tool calling" schemas, the runtime can plan and execute tool interactions using typed MCP metadata, then settle economics according to the active mode (Query or Execute).
+Context is built around a **managed runtime**. The server discovers relevant tools, executes retrieval against the marketplace, and settles economics according to the active mode (Query or Execute).
 
 The architecture consists of five layers:
 
@@ -59,7 +59,7 @@ The MCP specification defines `outputSchema` and `structuredContent` as optional
 
 While optional in vanilla MCP, Context requires structured outputs because:
 
-- **AI Agent Benefit**: The agent uses your `outputSchema` to write accurate TypeScript code that parses your response correctly.
+- **AI Agent Benefit**: Structured outputs give the runtime stable fields to compose, compare, and verify across tools.
 - **Payment Verification**: Our smart contracts can verify that your returned JSON matches your promised schema.
 - **Dispute Resolution**: Schema mismatches can be auto-adjudicated on-chain without manual review.
 

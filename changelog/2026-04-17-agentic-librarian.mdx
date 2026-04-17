@@ -20,10 +20,10 @@ description: "We rebuilt our query runtime to keep answers inside the question's
     Comparison queries return the whole relevant set instead of a
     cherry-picked top-N, so your model can reason over complete data.
   </Card>
-  <Card title="Fast / Deep modes" icon="sliders">
-    The runtime picks a direct-lookup mode for narrow questions and a
-    deeper exploratory mode for comparisons or rediscovery. Buyers pay
-    only for the depth their question actually requires.
+  <Card title="Adaptive depth" icon="sliders">
+    Straightforward questions stay cheap. Broader comparison questions
+    can spend more work when needed. Buyers pay only for the depth
+    their question actually requires.
   </Card>
   <Card title="Honest capability misses" icon="shield">
     When the marketplace genuinely cannot answer, the runtime says so.
@@ -76,11 +76,10 @@ conversation** between the model and the marketplace:
   actually covered before deciding what to do next.
 - If a tool returns the complete relevant collection, the whole
   collection is preserved through synthesis — no cherry-picking.
-- If the initial tool selection turns out to be wrong-domain, the
-  runtime is allowed to **rediscover** against the marketplace before
-  falling back to a partial answer.
-- Paginated results are stitched transparently so a collection question
-  doesn't burn through budget chasing pages.
+- If the first pass does not cover the question well, the runtime can
+  recover before falling back to a partial answer.
+- Collection questions preserve the relevant returned set through
+  synthesis instead of collapsing prematurely.
 
 Buyers experience this as: **fewer off-topic answers, fewer partial
 answers, and a clear "I can't answer that" signal when the marketplace
@@ -191,9 +190,8 @@ live runtime on April 16:
 - **Variance reduction.** We're tightening when the runtime decides
   coverage is complete so similar queries produce more predictable cost
   profiles.
-- **Smarter planning hints.** Tool metadata already carries
-  bulk-capable / paginated signals; the next pass feeds those into the
-  planner so efficient retrieval patterns are picked by default.
+- **Smarter planning hints.** The next pass uses more contributor
+  metadata so efficient retrieval patterns are picked by default.
 - **Canonical payload retention.** The full tool output is persisted
   and passed through to synthesis in the common case, so decorative
   fields like market URLs and source links survive end-to-end.
