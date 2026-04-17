@@ -11,6 +11,8 @@ CoinGlass. Glassnode. Hyblock. BamSEC. These prosumer subscriptions gatekeep one
 
 Context Protocol is a decentralized marketplace where AI agents pay for data. Build an MCP tool that delivers value, and you earn **90% of usage fees** (Query responses and eligible Execute calls).
 
+**The long-term vision:** thousands of unbundled feature slices, shipped by independent contributors worldwide, collectively rival Bloomberg, FactSet, and Capital IQ as a decentralized, user-generated intelligence layer for AI agents. You own the piece you ship.
+
 <CardGroup cols={2}>
   <Card title="Apply Now" icon="rocket" href="https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform">
     Submit your tool proposal
@@ -134,9 +136,17 @@ Right now, we are most excited about **premium crypto and financial-data workflo
 <Warning>
 **Before you apply: the agent-native sanity check.**
 
-A strong RFB unbundles a slice of a premium subscription into an answer an agent would naturally be asked. Before you build, write down the exact sentence a buyer would type into an agent to get this answer. If that sentence feels awkward, if the workflow is really someone scrolling a dashboard or scanning a feed, if a free LLM with browsing could plausibly fake the answer, or if the real buyer is already on an enterprise contract (Bloomberg, FactSet, 6sense) they will not leave for \$0.10 micropayments, the slice is not agent-native yet. Pick a different slice.
+A strong RFB unbundles a slice of a premium subscription into an answer an agent would naturally be asked. Before you build, write the exact sentence a buyer would type, and name the audience that would pay for the answer.
 
-The pattern that works: prosumer subscriptions (CoinGlass, Glassnode, Hyblock, BamSEC) where real users already ask actual questions in natural language. The pattern that fails: enterprise terminal workflows where buyers scroll dashboards inside a contract they won't cancel.
+The slice works if at least one of these audiences is clear:
+
+- a prosumer or independent buyer with no desk access (CoinGlass / Glassnode / BamSEC / FinTwit readers, small operators, indie investors)
+- a desk analyst who would still prefer typing one question into an agent over navigating a terminal menu for this specific query, even while keeping their terminal
+- an AI agent buying on behalf of an application that has no Bloomberg, FactSet, 6sense, or Capital IQ seat and needs a grounded answer in code
+
+The slice does **not** work if all three of these are true at once: the workflow is dashboard-shaped (scrolling a flow list, scanning a heatmap, watching a feed), free alternatives already serve the non-desk audience well enough (ETF.com, Yahoo Finance, popular Twitter accounts that publish the same info), and the only buyer who sees real uplift over free is a desk analyst already paying for an enterprise contract.
+
+**Bottom line:** "this slice lives inside Bloomberg, FactSet, 6sense, or Capital IQ" is **not** a disqualifier. The long-term vision is that thousands of unbundled slices, each shipped by an independent contributor, collectively rival those terminals as a decentralized, user-generated intelligence layer for AI agents. What disqualifies a slice is when it lives inside those terminals **and** has no audience outside them **and** is inherently dashboard-shaped.
 </Warning>
 
 ## Request for Builders by Marketplace Category
@@ -211,37 +221,47 @@ These are not invitations to clone entire products. They are examples of the spe
 | Feature slice | Mode | Replaces | Fund? |
 |---------------|------|----------|-------|
 | SEC filing delta intelligence | `Query` | filing comparison workflow | **Yes** |
-| Earnings estimate revision momentum | `Query` or `both` | EE / revision screens | **No** (see `Future Categories`) |
+| Earnings call transcript delta intelligence | `Query` | manual transcript re-reads | **Yes** |
+| Sell-side rating / target-revision velocity | `Query` or `both` | EE / revision screens | **Yes** (stricter bar) |
 | Insider cluster-buy intelligence | `Query` or `both` | insider screening workflow | **Yes** |
-| Supply-chain shock exposure intelligence | `Query` | SPLC + manual risk research | **No** (see `Future Categories`) |
+| Short-interest / squeeze-risk regime | `Query` or `both` | Ortex / S3 Partners dashboards | **Yes** |
+| 13F / institutional-ownership change intelligence | `Query` or `both` | WhaleWisdom-style ownership dashboards | **Yes** |
+| Corporate credit / CDS-spread anomaly intelligence | `Query` | Bloomberg credit feeds | **Yes** (stricter bar) |
+| Supply-chain shock exposure intelligence | `Query` | SPLC + manual risk research | **No** (build complexity, not framing) |
 | Full Bloomberg-for-agents clone | N/A | the terminal | **No** |
   </Accordion>
 </AccordionGroup>
 
 ### Financial Markets
 
-**High priority, with a sharper filter than before.** This category is strongest when you unbundle a workflow that a prosumer investor (FinTwit, small-cap community, independent analyst, value investor, short seller) would naturally ask as a question and pay to have answered with evidence. It does not work when the real buyer is a desk analyst on Bloomberg, FactSet, or Capital IQ, because those buyers will not switch to \$0.10 per answer.
+**High priority, with a sharper filter than before.** This category is strongest when you unbundle a workflow that a prosumer investor (FinTwit, small-cap community, independent analyst, value investor, short seller) would naturally ask as a question and pay to have answered with evidence. It also works when a slice inside Bloomberg, FactSet, Capital IQ, or 6sense has a meaningful audience outside the desk — prosumer, independent, or agent-driven — even if desks also pay for it today. It does not work when the slice has no audience outside a desk analyst with an enterprise contract.
 
-We explicitly support two kinds of `Financial Markets` RFBs:
+We explicitly support three kinds of `Financial Markets` RFBs:
 
 - **Prosumer-anchored public-filing workflows**: filing deltas, insider clusters, reverse DCF, accounting red flags
-- **Narrow developer-facing primitives** for normalizing painful public data (filings, ETF disclosures)
+- **Bloomberg / FactSet / Capital IQ slices with a non-desk audience**: earnings-call language deltas, short-interest and squeeze-risk regime, sell-side rating and target revision velocity, 13F / institutional-ownership deltas, corporate credit and CDS-spread anomalies
+- **Narrow developer-facing primitives** for normalizing painful public data (filings, ETF disclosures, transcripts)
 
-The classic analyst workflow lines (reverse DCF, earnings quality, comp valuation) still carry a stricter bar because free LLMs already produce a mediocre version.
+The classic analyst workflow lines (reverse DCF, earnings quality, comp valuation) still carry a stricter bar because free LLMs already produce a mediocre version. Enterprise-anchored lines also carry a stricter bar: you must show a real non-desk audience or a clear agent-interface advantage over the terminal.
 
 | Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
 |-------------|---------------------|------|-------|---------------------|----------|
 | **SEC filing delta intelligence** | BamSEC / Capital IQ (prosumer slice) | `Query` | independent analyst / FinTwit / newsletter writer | *"What actually changed between Palantir's last 10-Q and this one in the risk factors and revenue footnotes?"* | **Highest** |
 | **Insider cluster-buy intelligence** | OpenInsider (free, raw) / Capital IQ | `Query` or `both` | small-cap / event-driven / FinTwit investor | *"Any notable cluster insider buys in small-cap industrials this week, and what's the context?"* | **Highest** |
+| **Earnings call transcript delta intelligence** | Bloomberg / Capital IQ transcripts / BamSEC | `Query` | small-cap PM / FinTwit / earnings-season prosumer / investor-AI assistants | *"What changed in NVDA's forward-guidance language this quarter vs last, and did management sound more or less confident on gross margin?"* | **High** |
+| **Short-interest and squeeze-risk regime intelligence** | S3 Partners / Ortex / Bloomberg SI (paid); FINRA (free, laggy) | `Query` or `both` | options / small-cap / event-driven retail | *"Is CVNA setting up for a squeeze this week based on short interest, cost-to-borrow, and days-to-cover?"* | **High** |
+| **13F / institutional-ownership change intelligence** | FactSet / Capital IQ (paid); WhaleWisdom (free, laggy) | `Query` or `both` | small-cap / event-driven / FinTwit hedge-fund watcher | *"Which hedge funds newly initiated or exited PLTR last quarter, and how large were the positions relative to their book?"* | **High** |
 | **Reverse DCF / implied-expectations intelligence** | public filings + market data | `Query` or `both` | value investor / FinTwit analyst | *"What growth does AAPL's current price imply, and is that realistic given its last four quarters?"* | **High, stricter bar** |
 | **Post-earnings valuation reset analysis** | public filings + transcripts + market data | `Query` | prosumer PM / event-driven investor | *"Should my expectations for NFLX change after Q3, and in which direction?"* | **High, stricter bar** |
 | **Earnings-quality and accounting red-flag intelligence** | public filings | `Query` | equity analyst / short seller / FinTwit | *"Any accrual or cash-conversion red flags in TSLA's latest 10-Q?"* | **High, stricter bar** |
+| **Sell-side rating and target-revision velocity intelligence** | Capital IQ / FactSet / Bloomberg EE (paid); fragmented free | `Query` | small-cap / options / newsletter writer / FinTwit | *"Is the sell-side turning bullish on PLTR in the last 30 days, who's leading the revisions, and by how much?"* | **High, stricter bar** |
+| **Corporate credit / CDS-spread anomaly intelligence** | Bloomberg / FactSet credit feeds (paid) | `Query` | credit-FinTwit / event-driven / AI-agent risk screener | *"What credit-market signals are flashing around PLTR this week, and does the CDS move match the equity story?"* | **Medium, stricter bar** |
 | **SEC filing sections + numeric fact normalizer** | EDGAR (free, painful) / FactSet parsers | `Execute` | internal finance agent / research workflow builder | *(Execute primitive: developer-facing typed schema)* | **High** |
 | **ETF flows / holdings normalizer** | issuer disclosures (fragmented) / FactSet | `Execute` | workflow builder | *(Execute primitive: no Query surface)* | **Medium** |
 | **Comparable-company valuation gap analysis** | public filings + market data | `Query` or `both` | prosumer analyst / investor | *"How does ROKU's valuation compare to its streaming peers right now, and is the gap justified?"* | **Medium, stricter bar** |
 
 <Note>
-We do **not** want generic DCF calculators, generic stock screeners, or "analyze any stock" wrappers. Classic analyst workflows are only fundable when they beat a free LLM plus a basic spreadsheet by a meaningful margin. If your pitch's real buyer has a Bloomberg terminal, the buyer will not switch, and the line is not a fit for this program.
+We do **not** want generic DCF calculators, generic stock screeners, or "analyze any stock" wrappers. Classic analyst workflows are only fundable when they beat a free LLM plus a basic spreadsheet by a meaningful margin. If your pitch's only buyer is someone with a Bloomberg, FactSet, or Capital IQ seat they won't cancel **and** the slice is inherently dashboard-shaped, the line is not a fit. If the same slice also serves prosumer, independent, or agent-driven buyers — or gives desk analysts a natural-language agent interface they would prefer for this specific query — it is.
 </Note>
 
 ### Other
@@ -257,7 +277,7 @@ We are **not currently grant-funding** the categories below because we are focus
 
 You are welcome to ship permissionless in any of these categories today and earn 90% revenue share. If real paying demand shows up on one of these workflows, we will revisit and reopen grants for it.
 
-Lines listed as `on ice` are the ones that survived the agent-native sanity check. Lines that failed it (ETF basis dislocation, earnings estimate revisions, Bloomberg SPLC clones, Cortellis clones, AI code-remediation) are not listed because they would not convert at \$0.10 per answer regardless of grant status.
+Lines listed as `on ice` are the ones that survived the agent-native sanity check. Lines that failed it (ETF basis dislocation, Cortellis clones, AI code-remediation) are not listed because they would not convert at \$0.10 per answer regardless of grant status. Earnings-estimate / target-revision velocity and Bloomberg-style supply-chain exposure have been reclassified: revision velocity is now funded in the `Financial Markets` table above, and supply-chain exposure is still off-ramp, but for build complexity reasons rather than framing.
 </Note>
 
 <AccordionGroup>
