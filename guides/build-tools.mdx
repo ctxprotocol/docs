@@ -163,6 +163,41 @@ pnpm add -D @types/express
 - `structuredContent` in your responses (the machine-readable data matching your schema)
 </Warning>
 
+#### outputSchema root must be `type: "object"`
+
+The MCP specification requires the **root** of every `outputSchema` to be an object type. You cannot use `anyOf`, `oneOf`, a bare `array`, or a primitive at the top level — the MCP SDK will reject your `tools/list` response and Context will refuse to register the tool.
+
+Express variability **inside** `properties`, not at the root:
+
+| Need | Don't | Do |
+|------|-------|-----|
+| Nullable value | `outputSchema: { anyOf: [ { type: "object", ... }, { type: "null" } ] }` | `outputSchema: { type: "object", properties: { price: { type: ["string", "null"] } } }` |
+| Optional field | Union the whole schema | Omit the field from `required` |
+| "No data" / upstream error | Discriminated union in the schema | Return `{ content: [...], isError: true }` in the response |
+| One of several shapes | `oneOf` at the root | One `type: "object"` root with all possible fields, each nullable as needed |
+
+```typescript
+// ❌ Rejected — anyOf at the root
+outputSchema: {
+  anyOf: [
+    { type: "object", properties: { venue: { type: "string" } } },
+    { type: "null" },
+  ],
+}
+
+// ✅ Correct — object at the root, nullability expressed per-field
+outputSchema: {
+  type: "object",
+  properties: {
+    venue: { type: "string" },
+    current_price: { type: ["string", "null"] },
+    funding_rate: { type: ["string", "null"] },
+  },
+}
+```
+
+Every reference server in [`@ctxprotocol/sdk/examples/server`](https://github.com/ctxprotocol/sdk/tree/main/examples/server) follows this pattern. If you need to signal a no-data / upstream-error case at runtime, use the MCP `isError: true` response flag — don't encode it in the schema.
+
 ```typescript
 const TOOLS = [{
   name: "get_gas_price",

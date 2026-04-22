@@ -77,6 +77,56 @@ Your server is deployed but Context can't find your tools.
 - [ ] URL is HTTPS (not HTTP)
 - [ ] URL ends with `/mcp` (e.g., `https://your-server.com/mcp`)
 - [ ] Tools have `outputSchema` defined (required by Context)
+- [ ] Every `outputSchema` has `type: "object"` at the root (not `anyOf`, `oneOf`, an array, or a primitive) — see [outputSchema root must be object](/guides/build-tools#outputschema-root-must-be-type-object)
+
+---
+
+### Submission Rejected — Schema Validation Failed
+
+If the [contribute form](https://www.ctxprotocol.com/contribute) returns a schema-validation error when you submit your endpoint, the MCP SDK rejected your `tools/list` response. The most common cause is an `outputSchema` whose root is not `{ type: "object" }`.
+
+#### Symptoms
+
+The form shows an error like:
+
+> Schema validation failed on tool `<tool_name>`: `outputSchema.type` must be `"object"` at the root.
+
+#### Fix
+
+Your `outputSchema` root must be an object type. Move nullability, optionality, and error signalling **inside** `properties` — don't express them at the root.
+
+```typescript
+// ❌ Rejected
+outputSchema: {
+  anyOf: [
+    { type: "object", properties: { ... } },
+    { type: "null" },
+  ],
+}
+
+// ✅ Accepted
+outputSchema: {
+  type: "object",
+  properties: {
+    venue: { type: "string" },
+    current_price: { type: ["string", "null"] },
+  },
+}
+```
+
+See [outputSchema root must be object](/guides/build-tools#outputschema-root-must-be-type-object) for the full pattern and examples.
+
+#### Validate locally before resubmitting
+
+```bash
+curl -X POST https://your-server.com/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}' \
+  | jq '.result.tools[] | { name, outputSchemaRoot: .outputSchema.type }'
+```
+
+Every tool should print `"outputSchemaRoot": "object"`. Anything else — `null`, `"array"`, or missing — will be rejected.
 
 ---
 
