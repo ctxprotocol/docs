@@ -93,8 +93,8 @@ If your upstream venue already exposes reliable search and candidate selection, 
     - Checks data quality from a buyer's perspective
     - Audits latency metadata for correctness
     - Fixes issues and retests in a loop until everything passes
-    - Generates the optimal marketplace description (with proven "Try asking" prompts)
-    - Pushes the description directly to your listing via the SDK, with no manual copy-paste
+    - Generates the optimal marketplace description with proven `suggestedPrompts`
+    - Pushes the description and clickable example questions directly to your listing via the SDK, with no manual copy-paste
     
     ```
     Load the mcp-tool-optimization-skill.md from context-sdk/docs/.
@@ -594,11 +594,15 @@ When you add new endpoints, modify schemas, or change your tool's functionality:
   
   <Step title="Update Description (if needed)">
     If you've added significant new tools, update your description. Two options:
-    - **Recommended:** Re-run the [Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md), it regenerates and pushes the description automatically via the SDK
-    - **Programmatic:** Use `client.developer.updateTool(toolId, { description: "..." })` directly from the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference)
+    - **Recommended:** Re-run the [Optimization Skill](https://github.com/ctxprotocol/sdk/blob/main/docs/mcp-tool-optimization-skill.md), it regenerates and pushes the description plus validated `suggestedPrompts` automatically via the SDK
+    - **Programmatic:** Use `client.developer.updateTool(toolId, { description: "...", suggestedPrompts: [{ text: "What are the top markets right now?", source: "sdk" }] })` directly from the [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference)
     - **Manual:** Edit your tool in the Developer Tools page
   </Step>
 </Steps>
+
+<Info>
+`Try asking:` is now first-class marketplace metadata. Context parses that section into clickable prompt chips in the chat sidebar. If the section is missing or too weak, Context can generate example prompts from your discovered MCP methods so legacy and newly submitted tools render consistently.
+</Info>
 
 <Warning>
 **Don't forget to Refresh Skills!** Deploying new code doesn't automatically update the marketplace listing. You must click "Refresh Skills" for Context to re-discover your tools.
