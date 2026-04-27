@@ -727,6 +727,26 @@ TOOLS = [
 Design your `surface` and `queryEligible` settings intentionally, they control where your tool shows up.
 </Warning>
 
+### Choosing Eligibility With The Code Interpreter
+
+Query mode now includes a managed `code_interpreter` tool. After the runtime calls your MCP methods, the interpreter can turn raw structured outputs into derived metrics, chart artifacts, metric tables, rolling statistics, correlations, drawdowns, and other post-processed evidence.
+
+That changes the default choice for high-quality read methods. In the pre-interpreter model, a method that returned raw time-series data might have looked useful only for SDK Execute callers. In the current Query runtime, that same method can be first-class answer evidence because Context can compute the derived analysis after retrieval.
+
+Use this rule of thumb:
+
+| Method output is... | Recommended `surface` | Recommended `queryEligible` | Why |
+|---|---|---|---|
+| Time-series prices, OHLCV candles, funding history, open interest history, orderbook snapshots, large trade lists, or other high-fidelity public market data | `"both"` | `true` | Query can retrieve the data, then use `code_interpreter` to compute and render derived analysis. |
+| Curated intelligence or already-aggregated analysis | `"answer"` or `"both"` | `true` | Query can use the method directly as grounded answer evidence. |
+| Write actions, signatures, transaction submission, internal handshake callbacks, or approval flows | `"execute"` | `false` | Query answers must not perform side effects without an explicit app-controlled workflow. |
+| Streaming feeds or long-lived subscriptions | `"execute"` | `false` | Query excludes `latencyClass: "streaming"` methods from answer synthesis. |
+| Raw outputs that are only meaningful inside your own external execution context | `"execute"` | `false` | Query cannot safely interpret data that lacks portable structure or semantics. |
+
+<Tip>
+If a read method can produce portable structured data that a JavaScript analyst could compute over, prefer `surface: "both"` and `queryEligible: true`. The method does not need to return a polished narrative; the managed librarian and `code_interpreter` can derive the final answer.
+</Tip>
+
 ### Pricing Guidance
 
 | Listing response price (Query) | Suggested execute price per method | Ratio |
