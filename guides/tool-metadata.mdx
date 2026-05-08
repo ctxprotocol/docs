@@ -729,7 +729,7 @@ Design your `surface` and `queryEligible` settings intentionally, they control w
 
 ### Choosing Eligibility With The Code Interpreter
 
-Query mode now includes a managed `code_interpreter` tool. After the runtime calls your MCP methods, the interpreter can turn raw structured outputs into derived metrics, chart artifacts, metric tables, rolling statistics, correlations, drawdowns, and other post-processed evidence.
+Query mode now includes a managed `code_interpreter` tool. After the runtime calls your MCP methods, the interpreter can turn raw structured outputs into derived metrics, chart artifacts, markdown-ready tables in the synthesized answer, rolling statistics, correlations, drawdowns, and other post-processed evidence.
 
 That changes the default choice for high-quality read methods. In the pre-interpreter model, a method that returned raw time-series data might have looked useful only for SDK Execute callers. In the current Query runtime, that same method can be first-class answer evidence because Context can compute the derived analysis after retrieval.
 
