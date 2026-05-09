@@ -729,9 +729,11 @@ Design your `surface` and `queryEligible` settings intentionally, they control w
 
 ### Choosing Eligibility With The Code Interpreter
 
-Query mode now includes a managed `code_interpreter` tool. After the runtime calls your MCP methods, the interpreter can turn raw structured outputs into derived metrics, chart artifacts, markdown-ready tables in the synthesized answer, rolling statistics, correlations, drawdowns, and other post-processed evidence.
+Query mode includes a managed `code_interpreter` tool that runs **Python** in an isolated [Vercel Sandbox](https://vercel.com/docs/sandbox) microVM with `pandas`, `numpy`, `scipy`, `matplotlib`, `statsmodels`, and `pyarrow` available (see [Code Interpreter](/architecture/code-interpreter) for the full data flow contract). After the runtime calls your MCP methods, the interpreter can turn raw structured outputs into derived metrics, structured chart artifacts, matplotlib PNG visualisations, markdown-ready tables in the synthesized answer, rolling statistics, correlations, drawdowns, and other post-processed evidence.
 
 That changes the default choice for high-quality read methods. In the pre-interpreter model, a method that returned raw time-series data might have looked useful only for SDK Execute callers. In the current Query runtime, that same method can be first-class answer evidence because Context can compute the derived analysis after retrieval.
+
+The interpreter operates **only** on data your method already returned. It does not make HTTP, network, or marketplace calls of its own — `networkPolicy: "deny-all"` is enforced at the platform level — so methods that return portable structured data are first-class answer fuel, while methods that withhold the underlying data and only return a polished narrative leave the interpreter unable to compute on top.
 
 Use this rule of thumb:
 
@@ -744,7 +746,7 @@ Use this rule of thumb:
 | Raw outputs that are only meaningful inside your own external execution context | `"execute"` | `false` | Query cannot safely interpret data that lacks portable structure or semantics. |
 
 <Tip>
-If a read method can produce portable structured data that a JavaScript analyst could compute over, prefer `surface: "both"` and `queryEligible: true`. The method does not need to return a polished narrative; the managed librarian and `code_interpreter` can derive the final answer.
+If a read method can produce portable structured data that a Python analyst (with pandas + numpy) could compute over, prefer `surface: "both"` and `queryEligible: true`. The method does not need to return a polished narrative; the managed librarian and the Python `code_interpreter` can derive the final answer.
 </Tip>
 
 ### Pricing Guidance

@@ -47,7 +47,7 @@ Both surfaces expose the same underlying runtime through different wire shapes. 
 | `selectedChatModel` | `/api/chat` | Same role as `answerModelId`, on the chat wire format |
 | `includeDeveloperTrace` | `/api/v1/query` | Opt in to structured diagnostics for your own debugging |
 
-All other runtime behavior — discovery, selection, ambiguity resolution, execution, and retrieval — is managed by the server. Callers do not pick between internal lanes or budgets.
+All other runtime behavior — discovery, selection, ambiguity resolution, execution, retrieval, and post-execution computation via the managed Python `code_interpreter` (see [Code Interpreter](/architecture/code-interpreter)) — is managed by the server. Callers do not pick between internal lanes or budgets.
 
 ---
 
@@ -83,6 +83,20 @@ If an answer renders correctly through `/api/v1/query` but breaks in chat, the c
 Pass `includeDeveloperTrace: true` to `/api/v1/query` to receive a structured diagnostics payload alongside the answer. Traces are the supported public way to inspect what the runtime did on a given request.
 
 The trace is intentionally a typed, stable surface — internal intermediate diagnostics can change across rollouts without breaking it.
+
+
+## Chat streaming UI extensions (first-party `/chat`)
+
+Beyond message text, the chat stream emits structured UI payloads used by the web client:
+
+| Data part | Purpose |
+| --- | --- |
+| `data-reasoningStep` | Incremental librarian reasoning chunks, optionally keyed with `relatedExecutionCallId` to align with tool execution. |
+| `data-executionToolCalls` | Final per-call timeline (arguments + truncated results + `executionCallId`) for the docked execution sidecar. |
+| `data-chartDelta`, `data-codeDelta`, `data-sheetDelta`, `data-textDelta`, `data-imageDelta` | Artifact document streaming payloads; buffered client-side next to structural `data-id`/`data-kind`/`data-finish` parts. |
+
+Users can wipe all server-side conversations with `DELETE /api/history` (authenticated).
+
 
 ---
 

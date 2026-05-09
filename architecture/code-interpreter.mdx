@@ -1,0 +1,124 @@
+---
+title: "Code Interpreter"
+description: "How the managed code_interpreter tool runs Python in an isolated Vercel Sandbox microVM and what data it can and cannot reach."
+---
+
+The Context Query runtime exposes a managed `code_interpreter` tool that the
+agent can call after MCP retrieval to derive metrics, build chart artifacts,
+or render matplotlib visuals from data already fetched. The interpreter runs
+**Python 3.13** inside a **Vercel Sandbox** Firecracker microVM with a
+pre-built snapshot of the pure-compute scientific Python stack
+(`pandas`, `numpy`, `scipy`, `matplotlib`, `statsmodels`, `pyarrow`).
+
+## Data flow contract (load-bearing)
+
+The interpreter is for **derivation, not data acquisition**. Data flows in
+one direction only:
+
+1. The AI SDK turn loop runs in plain Node.js inside the chat API route.
+2. The agent calls MCP tools (`call_mcp_skill`, `get_earnings`,
+   `get_price`, etc.). These are HTTP fetches from Node to contributor
+   servers and accumulate in `toolOutputsByAlias`.
+3. Optionally the agent calls `render_chart` to emit a quick inline
+   recharts artifact directly from one alias.
+4. Optionally the agent calls `code_interpreter` to derive metrics or
+   produce custom plots. Each call declares
+   `inputs: Record<localName, alias>` mapping into prior tool outputs.
+   The runtime hydrates those inputs, serializes them as
+   `/vercel/sandbox/inputs.json`, then runs Python.
+5. Python reads `inputs`, computes results, optionally calls
+   `render_chart(spec, data, title)` for structured charts and / or
+   `plt.savefig()` plus `save_figure(alt, title)` for matplotlib PNGs,
+   then calls `set_result(value)` with the final JSON-serializable result.
+6. The sandbox returns `stdout`, `result`, plus chart and image artifacts
+   back into the Node loop. Image PNGs are uploaded to Vercel Blob and
+   exposed as `ImageArtifact` URLs.
+
+**Python never makes HTTP, network, marketplace, or filesystem-egress
+calls.** This is enforced at four layers:
+
+- **Snapshot composition.** The pre-built sandbox image deliberately
+  omits `requests`, `urllib3`, `httpx`, `aiohttp`, and `yfinance`. Even
+  if the model writes `import requests`, the import fails at runtime.
+- **`networkPolicy: "deny-all"`.** Each sandbox is created with a
+  Firecracker network policy that blocks outbound traffic. Python's
+  stdlib `urllib` cannot escape the microVM. Verified by the
+  `python sandbox: networkPolicy deny-all blocks outbound HTTP`
+  integration test.
+- **Librarian prompt.** The agent prompt explicitly forbids
+  network-fetching imports and lists only the allowed libraries. The
+  prompt is contributor-agnostic and does not name venues.
+- **`validateCodeInterpreterContract`.** A `code_interpreter` call with
+  an empty `inputs` map is rejected; Python cannot run unless it
+  declares at least one alias from prior tool outputs.
+
+## Lazy-per-turn lifecycle
+
+Most chat turns never call `code_interpreter`. Those turns pay zero
+sandbox cost. When the agent calls the interpreter for the first time
+within a turn, the runtime lazy-creates a Vercel Sandbox booted from the
+snapshot (sub-second cold start) via `getOrCreateTurnSandbox(...)`. All
+subsequent interpreter calls in the same turn reuse that sandbox. The
+sandbox is disposed in a `finally` block around the turn's
+`streamText` / `generateText` call by `disposeTurnSandbox(...)`.
+
+```
+┌─ Node turn loop ──────────────────────────────────────┐
+│  MCP tools (fetch + HTTP)        ◀── never sandboxed   │
+│  render_chart                    ◀── never sandboxed   │
+│  python_code_interpreter[1]      ─▶ Sandbox.create     │
+│  python_code_interpreter[2..N]   ─▶ reuse sandbox      │
+│  returnResult                    ◀── never sandboxed   │
+│  finally { disposeTurnSandbox }  ─▶ Sandbox.stop       │
+└────────────────────────────────────────────────────────┘
+```
+
+## Artifacts emitted by `code_interpreter`
+
+- **Chart artifact (`kind: "chart"`).** Structured spec + rows that the
+  recharts client renders inline in the message and in the docked
+  artifact panel. Emit via the in-Python `render_chart(spec, data,
+  title=None)` helper.
+- **Image artifact (`kind: "image"`).** Matplotlib PNG saved to
+  `/vercel/sandbox/out/images/`, uploaded to Vercel Blob (sha256
+  content-addressed), and rendered inline as an `<img>` in the message
+  body. Emit via `save_figure(alt, title=None, fig=None)` after building
+  the matplotlib `Figure`.
+
+Both artifact kinds flow through the unified `ArtifactEnvelope` union
+declared in `lib/types.ts` (`ChartArtifact | ImageArtifact`). Every
+emitted artifact must match the agent's declared
+`postProcessingContract.expectedArtifacts` (e.g. `["chart"]`,
+`["image"]`, `["chart", "image"]`, or `[]`); the runtime rejects a call
+that emits the wrong kind.
+
+## Step budget for chart-required turns
+
+When the planning contract declares `chartIntent: "explicit"`, the
+runtime increases the per-turn step budget by
+`CHART_REQUIRED_STEP_BUDGET_BOOST = 4` (10 -> 14 for exploratory
+queries). This gives the agent room for MCP fetch + render_chart Path A
+attempt + Path B reshape with `code_interpreter` + retry on shape /
+spec failures, while still bounding total compute.
+
+If the agent still hits the budget without producing a chart, the
+runtime synthesizes a `buildBestEffortTerminalOutcome(...)` answer and
+explicitly surfaces a `gaps` entry telling synthesis that the chart
+could not be rendered. Synthesis must communicate the failure honestly
+to the user instead of dropping the visual silently.
+
+## Observability
+
+Every `runPythonInSandbox(...)` call emits structured runtime probes
+on stdout:
+
+- `[python-sandbox-latency-probe] event=python_call_start` once per
+  call, with `inputsBytes`, `codeBytes`, `inputAliasCount`, sandbox id.
+- `[python-sandbox-latency-probe] event=python_call_success` on
+  success with `stdoutChars`, `artifactCount`, per-kind counts.
+- `[python-sandbox-latency-probe] event=python_call_failure` on any
+  failure with the failing `stage` and an error message.
+
+These probes mirror the `[mcp-latency-probe]` pattern used by the
+marketplace dispatcher and let operations dashboards measure cold-start
+vs warm boot, exit codes, and artifact emission rates per turn.
