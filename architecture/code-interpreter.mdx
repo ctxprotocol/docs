@@ -19,17 +19,16 @@ one direction only:
 2. The agent calls MCP tools (`call_mcp_skill`, `get_earnings`,
    `get_price`, etc.). These are HTTP fetches from Node to contributor
    servers and accumulate in `toolOutputsByAlias`.
-3. Optionally the agent calls `render_chart` to emit a quick inline
-   recharts artifact directly from one alias.
-4. Optionally the agent calls `code_interpreter` to derive metrics or
-   produce custom plots. Each call declares
-   `inputs: Record<localName, alias>` mapping into prior tool outputs.
-   The runtime hydrates those inputs, serializes them as
+3. Optionally the agent calls `code_interpreter` to derive metrics or
+   produce custom plots. Prior tool outputs are auto-bound by their
+   canonical `_contextAlias` as Python globals and as `inputs[...]`
+   entries. The optional `inputs: Record<localName, alias>` mapping is
+   only friendly-name sugar for dense scripts.
+4. The runtime hydrates those inputs, serializes them as
    `/vercel/sandbox/inputs.json`, then runs Python.
-5. Python reads `inputs`, computes results, optionally calls
-   `render_chart(spec, data, title)` for structured charts and / or
-   `plt.savefig()` plus `save_figure(alt, title)` for matplotlib PNGs,
-   then calls `set_result(value)` with the final JSON-serializable result.
+5. Python reads the bound aliases / `inputs`, computes results, calls
+   `save_figure(alt, title)` for matplotlib PNGs when a visual is needed,
+   and calls `set_result(value)` with the final JSON-serializable result.
 6. The sandbox returns `stdout`, `result`, plus chart and image artifacts
    back into the Node loop. Image PNGs are uploaded to Vercel Blob and
    exposed as `ImageArtifact` URLs.
@@ -48,9 +47,11 @@ calls.** This is enforced at four layers:
 - **Librarian prompt.** The agent prompt explicitly forbids
   network-fetching imports and lists only the allowed libraries. The
   prompt is contributor-agnostic and does not name venues.
-- **`validateCodeInterpreterContract`.** A `code_interpreter` call with
-  an empty `inputs` map is rejected; Python cannot run unless it
-  declares at least one alias from prior tool outputs.
+- **`validateCodeInterpreterContract`.** Every `code_interpreter` call must
+  declare a `postProcessingContract` with `operation`, `reason`,
+  `inputAliases`, and `expectedArtifacts`. The contract is validated before
+  Python starts so malformed tool input becomes a repairable model error
+  instead of an unclassified sandbox failure.
 
 ## Lazy-per-turn lifecycle
 
@@ -65,9 +66,8 @@ sandbox is disposed in a `finally` block around the turn's
 ```
 ┌─ Node turn loop ──────────────────────────────────────┐
 │  MCP tools (fetch + HTTP)        ◀── never sandboxed   │
-│  render_chart                    ◀── never sandboxed   │
-│  python_code_interpreter[1]      ─▶ Sandbox.create     │
-│  python_code_interpreter[2..N]   ─▶ reuse sandbox      │
+│  code_interpreter[1]             ─▶ Sandbox.create     │
+│  code_interpreter[2..N]          ─▶ reuse sandbox      │
 │  returnResult                    ◀── never sandboxed   │
 │  finally { disposeTurnSandbox }  ─▶ Sandbox.stop       │
 └────────────────────────────────────────────────────────┘
@@ -75,31 +75,36 @@ sandbox is disposed in a `finally` block around the turn's
 
 ## Artifacts emitted by `code_interpreter`
 
-- **Chart artifact (`kind: "chart"`).** Structured spec + rows that the
-  recharts client renders inline in the message and in the docked
-  artifact panel. Emit via the in-Python `render_chart(spec, data,
-  title=None)` helper.
 - **Image artifact (`kind: "image"`).** Matplotlib PNG saved to
   `/vercel/sandbox/out/images/`, uploaded to Vercel Blob (sha256
   content-addressed), and rendered inline as an `<img>` in the message
   body. Emit via `save_figure(alt, title=None, fig=None)` after building
   the matplotlib `Figure`.
 
-Both artifact kinds flow through the unified `ArtifactEnvelope` union
-declared in `lib/types.ts` (`ChartArtifact | ImageArtifact`). Every
-emitted artifact must match the agent's declared
-`postProcessingContract.expectedArtifacts` (e.g. `["chart"]`,
-`["image"]`, `["chart", "image"]`, or `[]`); the runtime rejects a call
-that emits the wrong kind.
+Every emitted artifact must match the agent's declared
+`postProcessingContract.expectedArtifacts` (`["image"]` for matplotlib
+figures, or `[]` for computation-only calls); the runtime rejects a call
+that declares an image but does not emit one. When a figure is emitted, the
+sandbox also reports low-coverage plotted time-series lines so the runtime can
+force a `python_code_edit` repair instead of finalizing a visibly sparse chart.
+
+## Time-series alignment helpers
+
+The sandbox exposes contributor-agnostic helpers for common data-shaping
+failure modes. `safe_merge_timeseries(...)` and `align_timeseries(...)`
+normalize timestamp buckets, aggregate duplicate buckets, and attach
+data-quality diagnostics before chart code runs. When `names=[...]` is passed,
+the helpers keep prefixed columns for disambiguation and also preserve
+unprefixed aliases for columns that are globally unique across the merged
+sources. For example, a merge may expose both `cg_net_flow` and `net_flow`, but
+only if no other source also has a `net_flow` column.
 
 ## Step budget for chart-required turns
 
 When the planning contract declares `chartIntent: "explicit"`, the
-runtime increases the per-turn step budget by
-`CHART_REQUIRED_STEP_BUDGET_BOOST = 4` (10 -> 14 for exploratory
-queries). This gives the agent room for MCP fetch + render_chart Path A
-attempt + Path B reshape with `code_interpreter` + retry on shape /
-spec failures, while still bounding total compute.
+runtime increases the per-turn step budget. This gives the agent room for MCP
+fetch + matplotlib generation with `code_interpreter` + retry on shape,
+alignment, or artifact failures, while still bounding total compute.
 
 If the agent still hits the budget without producing a chart, the
 runtime synthesizes a `buildBestEffortTerminalOutcome(...)` answer and
