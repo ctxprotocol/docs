@@ -69,6 +69,45 @@ can reuse cached inputs and intermediate files, while each `runPythonInSandbox`
 command still defaults to a 60-second abort budget. In other words: the runtime
 allows a long analytical turn, but still kills a single runaway script quickly.
 
+## Storage layers
+
+```mermaid
+flowchart LR
+  subgraph contextLayer [Per-request runtime]
+    aliasStore["toolOutputsByAlias (_contextAlias handles)"]
+    canonical["Canonical execution dataset (stage artifacts + publicDataUrl)"]
+  end
+  subgraph modelLayer [Per-step LLM input]
+    visible["Model-visible context (budget-capped)"]
+  end
+  subgraph sandboxLayer [Per-turn sandbox]
+    fs["Sandbox FS / inputs.json (temporary compute)"]
+  end
+  aliasStore --> visible
+  aliasStore --> fs
+  canonical --> aliasStore
+```
+
+The code interpreter spans three storage layers with different durability and
+budget rules:
+
+- **Model-visible context** is the per-step tool result payload the execution
+  model rereads. This layer is budget-capped and may be compacted under prompt
+  pressure, but it always preserves enough metadata for the model to reference
+  the original dataset again.
+- **Runtime alias store + canonical dataset** is the durable evidence layer for
+  the request. `toolOutputsByAlias` keeps the full raw tool outputs keyed by
+  `_contextAlias`, and the canonical execution dataset / stage artifacts /
+  `publicDataUrl` preserve the answer backing data for synthesis and downloads.
+- **Sandbox FS** is ephemeral compute state only. The runtime writes
+  `/vercel/sandbox/inputs.json`, `bootstrap.py`, user code, and generated
+  figures there so Python can execute, but the filesystem is never the only
+  copy of important data.
+
+`_contextAlias` is therefore the Python-facing addressing scheme, not the
+durable evidence layer by itself. Compaction only targets what the LLM rereads;
+the alias store and canonical dataset remain full fidelity.
+
 ```
 ┌─ Node turn loop ──────────────────────────────────────┐
 │  MCP tools (fetch + HTTP)        ◀── never sandboxed   │
