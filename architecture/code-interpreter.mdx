@@ -63,6 +63,12 @@ subsequent interpreter calls in the same turn reuse that sandbox. The
 sandbox is disposed in a `finally` block around the turn's
 `streamText` / `generateText` call by `disposeTurnSandbox(...)`.
 
+The sandbox lifetime is intentionally longer than an individual Python command
+timeout. The microVM is kept warm for up to 15 minutes so multi-step analysis
+can reuse cached inputs and intermediate files, while each `runPythonInSandbox`
+command still defaults to a 60-second abort budget. In other words: the runtime
+allows a long analytical turn, but still kills a single runaway script quickly.
+
 ```
 ┌─ Node turn loop ──────────────────────────────────────┐
 │  MCP tools (fetch + HTTP)        ◀── never sandboxed   │
