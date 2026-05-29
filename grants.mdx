@@ -1,7 +1,35 @@
 ---
 title: "Developer Grants"
-description: "$10,000 Grant Program - Build MCP tools, earn upfront grants + ongoing USDC revenue"
+description: "Developer grants and contributor guidance — list permissionlessly and earn 90% USDC revenue share on the Context marketplace"
 ---
+
+{/*
+  BATCH TOGGLE — reopening grants for a new batch:
+  1. Set GRANTS_ACCEPTING_APPLICATIONS = true (below)
+  2. Google Form → Responses → turn ON "Accepting responses"
+  Full revert checklist: changelog/2026-05-30-grants-batch-1-closed.mdx
+*/}
+
+export const GRANTS_ACCEPTING_APPLICATIONS = false;
+
+export const GRANT_APPLICATION_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform";
+
+{!GRANTS_ACCEPTING_APPLICATIONS && (
+  <Warning>
+    **Batch 1 grant applications are closed.** We are focused on growing
+    demand-side users so existing and new tools get paid usage. There is
+    **no timeline for Batch 2** — we will reopen when marketplace demand
+    justifies more funded supply.
+
+    **Permissionless listing is still open:** [build and list your
+    tool](https://ctxprotocol.com/contribute) anytime and keep **90% of
+    usage fees** in perpetuity.
+
+    Applications already in review and approved Batch 1 projects are still
+    honored on existing payment terms.
+  </Warning>
+)}
 
 # Become a Data Broker
 
@@ -13,14 +41,25 @@ Context Protocol is a decentralized marketplace where AI agents pay for data. Bu
 
 **The long-term vision:** thousands of unbundled feature slices, shipped by independent contributors worldwide, collectively rival Bloomberg, FactSet, and Capital IQ as a decentralized, user-generated intelligence layer for AI agents. You own the piece you ship.
 
-<CardGroup cols={2}>
-  <Card title="Apply Now" icon="rocket" href="https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform">
-    Submit your tool proposal
-  </Card>
-  <Card title="Build & List Your Tool" icon="code" href="/guides/build-tools">
-    Learn how to build, secure, and list your MCP server on the marketplace.
-  </Card>
-</CardGroup>
+{GRANTS_ACCEPTING_APPLICATIONS ? (
+  <CardGroup cols={2}>
+    <Card title="Apply Now" icon="rocket" href={GRANT_APPLICATION_FORM_URL}>
+      Submit your tool proposal
+    </Card>
+    <Card title="Build & List Your Tool" icon="code" href="/guides/build-tools">
+      Learn how to build, secure, and list your MCP server on the marketplace.
+    </Card>
+  </CardGroup>
+) : (
+  <CardGroup cols={2}>
+    <Card title="Build & List Your Tool" icon="code" href="/guides/build-tools">
+      Learn how to build, secure, and list your MCP server on the marketplace.
+    </Card>
+    <Card title="List on Context" icon="rocket" href="https://ctxprotocol.com/contribute">
+      Register your MCP endpoint on the permissionless marketplace.
+    </Card>
+  </CardGroup>
+)}
 
 <Info>
 **What we fund:** feature-level MCP products that unbundle one paid workflow into either:
@@ -36,6 +75,14 @@ Context Protocol is a decentralized marketplace where AI agents pay for data. Bu
 ---
 
 ## The Grant Pool
+
+{!GRANTS_ACCEPTING_APPLICATIONS && (
+  <Note>
+    **Batch 1 is closed.** Pool and tier details below are kept for
+    reference. New contributors can still list permissionlessly and earn
+    revenue share.
+  </Note>
+)}
 
 We're allocating **\$10,000 USD** to bootstrap the supply side of the Context Marketplace.
 
@@ -391,6 +438,14 @@ If your pitch sounds like "I am unbundling this one paid workflow from a product
 
 ## How to Apply
 
+{!GRANTS_ACCEPTING_APPLICATIONS && (
+  <Note>
+    Batch 1 applications are closed. The steps below are **archived for
+    reference** when the next batch opens. To ship today without a grant,
+    start at [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute).
+  </Note>
+)}
+
 <Warning>
 **One application at a time.** If you have an active grant project (Processing, Draft Created, Conversation, or any awarded tier), complete it before submitting a new application. Duplicate submissions will be automatically rejected.
 
@@ -421,7 +476,11 @@ If your pitch sounds like "I am unbundling this one paid workflow from a product
     - Technical approach (1-2 paragraphs)
     - Your background (GitHub, portfolio)
     
-    [**Submit Proposal**](https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform)
+    {GRANTS_ACCEPTING_APPLICATIONS && (
+      <p>
+        <a href={GRANT_APPLICATION_FORM_URL}>Submit Proposal</a>
+      </p>
+    )}
   </Step>
   <Step title="Build & Deploy">
     Once approved, build your MCP server using our SDK:
@@ -528,9 +587,15 @@ To receive grant payments, your tool must:
 You're not alone. We're here to help you ship.
 
 <CardGroup cols={2}>
-  <Card title="Email Support" icon="envelope" href="mailto:grants@ctxprotocol.com">
-    Send proposals and questions directly to the team.
-  </Card>
+  {GRANTS_ACCEPTING_APPLICATIONS ? (
+    <Card title="Email Support" icon="envelope" href="mailto:grants@ctxprotocol.com">
+      Send proposals and questions directly to the team.
+    </Card>
+  ) : (
+    <Card title="Email Support" icon="envelope" href="mailto:grants@ctxprotocol.com">
+      Questions about existing Batch 1 grants or permissionless listing.
+    </Card>
+  )}
   <Card title="GitHub Examples" icon="github" href="https://github.com/ctxprotocol/sdk/tree/main/examples/server">
     View reference implementations and code patterns.
   </Card>
@@ -574,6 +639,12 @@ The marketplace is hungry for data. AI agents are querying tools right now, and 
 
 Build it. List it. Get paid.
 
-<Card title="Apply Now" icon="rocket" href="https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform">
-  Submit your proposal and start earning
-</Card>
+{GRANTS_ACCEPTING_APPLICATIONS ? (
+  <Card title="Apply Now" icon="rocket" href={GRANT_APPLICATION_FORM_URL}>
+    Submit your proposal and start earning
+  </Card>
+) : (
+  <Card title="List Your Tool" icon="code" href="https://ctxprotocol.com/contribute">
+    Ship permissionlessly and earn 90% of usage fees
+  </Card>
+)}

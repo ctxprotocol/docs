@@ -1,0 +1,116 @@
+---
+title: "Grants Batch 1 Closed — Demand-Side Focus"
+description: "Developer grant applications paused while we grow paying users. Permissionless listing stays open. Revert checklist included for Batch 2."
+---
+
+<Note>
+  **May 30, 2026.** Batch 1 grant applications are closed. The marketplace
+  has enough supply-side tools (~20–40) for now; we are focused on
+  demand-side user growth. Permissionless contributor listing is unchanged.
+</Note>
+
+## What changed
+
+| Surface | Change |
+|---------|--------|
+| [`grants.mdx`](/grants) | Added `GRANTS_ACCEPTING_APPLICATIONS = false` toggle; closed banner; Apply CTAs hidden; permissionless CTAs promoted |
+| `context-sdk/README.md` | Replaced open-grant hero with generic contributor section linking to grants page |
+| `context-sdk-python/README.md` | Same as TypeScript SDK README |
+| [`guides/build-tools.mdx`](/guides/build-tools) | Softened Tier S grant line to “future grant batches” |
+| **Google Form** (manual) | Must turn **off** “Accepting responses” — see checklist below |
+
+RFB tables, funding tiers, and the archived “How to Apply” steps stay on the grants page as contributor reference. Nothing was deleted.
+
+---
+
+## How to reopen grants (Batch 2+)
+
+When you are ready to accept applications again, do **all** of these steps:
+
+### 1. Google Form (physical stop — not in git)
+
+1. Open the [grant application form](https://docs.google.com/forms/d/e/1FAIpQLSfM702YEtiCK5o22bA6hbM7cke7psDbfx4t9-Oj7OsnPjDhtA/viewform) in Google Forms (edit mode).
+2. Go to the **Responses** tab.
+3. Turn **Accepting responses** **ON**.
+4. Optional: edit the closed-message text or update the form description for the new batch.
+
+Same form URL — no link changes needed anywhere in the repo.
+
+### 2. Docs toggle (marketing stop)
+
+In [`grants.mdx`](/grants), near the top of the file:
+
+```tsx
+export const GRANTS_ACCEPTING_APPLICATIONS = false;
+```
+
+Change to:
+
+```tsx
+export const GRANTS_ACCEPTING_APPLICATIONS = true;
+```
+
+That automatically restores:
+
+- Top “Apply Now” card
+- “Submit Proposal” link in How to Apply → Step 2
+- Bottom “Apply Now” card on Ready to Build?
+- Hides the Batch 1 closed `<Warning>` banner
+- Hides the Grant Pool / How to Apply closed `<Note>` blocks
+
+Deploy docs after merging.
+
+### 3. SDK READMEs (optional)
+
+When Batch 1 closed, READMEs were changed to a **generic contributor blurb** that always links to the grants page for batch status. You do **not** need to change READMEs to reopen Batch 2 — the grants page is the source of truth.
+
+If you want the loud “\$10,000 Developer Grant Program” hero back in READMEs, restore this block in both:
+
+- `context-sdk/README.md`
+- `context-sdk-python/README.md`
+
+```markdown
+### 💰 $10,000 Developer Grant Program
+
+We're funding the initial supply of MCP Tools for the Context Marketplace. **Become a Data Broker.**
+
+- **🛠️ Build:** Create an MCP Server using this SDK (Solana data, Trading tools, Scrapers, etc.)
+- **📦 List:** Publish it to the Context Registry
+- **💵 Earn:** Get a **$250–$1,000 Grant** + earn USDC every time an agent queries your tool
+
+👉 [**View Open Bounties & Apply Here**](https://docs.ctxprotocol.com/grants)
+```
+
+(Git history: commit that closed Batch 1 — search for `GRANTS_ACCEPTING_APPLICATIONS` or “Batch 1 Closed”.)
+
+### 4. Verify before announcing
+
+- [ ] Grants page shows “Apply Now” and no closed banner
+- [ ] Google Form accepts a test submission
+- [ ] `ctxprotocol.com/contribute` still works (unchanged — permissionless path)
+- [ ] Email `grants@ctxprotocol.com` is monitored for new applications
+
+---
+
+## How to close a batch again
+
+Reverse the reopen steps:
+
+1. Google Form → **Accepting responses** **OFF** (set a custom closed message pointing to [ctxprotocol.com/contribute](https://ctxprotocol.com/contribute))
+2. `grants.mdx` → `GRANTS_ACCEPTING_APPLICATIONS = false`
+3. Deploy docs
+
+---
+
+## Files touched (Batch 1 close)
+
+```
+context-docs/grants.mdx
+context-docs/guides/build-tools.mdx
+context-docs/changelog/2026-05-30-grants-batch-1-closed.mdx   ← this file
+context-docs/docs.json                                         ← changelog nav entry
+context-sdk/README.md
+context-sdk-python/README.md
+```
+
+**Not in git:** Google Form “Accepting responses” toggle.
