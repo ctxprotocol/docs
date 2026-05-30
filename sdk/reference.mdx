@@ -481,7 +481,7 @@ import type {
   QueryDeveloperTrace,
   QueryOrchestrationMetrics,
   QueryResponseEnvelope,
-  QueryClarificationPayload,
+  QueryComputedArtifact,
   QueryCapabilityMissPayload,
   QueryAssumptionMetadata,
   ContextErrorCode,
@@ -614,20 +614,20 @@ interface QueryResult {
   toolsUsed: QueryToolUsage[];          // [{ id, name, skillCalls }]
   cost: QueryCost;                      // { modelCostUsd, toolCostUsd, totalCostUsd }
   durationMs: number;
-  data?: unknown;                       // Optional execution data (includeData=true)
+  data?: unknown;                       // Raw fetched tool data (includeData=true; default for evidence_only)
   dataUrl?: string;                     // Optional blob URL (includeDataUrl=true)
+  computedArtifacts?: QueryComputedArtifact[]; // Charts/dataframes computed by code_interpreter
   developerTrace?: QueryDeveloperTrace; // Optional runtime trace + diagnostics
   orchestrationMetrics?: QueryOrchestrationMetrics; // Optional first-pass metrics
   responseShape?: "answer" | "answer_with_evidence" | "evidence_only";
   summary?: string;
   evidence?: QueryResponseEnvelope["evidence"];
-  artifacts?: QueryResponseEnvelope["artifacts"];
+  artifacts?: QueryResponseEnvelope["artifacts"];   // Provenance: source refs + dataset handles
   view?: QueryResponseEnvelope["view"];
   freshness?: QueryResponseEnvelope["freshness"];
   confidence?: QueryResponseEnvelope["confidence"];
   usage?: QueryResponseEnvelope["usage"];
-  outcomeType: "answer" | "clarification_required" | "capability_miss";
-  clarification?: QueryClarificationPayload;
+  outcomeType: "answer" | "capability_miss";
   capabilityMiss?: QueryCapabilityMissPayload;
   assumptionMade?: QueryAssumptionMetadata;
 }

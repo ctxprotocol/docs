@@ -74,7 +74,7 @@ While optional in vanilla MCP, Context requires structured outputs because:
 When a user asks a complex question (e.g., *"Is it profitable to arb Uniswap vs Aave?"*), the managed runtime handles everything between the question and the answer. Callers only see the public contract; the server owns orchestration.
 
 <Note>
-For the public contract — inputs, response shapes, clarification behavior, and debugging surfaces — see [Query and Chat Runtime](/architecture/query-chat-agentic-flow).
+For the public contract — inputs, response shapes, and debugging surfaces — see [Query and Chat Runtime](/architecture/query-chat-agentic-flow).
 </Note>
 
 <Steps>
@@ -82,7 +82,7 @@ For the public contract — inputs, response shapes, clarification behavior, and
     The runtime discovers relevant tools from the marketplace, or uses the ones you pin.
   </Step>
   <Step title="Resolve ambiguity if needed">
-    If the prompt could mean materially different things, the runtime returns `clarification_required`, auto-resolves with a disclosed assumption, or returns `capability_miss` when the marketplace genuinely can't answer.
+    If the prompt is under-specified, the runtime proceeds with the best grounded interpretation and discloses the assumption it made, or returns `capability_miss` when the marketplace genuinely can't answer.
   </Step>
   <Step title="Execute and verify">
     The runtime issues tool calls, preserves full returned collections, and recovers in-line when a call fails or drifts off-domain.

@@ -21,7 +21,7 @@ You should expect identical answer behavior across both. Transport, streaming, a
     Every paid response is assembled from tool results the runtime actually retrieved. If the marketplace can't answer, the runtime returns `capability_miss` instead of fabricating numbers.
   </Card>
   <Card title="Honest ambiguity" icon="question">
-    If a prompt has multiple materially different interpretations, the runtime either returns `clarification_required` with options or (in `auto` mode) proceeds with the best option and discloses the assumption it made.
+    If a prompt is under-specified, the agentic runtime proceeds with the best grounded interpretation and discloses any assumption it made in the answer. It returns `capability_miss` only when the marketplace genuinely can't answer.
   </Card>
   <Card title="Full collection preservation" icon="list-check">
     Comparison queries return the complete relevant set rather than a cherry-picked subset, so your model can reason over the whole collection.
@@ -42,7 +42,7 @@ Both surfaces expose the same underlying runtime through different wire shapes. 
 | `query` | `/api/v1/query` | Natural-language question to answer |
 | `tools` | `/api/v1/query` | Optional pinned tool shortlist (overrides marketplace discovery) |
 | `responseShape` | `/api/v1/query` | `answer`, `answer_with_evidence`, or `evidence_only` |
-| `clarificationPolicy` | `/api/v1/query`, `/api/chat` | `return` (surface clarifications to the caller) or `auto` (server picks the best option and discloses the assumption) |
+| `includeData` | `/api/v1/query` | Inline raw fetched tool data in the response (defaults to `true` for `evidence_only`) |
 | `answerModelId` | `/api/v1/query` | Public model knob for the final synthesis step |
 | `selectedChatModel` | `/api/chat` | Same role as `answerModelId`, on the chat wire format |
 | `includeDeveloperTrace` | `/api/v1/query` | Opt in to structured diagnostics for your own debugging |
@@ -57,9 +57,13 @@ All other runtime behavior — discovery, selection, ambiguity resolution, execu
 | --- | --- | --- |
 | `answer` | Backward-compatible callers | A single natural-language answer string |
 | `answer_with_evidence` | First-party chat, agents that want both | Natural-language answer **plus** structured evidence, freshness, confidence, and optional view payloads |
-| `evidence_only` | External agents that don't need prose | Structured evidence package without a synthesized answer |
+| `evidence_only` | External agents that don't need prose | Raw fetched data, computed artifacts, and provenance — without a synthesized prose answer |
 
-When the runtime returns `capability_miss` or `clarification_required`, the response still carries typed fields your client can branch on — no prose-parsing required.
+In `evidence_only` mode the raw fetched tool data is included by default (`includeData` defaults to `true`), so your agent harness receives the underlying data plus structured artifacts to reason over directly.
+
+**Artifacts vs. computed artifacts.** Structured charts and dataframes the runtime computes (for example, via the managed Python `code_interpreter`) are returned in `computedArtifacts`. The `artifacts` field carries provenance metadata — source references and dataset handles for the evidence behind the answer.
+
+When the runtime returns `capability_miss`, the response still carries typed fields your client can branch on — no prose-parsing required.
 
 ---
 
@@ -72,7 +76,6 @@ The runtime contract is identical across surfaces. What differs:
 | Transport | JSON response | Streamed UI events |
 | Session state | Caller-managed | Server-managed chat thread |
 | Auth | API key | User wallet session |
-| Clarification default | `return` | Configurable toggle: off → `return`, on → `auto` |
 
 If an answer renders correctly through `/api/v1/query` but breaks in chat, the chat adapter is usually the first place to look — the shared runtime is the same on both sides.
 

@@ -122,7 +122,6 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 |-----------|------|----------|-------------|
 | `question` | string | Yes | The question to answer (1–4000 chars) |
 | `toolIds` | string[] | No | Restrict query to specific tool UUIDs |
-| `clarificationPolicy` | `"return"` \| `"auto"` \| `"error"` | No | How to handle ambiguous queries (`auto` is the default for headless MCP use) |
 | `favoritesOnly` | boolean | No | Override the account-level Favorites-Only Auto Mode for this request |
 
 **Example prompt to your agent:**
@@ -208,7 +207,7 @@ Your wallet balance and spending cap apply identically.
   <Accordion title="Session expired">
     Sessions expire after 30 minutes of inactivity. Your MCP client will re-initialize automatically on the next request.
   </Accordion>
-  <Accordion title="Query returns clarification_required">
-    The query was ambiguous. Either rephrase or set `clarificationPolicy: "auto"` to let the engine resolve it.
+  <Accordion title="Query returns capability_miss">
+    No marketplace tool can satisfy the request. Rephrase to target a supported venue or capability, or check the suggested rewrites in the response.
   </Accordion>
 </AccordionGroup>

@@ -489,7 +489,7 @@ from ctxprotocol import (
     QueryResponseEnvelopeFreshness,
     QueryResponseEnvelopeConfidence,
     QueryResponseEnvelopeUsage,
-    QueryClarificationPayload,
+    QueryComputedArtifact,
     QueryCapabilityMissPayload,
     QueryAssumptionMetadata,
     ContextErrorCode,
@@ -598,18 +598,18 @@ class QueryResult(BaseModel):
     duration_ms: int
     data: Any | None                     # Optional execution data (include_data=True)
     data_url: str | None                 # Optional blob URL (include_data_url=True)
+    computed_artifacts: list[QueryComputedArtifact] | None  # Charts/dataframes from code_interpreter
     developer_trace: QueryDeveloperTrace | None  # Optional runtime trace + diagnostics
     orchestration_metrics: QueryOrchestrationMetrics | None  # Optional first-pass metrics
     response_shape: Literal["answer", "answer_with_evidence", "evidence_only"] | None
     summary: str | None
     evidence: QueryResponseEnvelopeEvidence | None
-    artifacts: QueryResponseEnvelopeArtifacts | None
+    artifacts: QueryResponseEnvelopeArtifacts | None    # Provenance: source refs + dataset handles
     view: QueryResponseEnvelopeView | None
     freshness: QueryResponseEnvelopeFreshness | None
     confidence: QueryResponseEnvelopeConfidence | None
     usage: QueryResponseEnvelopeUsage | None
-    outcome_type: Literal["answer", "clarification_required", "capability_miss"]
-    clarification: QueryClarificationPayload | None
+    outcome_type: Literal["answer", "capability_miss"]
     capability_miss: QueryCapabilityMissPayload | None
     assumption_made: QueryAssumptionMetadata | None
 ```

@@ -235,7 +235,7 @@ Use standard JSON Schema keys in `inputSchema` properties to guide argument gene
 - **`default`:** fallback value the AI uses when the user doesn't specify one (e.g., `"default": "BTC"`)
 - **`examples`:** sample values the AI references to understand valid inputs (e.g., `"examples": ["BTC", "ETH", "SOL"]`)
 
-The platform reads these fields when generating arguments for your methods, when grounding clarifications, and when selecting the right method for a query. Without strong schema hints, the runtime has to guess valid values from the description alone, leading to more retries and lower first-pass success rates.
+The platform reads these fields when generating arguments for your methods and when selecting the right method for a query. Without strong schema hints, the runtime has to guess valid values from the description alone, leading to more retries and lower first-pass success rates.
 
 Do not add custom `_meta.inputExamples`; `_meta` should only carry tool metadata such as pricing, context requirements, and rate-limit hints.
 </Tip>
