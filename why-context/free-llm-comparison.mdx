@@ -1,15 +1,15 @@
 ---
 title: "Grounded vs. Synthetic: One Question, Two Answers"
-description: "The same hard BTC order-flow question, sent to a top frontier model with no tools and to Context's grounded pipeline. The two verdicts disagree — because one of them invented the data."
+description: "The same hard BTC order-flow question, sent to a top frontier model with no tools and to Context's grounded pipeline. The two verdicts disagree because one of them invented the data."
 ---
 
 Free LLMs are smart. But when a question needs **live market data they can't
-see**, they don't refuse — they confidently fill in the numbers and answer
+see**, they don't refuse. They confidently fill in the numbers and answer
 anyway.
 
 Below is the *same* question sent two ways: to a top frontier model (Gemini 3.1
 Pro, no tools) and to Context's grounded pipeline. Read the two verdicts. They
-disagree — and the reason they disagree is the entire point of Context.
+disagree, and the reason they disagree is the entire point of Context.
 
 <CardGroup cols={2}>
   <Card title="Gemini 3.1 Pro · no tools" icon="robot" color="#d48a8a">
@@ -72,7 +72,7 @@ one dashboard chart plus a clear trade-setup verdict.
 
 With no access to the live feed, the model **accepted the prompt's framing**
 ("steady OI climb") and reasoned from there. It produced a confident,
-well-structured analysis — and then handed back a Python engine for you to run
+well-structured analysis, and then handed back a Python engine for you to run
 yourself, because it never had the data.
 
 > **Trade-Setup Verdict: SHORT SQUEEZE (Bullish Reversal)**
@@ -87,7 +87,7 @@ OI was rising.
 
 <Accordion title="Gemini's full response (narrative + Python engine)" icon="code">
 The model returned a multi-section narrative followed by a complete
-`pandas` / `scipy` / `matplotlib` script — roughly 100 lines — ending with:
+`pandas` / `scipy` / `matplotlib` script (roughly 100 lines) ending with:
 
 ```python
 # To run: generate_orderflow_dashboard(velo_btc_df)
@@ -106,7 +106,7 @@ Context ran the live pipeline against the real Velo feed, computed every metric
 the prompt asked for, and returned the **rendered dashboard** plus exact
 numbers.
 
-<Frame caption="BTC order-flow dashboard — 7-day Velo aggregate, 1h granularity, built from live data.">
+<Frame caption="BTC order-flow dashboard: 7-day Velo aggregate, 1h granularity, built from live data.">
   <img
     src="https://7rs12nlupksbkzdm.public.blob.vercel-storage.com/python-sandbox/charts/b73d5c0a89f16c39b922f8ad58c5a58d59cdc1df49faa77210687825adf51052.png"
     alt="BTC order-flow dashboard: price vs open interest, funding rate with hourly deltas, normalized spot vs perp CVD, and rolling adjusted-slope panels"
@@ -128,15 +128,15 @@ numbers.
 ### The grounded read
 
 - **Regime (OI matrix):** flat price + falling OI + below-average volume lands
-  on **weak uptrend / short-covering** — *not* the new-money strong uptrend a
+  on **weak uptrend / short-covering**, not the new-money strong uptrend a
   bullish squeeze would need.
 - **Absorption:** spot CVD trending up (+$8.67M/hr) while perp CVD is
   flat-to-negative = real **spot absorption** of perp-driven selling.
 - **Who's trapped:** earlier shorts are under pressure (−$219M sell-liq
   imbalance, funding still positive), but mid-week longs are exposed because OI
-  is *declining* — no fresh margin confirms the move.
+  is *declining*, so no fresh margin confirms the move.
 
-> **Verdict: Neutral / Mixed — lean cautiously bullish on absorption, but wait
+> **Verdict: Neutral / Mixed: lean cautiously bullish on absorption, but wait
 > for confirmation.** Watch for a reclaim of local highs with *simultaneous OI
 > expansion* and funding dipping toward zero. Until then, this is a
 > wait-and-confirm environment, not a high-conviction entry.
@@ -158,7 +158,7 @@ numbers.
   </Card>
   <Card title="Grounded answers check the premise" icon="circle-check" color="#10B981">
     Context pulled the live data, found OI was actually down 4.35%, and the
-    verdict changed. The data is the deliverable — including the chart you can
+    verdict changed. The data is the deliverable, including the chart you can
     act on.
   </Card>
 </CardGroup>
