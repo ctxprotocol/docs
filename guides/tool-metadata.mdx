@@ -590,7 +590,7 @@ Context runs **one marketplace with two modes**:
 | **Execute** | Your app/agent (used via `client.tools.execute()` in the SDK) | Per method call (~$0.001) | Raw structured data with session spending limit visibility |
 
 <Info>
-SDK consumers can use **both** modes. Use `client.query.run()` when you want Context to be the librarian (`answer`, `answer_with_evidence`, or `evidence_only`, pay-per-response). Use `client.tools.execute()` when your agent is the librarian (raw data, per-call pricing, spending limits). See [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference).
+SDK consumers can use **both** modes. Use `client.query.run()` when you want Context to be the librarian (`answer_with_evidence` or `evidence_only`, pay-per-response). Use `client.tools.execute()` when your agent is the librarian (raw data, per-call pricing, spending limits). See [TypeScript SDK](/sdk/reference) or [Python SDK](/sdk/python-reference).
 </Info>
 
 Execute pricing is typically **~1/100 of listing response price** because a single Query response can invoke up to 100 method calls internally. When developers pay per call, they need proportionally lower prices.

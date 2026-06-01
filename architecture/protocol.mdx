@@ -88,7 +88,7 @@ For the public contract — inputs, response shapes, and debugging surfaces — 
     The runtime issues tool calls, preserves full returned collections, and recovers in-line when a call fails or drifts off-domain.
   </Step>
   <Step title="Ground the answer">
-    Verified tool output is composed into the response contract you asked for: `answer`, `answer_with_evidence`, or `evidence_only`.
+    Verified tool output is composed into the response contract you asked for: `answer_with_evidence` or `evidence_only`.
   </Step>
   <Step title="Settle">
     After delivery, payment is settled in the background via `ContextRouter` — deferred settlement in USDC on Base. Tool fees are waived if execution fails.
@@ -299,11 +299,11 @@ The SDKs expose two modes, reflecting Context's role as both a response marketpl
 | Mode | Endpoint | Payment Model | Settlement Timing | What You Get |
 |------|----------|---------------|-------------------|--------------|
 | **Execute** (`client.tools.execute()`) | `/api/v1/tools/execute` | Per execute call | Session accrual + automatic batch payment | Raw data + explicit spending limit |
-| **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | Managed librarian output: `answer`, `answer_with_evidence`, or `evidence_only` from the full agentic pipeline |
+| **Query** (`client.query.run()`) | `/api/v1/query` | Pay-per-response | Deferred (post-response) | Managed librarian output: `answer_with_evidence` or `evidence_only` from the full agentic pipeline |
 
 **Execute** is for precision: you call specific methods with explicit execute pricing and get raw data + session spend visibility. Good for custom pipelines and deterministic orchestration.
 
-**Query** is for intelligence: you ask a natural-language question, and the managed runtime handles everything — tool discovery, ambiguity resolution, multi-tool execution (up to 100 MCP calls per response turn), and settlement. One flat fee, with a response contract that can stay backward-compatible (`answer`) or return structured evidence packages (`answer_with_evidence`, `evidence_only`). This is the same managed runtime that powers the client app.
+**Query** is for intelligence: you ask a natural-language question, and the managed runtime handles everything — tool discovery, ambiguity resolution, multi-tool execution (up to 100 MCP calls per response turn), and settlement. One flat fee, with a structured response contract: `answer_with_evidence` (prose plus grounding, chat parity) or `evidence_only` (raw data, computed artifacts, and provenance for agent harnesses). This is the same managed runtime that powers the client app.
 
 <Info>
 **Why offer both?** Different consumers have different needs. An agent building a custom trading strategy wants raw data and full control (Execute). An agent answering user questions wants curated intelligence without managing orchestration (Query). Context serves both.

@@ -15,7 +15,7 @@ If you want the public contract for Context's managed Query runtime (inputs, res
 
 | Use this surface | When you want | What comes back |
 |------------------|---------------|-----------------|
-| **Query** | Context to act as the librarian | `answer`, `answer_with_evidence`, or `evidence_only` |
+| **Query** | Context to act as the librarian | `answer_with_evidence` or `evidence_only` |
 | **Execute** | Your own agent to own the loop | Raw typed method outputs plus execute-session spend metadata |
 
 The first-party chat app is just a client of the same Query contract external SDK users get. If you want the server-managed answer package, use Query. If you want direct primitives for your own loop, use Execute.
@@ -48,9 +48,8 @@ print(answer.evidence.facts if answer.evidence else None)
 
 The managed runtime handles tool discovery, ambiguity resolution, multi-tool execution, and grounding. It returns either:
 
-- a backward-compatible prose `answer`
-- `answer_with_evidence` for human-facing premium answers
-- `evidence_only` for agent-facing evidence packages without depending on prose synthesis
+- `answer_with_evidence` for human-facing premium answers (default, chat parity)
+- `evidence_only` for agent-facing evidence packages without prose synthesis
 
 The structured envelope can also include `marketIntelligence`, `view.rows`, `view.columns`, and the public controller fields `stopReason`, `issueClass`, `actionsTaken`, and `controller`.
 
