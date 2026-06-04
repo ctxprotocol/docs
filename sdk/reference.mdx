@@ -315,7 +315,7 @@ Run an agentic query. The managed runtime handles tool discovery, ambiguity reso
 | `favoritesOnly` | `boolean` | No | Override the account-level Favorites-Only Auto Mode for this request |
 | `agentModelId` | `string` | No | Main librarian agent model ID (default: `kimi-k2.6-model`) |
 | `responseShape` | `"answer_with_evidence" \| "evidence_only"` | No | Structured response mode (default: `answer_with_evidence`). |
-| `includeData` | `boolean` | No | Include execution data inline in the response |
+| `includeData` | `boolean` | No | Include bounded execution data inline. Large payloads return a preview plus full-data references |
 | `includeDataUrl` | `boolean` | No | Persist execution data to blob and return a URL |
 | `includeDeveloperTrace` | `boolean` | No | Include optional developer trace + orchestration diagnostics |
 | `idempotencyKey` | `string` | No | Optional idempotency key (UUID recommended) |
@@ -375,7 +375,7 @@ Query is Context's managed librarian contract. You can choose how much structure
 | `responseShape` | Best for | Behavior |
 |-----------------|----------|----------|
 | `answer_with_evidence` | First-party chat, human-facing apps (default) | Prose answer plus structured evidence, artifacts, freshness, confidence, and usage metadata |
-| `evidence_only` | External agents, downstream automation | Raw fetched data, computed artifacts, and provenance without prose synthesis |
+| `evidence_only` | External agents, downstream automation | Bounded evidence, computed artifacts, and full-data references without prose synthesis |
 
 The first-party chat app defaults to `answer_with_evidence`, but it is using the same Query contract you get in the SDK.
 
@@ -416,7 +416,7 @@ When retrieval-first rollout is enabled in the deployment, the query runtime can
 - Stage artifacts are emitted in request-scoped internal storage (selection, scout, execution, synthesis).
 - Retrieval primitives (path lookup, array windows/sampling, keyword slices, top-K relevance) are used to build a bounded context pack from canonical execution data.
 - Final synthesis still passes through the existing synthesis safety contract.
-- `includeData` and `includeDataUrl` continue to reference the same canonical execution dataset used by retrieval-first assembly.
+- `includeData` returns a bounded inline preview when needed, and `includeDataUrl`/`artifacts.canonicalDataRef` reference the same canonical execution dataset used by retrieval-first assembly.
 
 #### `client.query.stream(options)`
 
@@ -613,7 +613,7 @@ interface QueryResult {
   toolsUsed: QueryToolUsage[];          // [{ id, name, skillCalls }]
   cost: QueryCost;                      // { modelCostUsd, toolCostUsd, totalCostUsd }
   durationMs: number;
-  data?: unknown;                       // Raw fetched tool data (includeData=true; default for evidence_only)
+  data?: unknown;                       // Bounded data/preview when includeData=true
   dataUrl?: string;                     // Optional blob URL (includeDataUrl=true)
   computedArtifacts?: QueryComputedArtifact[]; // Charts/dataframes computed by code_interpreter
   developerTrace?: QueryDeveloperTrace; // Optional runtime trace + diagnostics

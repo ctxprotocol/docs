@@ -125,8 +125,8 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 | `responseShape` | string | No | `answer_with_evidence` (default) or `evidence_only`. See [Answer vs evidence](#answer-vs-evidence) |
 | `toolIds` | string[] | No | Restrict query to specific tool UUIDs (Manual Mode). Omit for Auto Mode discovery and selection |
 | `favoritesOnly` | boolean | No | Override the account-level Favorites-Only Auto Mode for this request |
-| `includeData` | boolean | No | Include raw execution data inline. Defaults to true for `evidence_only`, false for `answer_with_evidence` |
-| `includeDataUrl` | boolean | No | Persist the full execution data and return a URL, keeping large payloads out of your context window |
+| `includeData` | boolean | No | Include bounded execution data inline. Large payloads return a preview plus full-data references |
+| `includeDataUrl` | boolean | No | Persist the full execution data and return a URL, keeping large payloads out of your context window. Defaults to true in the ctxprotocol MCP tool |
 | `includeDeveloperTrace` | boolean | No | Include a machine-readable runtime trace (tool selection, retries, loops) for debugging |
 
 <Note>
@@ -162,9 +162,9 @@ For natural-language questions, start with `context_query` and answer from that 
 | Shape | Returns | Use when |
 |-------|---------|----------|
 | `answer_with_evidence` (default) | A written answer plus structured `evidence`, `summary`, `artifacts`, `freshness`, `confidence`, and `usage` | You want a ready-to-read answer, or chat-parity output |
-| `evidence_only` | Raw `data`, `computedArtifacts`, and `grounding`/`evidence` with no prose | Your own agent (Cursor, Claude Code) is the synthesizer and wants the facts to reason over itself |
+| `evidence_only` | Bounded `evidence`, optional bounded `data`, `computedArtifacts`, and full-data references with no prose | Your own agent (Cursor, Claude Code) is the synthesizer and wants grounded facts plus artifact/data handles |
 
-For `evidence_only`, raw `data` is returned inline by default. For large payloads, set `includeDataUrl: true` (and optionally `includeData: false`) to keep your context window clean and fetch the full dataset from the returned URL.
+For `evidence_only`, unbounded raw data is not returned inline by default. Use the default evidence envelope and `computedArtifacts` inline, then fetch the full dataset from `dataUrl`/`artifacts.canonicalDataRef` when needed. If you set `includeData: true`, large payloads are still capped and returned as a truncation preview.
 
 <Note>
 The full machine-readable payload is always in the MCP `structuredContent` field. The text content mirrors it, so hosts that only forward text still receive the evidence. If the response includes chart artifacts, the text content also includes markdown image links so agents can surface the charts to users.

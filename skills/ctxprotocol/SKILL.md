@@ -28,11 +28,11 @@ Access live, premium data through the Context marketplace over MCP. Context is a
 Set `responseShape` based on who writes the final answer:
 
 - `answer_with_evidence` (default): returns a written answer plus structured evidence. Use when you want a ready-to-present answer.
-- `evidence_only`: returns raw `data`, `computedArtifacts`, and `grounding` with no prose. Use this when you (the coding agent) will reason over the facts yourself and write your own answer for the user.
+- `evidence_only`: bounded structured grounding with no prose synthesis. Use it when your agent will write the final answer itself.
 
 Tips:
 
-- For large results, pass `includeDataUrl: true` (optionally with `includeData: false`) to keep your context window clean and fetch the dataset from the returned URL.
+- Avoid inline `includeData` unless you need a bounded preview. Use `includeDataUrl: true` when you need a fetchable full-data reference.
 - You usually do not need a model parameter; omitting `agentModelId` uses `kimi-k2.6-model`. If the user explicitly asks for a different quality/cost tradeoff, inspect the MCP schema enum and pass one of its `agentModelId` values. Tool selection and depth remain managed by the runtime.
 - Pass `toolIds` only to restrict the query to specific tools returned by `context_discover` in query mode.
 - Pass `includeDeveloperTrace: true` when you need to debug why the runtime chose certain tools.

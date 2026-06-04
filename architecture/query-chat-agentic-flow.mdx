@@ -42,7 +42,7 @@ Both surfaces expose the same underlying runtime through different wire shapes. 
 | `query` | `/api/v1/query` | Natural-language question to answer |
 | `tools` | `/api/v1/query` | Optional pinned tool shortlist (overrides marketplace discovery) |
 | `responseShape` | `/api/v1/query` | `answer_with_evidence` (default) or `evidence_only` |
-| `includeData` | `/api/v1/query` | Inline raw fetched tool data in the response (defaults to `true` for `evidence_only`) |
+| `includeData` | `/api/v1/query` | Optional bounded inline execution data. Large payloads return a preview plus full-data references |
 | `agentModelId` | `/api/v1/query` | Public model knob for the main librarian agent loop |
 | `selectedChatModel` | `/api/chat` | Legacy chat wire name for the same user-selected agent model |
 | `includeDeveloperTrace` | `/api/v1/query` | Opt in to structured diagnostics for your own debugging |
@@ -56,9 +56,9 @@ All other runtime behavior — discovery, selection, ambiguity resolution, execu
 | Shape | Who it's for | Contents |
 | --- | --- | --- |
 | `answer_with_evidence` | First-party chat, human-facing apps (default) | Natural-language answer **plus** structured evidence, freshness, confidence, and optional view payloads |
-| `evidence_only` | External agents that don't need prose | Raw fetched data, computed artifacts, and provenance — without a synthesized prose answer |
+| `evidence_only` | External agents that don't need prose | Bounded evidence, computed artifacts, and full-data references without a synthesized prose answer |
 
-In `evidence_only` mode the raw fetched tool data is included by default (`includeData` defaults to `true`), so your agent harness receives the underlying data plus structured artifacts to reason over directly.
+In `evidence_only` mode the agent harness receives the structured evidence package and computed artifacts without prose synthesis. Full execution data is referenced by `artifacts.canonicalDataRef` and, when requested, `dataUrl`; `includeData: true` adds a bounded preview rather than unbounded raw rows.
 
 **Artifacts vs. computed artifacts.** Structured charts and dataframes the runtime computes (for example, via the managed Python `code_interpreter`) are returned in `computedArtifacts`. The `artifacts` field carries provenance metadata — source references and dataset handles for the evidence behind the answer.
 
