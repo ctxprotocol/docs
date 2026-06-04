@@ -87,7 +87,7 @@ Provider/model behavior is frozen to the following rules:
 - Contributors may override provider, model, timeout, budget, and disable-switch behavior without changing helper call sites.
 - Billing is contributor BYOK only in this phase. Any extra model spend belongs to the contributor server.
 - The platform does **not** provide hosted judge routing, deferred judge reimbursement, or platform-funded model fallback in this rollout.
-- If a design spike or local validation run exercises a judge, use `glm-turbo-model` locally unless you are intentionally comparing models.
+- If a design spike or local validation run exercises a judge, use the platform default `kimi-k2.6-model` locally unless you are intentionally comparing models.
 
 ### Pricing Responsibility In Practice
 

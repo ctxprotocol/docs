@@ -50,6 +50,7 @@
             "group": "Use the SDK",
             "pages": [
               "sdk/mcp",
+              "sdk/mcp-skill",
               "sdk/agentic-pattern",
               "sdk/reference",
               "sdk/python-reference"

@@ -63,7 +63,7 @@ Add to your project's `.cursor/mcp.json` (or your global MCP settings):
 ```json
 {
   "mcpServers": {
-    "context-marketplace": {
+    "ctxprotocol": {
       "url": "https://www.ctxprotocol.com/api/mcp",
       "headers": {
         "Authorization": "Bearer sk_live_YOUR_KEY"
@@ -78,7 +78,7 @@ Restart Cursor. The three tools appear in your MCP tool list automatically.
 ### Claude Code
 
 ```bash
-claude mcp add --transport http context-marketplace https://www.ctxprotocol.com/api/mcp \
+claude mcp add --transport http ctxprotocol https://www.ctxprotocol.com/api/mcp \
   --header "Authorization: Bearer sk_live_YOUR_KEY"
 ```
 
@@ -89,7 +89,7 @@ Add to your project's `mcp.json` or pass via CLI:
 ```json
 {
   "mcpServers": {
-    "context-marketplace": {
+    "ctxprotocol": {
       "transport": "streamable-http",
       "url": "https://www.ctxprotocol.com/api/mcp",
       "headers": {
@@ -121,8 +121,17 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `question` | string | Yes | The question to answer (1–4000 chars) |
-| `toolIds` | string[] | No | Restrict query to specific tool UUIDs |
+| `agentModelId` | string | No | Advanced: choose the main librarian agent model for the merged execution/final-response loop |
+| `responseShape` | string | No | `answer_with_evidence` (default) or `evidence_only`. See [Answer vs evidence](#answer-vs-evidence) |
+| `toolIds` | string[] | No | Restrict query to specific tool UUIDs (Manual Mode). Omit for Auto Mode discovery and selection |
 | `favoritesOnly` | boolean | No | Override the account-level Favorites-Only Auto Mode for this request |
+| `includeData` | boolean | No | Include raw execution data inline. Defaults to true for `evidence_only`, false for `answer_with_evidence` |
+| `includeDataUrl` | boolean | No | Persist the full execution data and return a URL, keeping large payloads out of your context window |
+| `includeDeveloperTrace` | boolean | No | Include a machine-readable runtime trace (tool selection, retries, loops) for debugging |
+
+<Note>
+The runtime auto-selects execution depth and the internal tool-selection model per request. `agentModelId` is optional and controls the main librarian loop only; most callers can omit it. MCP clients can inspect the `agentModelId` schema enum to see valid slugs. The default is `kimi-k2.6-model`.
+</Note>
 
 **Example prompt to your agent:**
 
@@ -133,6 +142,33 @@ The response includes the answer text, structured evidence, and metadata.
 <Info>
 If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxprotocol.com/settings), `context_query` and `context_discover` inherit that account default automatically. Pass `favoritesOnly: true` or `favoritesOnly: false` on a single MCP call to override it. If you pass explicit `toolIds` to `context_query`, manual tool selection wins and favorites filtering is ignored.
 </Info>
+
+### Auto Mode vs Manual Mode
+
+`context_query` is the default one-call product surface:
+
+- **Auto Mode:** omit `toolIds`. The runtime runs marketplace discovery, selects tools with its managed selector, executes the librarian loop, and returns grounded output.
+- **Manual Mode:** pass `toolIds` from `context_discover`. The runtime skips broad marketplace selection and runs the same librarian loop using only those tools.
+- **Agent-driven mode:** use `context_discover` + `context_execute` only when your host agent wants to drive exact method calls and synthesis itself.
+
+### Answer vs evidence
+
+`responseShape` controls whether Context adds a prose synthesis layer on top of the grounded result. Both shapes run the same managed runtime (discover, select, execute, ground); they differ only in what comes back.
+
+| Shape | Returns | Use when |
+|-------|---------|----------|
+| `answer_with_evidence` (default) | A written answer plus structured `evidence`, `summary`, `artifacts`, `freshness`, `confidence`, and `usage` | You want a ready-to-read answer, or chat-parity output |
+| `evidence_only` | Raw `data`, `computedArtifacts`, and `grounding`/`evidence` with no prose | Your own agent (Cursor, Claude Code) is the synthesizer and wants the facts to reason over itself |
+
+For `evidence_only`, raw `data` is returned inline by default. For large payloads, set `includeDataUrl: true` (and optionally `includeData: false`) to keep your context window clean and fetch the full dataset from the returned URL.
+
+<Note>
+The full machine-readable payload is always in the MCP `structuredContent` field. The text content mirrors it, so hosts that only forward text still receive the evidence.
+</Note>
+
+### Ambiguity And Capability Misses
+
+When a request is ambiguous, the runtime answers with its best grounded assumption rather than blocking and may include `assumptionMade` in `structuredContent`. If no marketplace tool can satisfy the request, the response uses `outcomeType: "capability_miss"` with a typed `capabilityMiss` payload and suggested rewrites.
 
 ### context_execute
 
@@ -162,13 +198,17 @@ Search the marketplace to find tools before querying or executing.
 
 ## Example Workflows
 
-### Simple Q&A (one tool call)
+### Simple Q&A (Auto Mode)
 
 Tell your agent:
 
 > Use context_query to find out which Kalshi markets have the highest open interest today.
 
 The runtime discovers relevant tools, handles execution end-to-end, and returns a complete answer.
+
+### Pinned Tools (Manual Mode)
+
+For more control, first call `context_discover`, choose the relevant tool IDs, then call `context_query` with `toolIds`. Context still handles execution, grounding, and response assembly, but it stays within your pinned tool shortlist.
 
 ### Discovery -> Execute (agent-driven loop)
 
@@ -187,7 +227,7 @@ This mirrors the [Agentic Pattern](/sdk/agentic-pattern) but through MCP instead
 
 MCP requests use the same pricing as the SDK:
 
-- **Query**: pay-per-response (varies by tools used)
+- **Query**: pay-per-response (selector model + agent model + invoked tool costs)
 - **Execute**: pay-per-call (method-level pricing set by tool builders)
 - **Discover**: free
 
