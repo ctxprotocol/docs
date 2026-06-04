@@ -151,6 +151,10 @@ If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxp
 - **Manual Mode:** pass `toolIds` from `context_discover`. The runtime skips broad marketplace selection and runs the same librarian loop using only those tools.
 - **Agent-driven mode:** use `context_discover` + `context_execute` only when your host agent wants to drive exact method calls and synthesis itself.
 
+<Tip>
+For natural-language questions, start with `context_query` and answer from that result. It already performed managed discovery, execution, grounding, and chart/artifact generation. Avoid repeated `context_discover` calls or a follow-up `context_execute` verification pass unless you need raw method output, exact rows, or pinned tools.
+</Tip>
+
 ### Answer vs evidence
 
 `responseShape` controls whether Context adds a prose synthesis layer on top of the grounded result. Both shapes run the same managed runtime (discover, select, execute, ground); they differ only in what comes back.
@@ -163,7 +167,7 @@ If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxp
 For `evidence_only`, raw `data` is returned inline by default. For large payloads, set `includeDataUrl: true` (and optionally `includeData: false`) to keep your context window clean and fetch the full dataset from the returned URL.
 
 <Note>
-The full machine-readable payload is always in the MCP `structuredContent` field. The text content mirrors it, so hosts that only forward text still receive the evidence.
+The full machine-readable payload is always in the MCP `structuredContent` field. The text content mirrors it, so hosts that only forward text still receive the evidence. If the response includes chart artifacts, the text content also includes markdown image links so agents can surface the charts to users.
 </Note>
 
 ### Ambiguity And Capability Misses
@@ -173,6 +177,8 @@ When a request is ambiguous, the runtime answers with its best grounded assumpti
 ### context_execute
 
 Call a specific tool method with explicit arguments. Useful when your agent already knows which tool it wants.
+
+Use `context_discover` with `mode: "execute"` before calling `context_execute`. Methods surfaced by `context_query` grounding or query-mode discovery are not necessarily direct-execute eligible.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
