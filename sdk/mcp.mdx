@@ -152,16 +152,19 @@ If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxp
 `context_query` is the default one-call product surface:
 
 - **Auto Mode:** omit `toolIds`. The runtime runs marketplace discovery, selects tools with its managed selector, executes the librarian loop, and returns grounded output.
-- **Manual Mode:** pass `toolIds` from `context_discover`. The runtime skips broad marketplace selection and runs the same librarian loop using only those tools.
+- **Named-provider Auto Mode:** if a normal natural-language question names providers or venues, keep those names in the `question` text and still omit `toolIds`. For example, "using Coinglass and Velo" should usually stay Auto Mode unless the user explicitly asks to pin tools.
+- **Manual Mode:** pass `toolIds` from `context_discover` only when you explicitly want to pin/inspect tools or bypass broad marketplace selection. The runtime skips broad marketplace selection and runs the same librarian loop using only those tools.
 - **Agent-driven mode:** use `context_discover` + `context_execute` only when your host agent wants to drive exact method calls and synthesis itself.
 
 <Tip>
-For natural-language questions, start with `context_query` and answer from that result. It already performed managed discovery, execution, grounding, and chart/artifact generation. Avoid repeated `context_discover` calls or a follow-up `context_execute` verification pass unless you need raw method output, exact rows, or pinned tools.
+For natural-language questions, start with `context_query` and answer from that result. It already performed managed discovery, selection, execution, grounding, and chart/artifact generation. Avoid `context_discover`, artifact fetching, or a follow-up `context_execute` verification pass unless you need raw method output, exact rows, or explicitly pinned tools.
 </Tip>
 
 ### Async Query Jobs
 
-Some marketplace questions are slow: multi-tool analysis, chart generation, long historical windows, and large data exports can exceed an MCP host's direct tool-call window. Context handles this with durable query jobs.
+Some marketplace questions are slow: multi-tool analysis, chart generation, long historical windows, large data exports, and code-interpreter post-processing can exceed an MCP host's direct tool-call window. Context handles this with durable query jobs: the backend librarian runtime keeps running discovery, tool calls, Python/code-interpreter work, chart generation, grounding, and synthesis after the initial MCP call returns a `jobId`.
+
+This is the same managed Query runtime, not a lightweight background fetch. The `jobId` is just the handle your MCP client uses while Context continues the long-running work server-side.
 
 | Tool | When to use | Next step |
 |------|-------------|-----------|
@@ -174,7 +177,7 @@ Do not start another `context_query` for the same prompt after receiving a `jobI
 </Warning>
 
 <Tip>
-For Cursor specifically, keep the loop simple: one `context_query` or `context_query_start`, then `context_query_status`. If the status tool is not visible in Cursor's MCP tool list, refresh/restart the MCP server rather than falling back to file searches or shell polling.
+For Cursor specifically, keep the loop simple: one `context_query` or `context_query_start`, then `context_query_status`. While status is `running`, do not inspect local files, fetch blobs, or start a duplicate query. If the status tool is not visible in Cursor's MCP tool list, refresh/restart the MCP server rather than falling back to file searches or shell polling.
 </Tip>
 
 ### Answer vs evidence
@@ -215,6 +218,8 @@ Use `context_discover` with `mode: "execute"` before calling `context_execute`. 
 
 Search the marketplace to find tools before querying or executing.
 
+`context_discover` is free marketplace retrieval. It returns tool IDs plus `mcpTools` method metadata, but it does not run the managed selector used by `context_query` Auto Mode. Use it for catalog inspection, Manual Mode pinning, or direct execution prep. Do not call it first for a normal question just because the question mentions a provider name.
+
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | No | Search term |
@@ -237,6 +242,8 @@ The runtime discovers relevant tools, handles execution end-to-end, and returns 
 ### Pinned Tools (Manual Mode)
 
 For more control, first call `context_discover`, choose the relevant tool IDs, then call `context_query` with `toolIds`. Context still handles execution, grounding, and response assembly, but it stays within your pinned tool shortlist.
+
+Use this only when pinning is intentional. If the user simply asks "using Coinglass and Velo" as part of a natural-language analysis request, put that provider constraint in the `question` and keep Auto Mode.
 
 ### Discovery -> Execute (agent-driven loop)
 
