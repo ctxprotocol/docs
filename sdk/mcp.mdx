@@ -21,6 +21,10 @@ Context provides a remote MCP server that exposes the entire marketplace (Query,
 The MCP server wraps the same Query and Execute APIs that the TypeScript and Python SDKs use. Authentication is the same `sk_live_...` API key you already have.
 </Note>
 
+<Tip>
+Building a daily report, alert, or repeatable data pipeline? See [Agent Data Routines](/sdk/agent-routines) for the progression from natural-language Query to `evidence_only`, `dataUrl`, pinned tools, and optional direct execution.
+</Tip>
+
 ---
 
 ## Prerequisites
@@ -195,6 +199,10 @@ For `evidence_only`, unbounded raw data is not returned inline by default. Use t
 The full machine-readable payload is always in the MCP `structuredContent` field. The text content mirrors it, so hosts that only forward text still receive the evidence. If the response includes chart artifacts, the text content also includes markdown image links so agents can surface the charts to users.
 </Note>
 
+<Tip>
+For recurring agent-written reports, use `responseShape: "evidence_only"` with `includeDataUrl: true`. Let the host agent read the bounded evidence first, then fetch `dataUrl` only when it needs full rows for local computation.
+</Tip>
+
 ### Ambiguity And Capability Misses
 
 When a request is ambiguous, the runtime answers with its best grounded assumption rather than blocking and may include `assumptionMade` in `structuredContent`. If no marketplace tool can satisfy the request, the response uses `outcomeType: "capability_miss"` with a typed `capabilityMiss` payload and suggested rewrites.
@@ -244,6 +252,18 @@ The runtime discovers relevant tools, handles execution end-to-end, and returns 
 For more control, first call `context_discover`, choose the relevant tool IDs, then call `context_query` with `toolIds`. Context still handles execution, grounding, and response assembly, but it stays within your pinned tool shortlist.
 
 Use this only when pinning is intentional. If the user simply asks "using Coinglass and Velo" as part of a natural-language analysis request, put that provider constraint in the `question` and keep Auto Mode.
+
+### Recurring Agent Routine
+
+For daily reports, alerts, and repeated analyst jobs:
+
+1. Start with Auto Mode `context_query` to find a good question shape.
+2. Capture a Routine Recipe from the terminal result, including the exact question, assumptions, and `toolsUsed` names and IDs.
+3. Switch to `responseShape: "evidence_only"` and `includeDataUrl: true` when your host agent writes the report.
+4. Pin saved `toolsUsed` IDs as `toolIds` in `context_query` when the routine should stay within the same tool shortlist.
+5. Use `context_execute` only if `context_discover` with `mode: "execute"` returns an eligible method.
+
+See [Agent Data Routines](/sdk/agent-routines) for a copy-paste routine prompt and SDK example shape.
 
 ### Discovery -> Execute (agent-driven loop)
 

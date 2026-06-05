@@ -51,6 +51,7 @@
             "pages": [
               "sdk/mcp",
               "sdk/mcp-skill",
+              "sdk/agent-routines",
               "sdk/agentic-pattern",
               "sdk/reference",
               "sdk/python-reference"
