@@ -203,6 +203,14 @@ The full machine-readable payload is always in the MCP `structuredContent` field
 For recurring agent-written reports, use `responseShape: "evidence_only"` with `includeDataUrl: true`. Let the host agent read the bounded evidence first, then fetch `dataUrl` only when it needs full rows for local computation.
 </Tip>
 
+<Tip>
+For routine recipe capture, read `toolsUsed` from the terminal structured result before fetching raw data. Direct `context_query` returns it at `structuredContent.toolsUsed`; completed `context_query_status` returns it at `structuredContent.result.toolsUsed`. Text-only hosts should show "Routine recipe tool candidates from toolsUsed".
+</Tip>
+
+<Warning>
+Large `dataUrl` files should be fetched with the SDK, Node/Python `fetch`, `curl`, or another real HTTP client. Browser-style webpage fetchers and summarizers may truncate multi-MB JSON.
+</Warning>
+
 ### Ambiguity And Capability Misses
 
 When a request is ambiguous, the runtime answers with its best grounded assumption rather than blocking and may include `assumptionMade` in `structuredContent`. If no marketplace tool can satisfy the request, the response uses `outcomeType: "capability_miss"` with a typed `capabilityMiss` payload and suggested rewrites.
@@ -258,7 +266,7 @@ Use this only when pinning is intentional. If the user simply asks "using Coingl
 For daily reports, alerts, and repeated analyst jobs:
 
 1. Start with Auto Mode `context_query` to find a good question shape.
-2. Capture a Routine Recipe from the terminal result, including the exact question, assumptions, and `toolsUsed` names and IDs.
+2. Capture a Routine Recipe from the terminal structured result, including the exact question, assumptions, and `toolsUsed` names and IDs. Do not fetch `dataUrl` just to find tool IDs.
 3. Switch to `responseShape: "evidence_only"` and `includeDataUrl: true` when your host agent writes the report.
 4. Pin saved `toolsUsed` IDs as `toolIds` in `context_query` when the routine should stay within the same tool shortlist.
 5. Use `context_execute` only if `context_discover` with `mode: "execute"` returns an eligible method.
