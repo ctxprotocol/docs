@@ -40,6 +40,8 @@ Use this progression when the user asks for daily/weekly reports, recurring anal
 6. **Execute only when eligible:** use `context_discover` with `mode: "execute"` before `context_execute`. If no execute methods are returned, keep the routine on pinned `context_query`.
 7. **Move heavy math client-side:** once the data shape is stable, write host-side code that fetches `dataUrl`, computes the user's signal, stores the result, and reports the recommendation.
 
+For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) from the Context SDK repo.
+
 ## context_query: answer vs evidence
 
 Set `responseShape` based on who writes the final answer:

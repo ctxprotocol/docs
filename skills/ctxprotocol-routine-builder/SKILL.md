@@ -7,6 +7,8 @@ description: Turns a successful ctxprotocol natural-language query into a repeat
 
 Use this alongside the main `ctxprotocol` skill. The goal is not just to answer once. The goal is to preserve a working Context query as a repeatable agent-operated data routine.
 
+For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) from the Context SDK repo. It lives in [`examples/client`](https://github.com/ctxprotocol/sdk/tree/main/examples/client) and runs with `npm run routine` after setting `CONTEXT_API_KEY`.
+
 ## Workflow
 
 1. **Explore with Auto Query**

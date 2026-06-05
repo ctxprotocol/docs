@@ -26,6 +26,10 @@ Use `context_query` for the managed data product: discovery, execution, groundin
 For coding-agent users, install the normal `ctxprotocol` skill for one-off live data questions and the `ctxprotocol-routine-builder` skill for turning a satisfying answer into a saved routine.
 </Tip>
 
+<Tip>
+TypeScript users can adapt the runnable SDK example at [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts). It lives in the [`examples/client`](https://github.com/ctxprotocol/sdk/tree/main/examples/client) package and runs with `npm run routine` after setting `CONTEXT_API_KEY`.
+</Tip>
+
 ---
 
 ## Fast Path: One-Prompt Autopilot
@@ -277,10 +281,6 @@ The agent still uses Context for premium data access. Your code owns the final d
 
 <Tip>
 For recurring routines, use Context's answer as evidence and diagnostics, not as the only source of truth for the final label. If managed prose says "neutral" but your saved signal policy says "short", report the disagreement and let the local policy drive the scheduled signal.
-</Tip>
-
-<Tip>
-TypeScript users can adapt the routine example in `examples/client/src/agent-routine.ts` from the Context SDK repo. Run it from the SDK example client with `npm run routine` after setting `CONTEXT_API_KEY`.
 </Tip>
 
 ---

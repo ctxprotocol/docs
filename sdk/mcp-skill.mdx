@@ -34,7 +34,7 @@ Use the `ctxprotocol` skill for normal live data questions. Add a second `ctxpro
 
 ## Optional routine-builder skill
 
-For scheduled reports, recurring analyst jobs, and "make this query repeatable" workflows, save a second skill as `ctxprotocol-routine-builder/SKILL.md`:
+For scheduled reports, recurring analyst jobs, and "make this query repeatable" workflows, save a second skill as `ctxprotocol-routine-builder/SKILL.md`. TypeScript users can pair it with the runnable SDK example at [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) in the [`examples/client`](https://github.com/ctxprotocol/sdk/tree/main/examples/client) package.
 
 ```markdown
 ---
@@ -44,7 +44,7 @@ description: Turns a successful ctxprotocol natural-language query into a repeat
 
 # ctxprotocol Routine Builder
 
-Use this alongside the main `ctxprotocol` skill. First run Auto Query, then capture the terminal result as a Routine Recipe: exact question template, useful `toolsUsed` names and IDs, assumptions, dataUrl policy, artifacts, and report fields. Read `toolsUsed` from `structuredContent.toolsUsed` or `structuredContent.result.toolsUsed`; do not fetch `dataUrl` just to find tool IDs. Rerun with `responseShape: "evidence_only"` and `includeDataUrl: true` when the host agent writes the report. Pin saved `toolsUsed` IDs as `toolIds` for repeatable Query runs. Only use `context_execute` after `context_discover` with `mode: "execute"` returns an eligible method. In Autopilot mode, work through all six stages from a filled-in goal/window/report config and return an Autopilot Result.
+Use this alongside the main `ctxprotocol` skill. First run Auto Query, then capture the terminal result as a Routine Recipe: exact question template, useful `toolsUsed` names and IDs, assumptions, dataUrl policy, artifacts, and report fields. Read `toolsUsed` from `structuredContent.toolsUsed` or `structuredContent.result.toolsUsed`; do not fetch `dataUrl` just to find tool IDs. Rerun with `responseShape: "evidence_only"` and `includeDataUrl: true` when the host agent writes the report. Pin saved `toolsUsed` IDs as `toolIds` for repeatable Query runs. Only use `context_execute` after `context_discover` with `mode: "execute"` returns an eligible method. In Autopilot mode, work through all six stages from a filled-in goal/window/report config and return an Autopilot Result. For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts).
 ```
 
 ## The skill
@@ -93,6 +93,8 @@ Use this progression when the user asks for daily/weekly reports, recurring anal
 5. **Pin for repeatability:** pass saved `toolsUsed` IDs as `toolIds` to `context_query` when the same routine should stay within the same provider/tool shortlist. Use `context_discover` in query mode only to inspect those tools or search for alternatives.
 6. **Execute only when eligible:** use `context_discover` with `mode: "execute"` before `context_execute`. If no execute methods are returned, keep the routine on pinned `context_query`.
 7. **Move heavy math client-side:** once the data shape is stable, write host-side code that fetches `dataUrl`, computes the user's signal, stores the result, and reports the recommendation.
+
+For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) from the Context SDK repo.
 
 ## context_query: answer vs evidence
 
