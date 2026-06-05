@@ -7,11 +7,13 @@ description: "Connect any MCP-compatible agent to the Context marketplace"
 
 Context provides a remote MCP server that exposes the entire marketplace (Query, Execute, and Discover) through the [Model Context Protocol](https://modelcontextprotocol.io). Any agent that supports Streamable HTTP MCP servers can connect in under a minute.
 
-**Three tools are available:**
+**Five tools are available:**
 
 | Tool | What it does |
 |------|-------------|
-| `context_query` | Run an agentic Q&A query against the marketplace and get a grounded answer with evidence |
+| `context_query` | Run an agentic Q&A query against the marketplace. Quick jobs return a grounded answer; long jobs return a `jobId` |
+| `context_query_start` | Start a complex query and return a `jobId` immediately |
+| `context_query_status` | Poll a query job until it completes or fails |
 | `context_execute` | Call a specific marketplace tool method directly and get the structured result |
 | `context_discover` | Search the marketplace for available tools before querying or executing |
 
@@ -73,7 +75,7 @@ Add to your project's `.cursor/mcp.json` (or your global MCP settings):
 }
 ```
 
-Restart Cursor. The three tools appear in your MCP tool list automatically.
+Restart Cursor. The five tools appear in your MCP tool list automatically. If `context_query_status` is missing after a deploy, refresh or restart the MCP server before testing long jobs.
 
 ### Claude Code
 
@@ -139,6 +141,8 @@ The runtime auto-selects execution depth and the internal tool-selection model p
 
 The response includes the answer text, structured evidence, and metadata.
 
+For long jobs, `context_query` may return a `jobId` before the answer is ready. Poll `context_query_status` with that exact `jobId`; do not call `context_query` again for the same question unless you want to start a duplicate paid query.
+
 <Info>
 If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxprotocol.com/settings), `context_query` and `context_discover` inherit that account default automatically. Pass `favoritesOnly: true` or `favoritesOnly: false` on a single MCP call to override it. If you pass explicit `toolIds` to `context_query`, manual tool selection wins and favorites filtering is ignored.
 </Info>
@@ -153,6 +157,24 @@ If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxp
 
 <Tip>
 For natural-language questions, start with `context_query` and answer from that result. It already performed managed discovery, execution, grounding, and chart/artifact generation. Avoid repeated `context_discover` calls or a follow-up `context_execute` verification pass unless you need raw method output, exact rows, or pinned tools.
+</Tip>
+
+### Async Query Jobs
+
+Some marketplace questions are slow: multi-tool analysis, chart generation, long historical windows, and large data exports can exceed an MCP host's direct tool-call window. Context handles this with durable query jobs.
+
+| Tool | When to use | Next step |
+|------|-------------|-----------|
+| `context_query` | Default natural-language workflow | If it returns an answer, use it. If it returns `jobId`, call `context_query_status` |
+| `context_query_start` | You know the job is complex and want a handle immediately | Call `context_query_status` |
+| `context_query_status` | You have a `jobId` | Poll until `completed` or `failed` |
+
+<Warning>
+Do not start another `context_query` for the same prompt after receiving a `jobId`. That creates a second paid query. Poll `context_query_status` instead.
+</Warning>
+
+<Tip>
+For Cursor specifically, keep the loop simple: one `context_query` or `context_query_start`, then `context_query_status`. If the status tool is not visible in Cursor's MCP tool list, refresh/restart the MCP server rather than falling back to file searches or shell polling.
 </Tip>
 
 ### Answer vs evidence
