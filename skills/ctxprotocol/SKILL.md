@@ -42,6 +42,8 @@ Use this progression when the user asks for daily/weekly reports, recurring anal
 
 For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) from the Context SDK repo.
 
+For dense Velo order-flow routines, prefer pinned `evidence_only` Query plus `includeDataUrl: true` as the recurring shape. Empty execute discovery is expected for Query-only tools, and scheduled bias labels should come from the saved client-side signal policy over `dataUrl` rows.
+
 ## context_query: answer vs evidence
 
 Set `responseShape` based on who writes the final answer:

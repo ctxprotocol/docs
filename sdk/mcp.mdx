@@ -273,6 +273,8 @@ For daily reports, alerts, and repeated analyst jobs:
 
 See [Agent Data Routines](/sdk/agent-routines) for a copy-paste routine prompt. TypeScript users can adapt the runnable SDK example at [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) in the [`examples/client`](https://github.com/ctxprotocol/sdk/tree/main/examples/client) package.
 
+For Velo order-flow routines, it is normal for Execute discovery to return no eligible methods. In that case, keep the routine on pinned Query with `responseShape: "evidence_only"` and `includeDataUrl: true`.
+
 ### Discovery -> Execute (agent-driven loop)
 
 For full control, your agent can:
