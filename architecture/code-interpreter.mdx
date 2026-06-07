@@ -144,6 +144,58 @@ unprefixed aliases for columns that are globally unique across the merged
 sources. For example, a merge may expose both `cg_net_flow` and `net_flow`, but
 only if no other source also has a `net_flow` column.
 
+## Coverage-aware change helpers
+
+When a user asks for a total, aggregate, net change, flow, threshold event, or
+regime across many entities, the metric scope is the full requested population.
+Top-N, selected-entity, representative, or readability subsets are display
+choices only; they must not define the requested metric unless the user
+explicitly asked for that bounded subset.
+
+`derive_change_series(...)` is the contributor-agnostic helper for changing
+entity populations. It accepts wide matrices (one entity per numeric column)
+and long rows (`time_col`, `entity_col`, `value_col`), then returns
+`total_value`, `total_change`, `stable_entities_change`, `coverage_change`,
+and optional `selected_entities_change`.
+
+This keeps display choices from changing the answer. For example, top-N rows
+may be useful as a breakdown, but they must not replace the whole-population
+`total_change` when the requested chart is a total.
+
+### Flow vs. coverage transitions
+
+A per-period change is only a real **flow** for entities observed in both
+adjacent periods. When the observed (non-null) membership changes — an entity is
+first listed, delisted, or has a reporting gap then resumes — the choice of
+aggregation silently decides the answer:
+
+- **Sum-then-diff** (`total_change`) absorbs the entering/leaving entity as if it
+  were one-period movement. A venue first appearing at 35k BTC looks like a 35k
+  inflow.
+- **Diff-then-sum** drops that entity's NaN delta, so the swing silently
+  disappears — the symptom users describe as a "missing data point."
+
+`derive_change_series(...)` resolves this by returning both views plus the
+disclosure layer: headline `stable_entities_change` as the real flow, and
+surface `coverage_change` (with `entering_entity_count` / `exiting_entity_count`)
+as an annotated layer — never as a flow bar, never silently dropped. The
+invariant `total_change == stable_entities_change + coverage_change` holds every
+period, and `coverage_events` names which entities moved in or out. This is
+contributor-agnostic: it applies to any entity set whose membership changes over
+time, not just exchange venues.
+
+Timestamp normalization is part of the metric, not cleanup. After flooring
+timestamps to a coarser bucket, aggregate duplicate buckets with an explicit
+policy before computing changes. Do not `drop_duplicates(..., keep="first")`
+or `dropna()` your way through duplicates: some contributors emit a null
+placeholder bucket followed by a real sample in the same logical day/hour.
+
+For inventory, balance, reserve, holdings, open-interest, supply, or other
+stock/level series, the default sign convention is structural: a positive level
+delta is net flow into that inventory/location, and a negative level delta is
+net flow out. Invert the sign only when the source field is already a flow
+metric with an explicit opposite convention.
+
 ## Step budget for chart-required turns
 
 When the planning contract declares `chartIntent: "explicit"`, the
