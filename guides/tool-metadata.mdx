@@ -712,10 +712,16 @@ TOOLS = [
 |---|---|---|---|
 | Curated intelligence (e.g., "smart money analysis") | `"answer"` or `"both"` | `true` | Optional (set if you also want Execute revenue) |
 | Normalized raw data (e.g., "cross-exchange prices") | `"execute"` or `"both"` | `false` for execute-only, `true` for both | **Required** |
+| Direct functional primitive the agent calls and consumes raw (e.g., "web page → markdown", "structured extraction", "docs/code search") | `"execute"` or `"both"` | `false` for execute-only, `true` if also answerable | **Required** |
+| Write or authed action (e.g., "post to X", "update a CRM record") | `"execute"` | `false` | **Required** (also wire up [Handshakes](/guides/handshake-architecture)) |
 | Both curated answers and raw data access | `"both"` | `true` | **Required** |
 
 <Tip>
-**Mixed listings are supported.** A single tool can have some methods for Query only (curated intelligence tools), some for Execute only (streaming or raw data), and some for both. The platform routes each method based on its individual metadata.
+**Execute is not only normalized data.** Two kinds of method belong on the Execute surface. The first is normalized raw data (prices, candles, funding). The second is a **functional primitive**: any tool whose buyer is an agent that wants to call a function and use the result directly, such as fetch-and-clean a page, extract structured records, or search docs. For methods that perform a write or authed action, set `surface: "execute"` and implement the [Handshake Architecture](/guides/handshake-architecture) for the signature, transaction, or OAuth step.
+</Tip>
+
+<Tip>
+**Mixed listings are supported.** A single tool can have some methods for Query only (curated intelligence tools), some for Execute only (streaming, raw data, or functional/action primitives), and some for both. The platform routes each method based on its individual metadata.
 </Tip>
 
 <Warning>

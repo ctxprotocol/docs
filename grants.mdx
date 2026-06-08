@@ -335,8 +335,9 @@ The bar when we reopen this category will be narrow question-shaped workflows fo
 |-------------|---------------------|------|-------|---------------------|----------|
 | **Buyer-intent and trigger-event intelligence for founders** | 6sense / Bombora (enterprise-priced) | `Query` or `both` | founder / seed-stage GTM / solo outbound operator | *"Any trigger events at my target accounts this week suggesting they'd buy?"* | Medium-High |
 | **Technographic stack and migration normalizer** | BuiltWith / Wappalyzer / StackShare | `Execute` | dev building outbound tooling | *(Execute primitive: fragmented tech-stack detection)* | Medium |
+| **Authed CRM write-action primitive** | Composio / Zapier (one-CRM slice) | `Execute` + handshake | founder / GTM operator's agent | *(Execute primitive: create or update records in one CRM via OAuth handshake, not a generic gateway)* | Medium |
 
-Not funded even when reopened: generic lead databases, CRM enrichment wrappers, "ZoomInfo for agents," enterprise-GTM-anchored lines.
+Not funded even when reopened: generic lead databases, CRM enrichment wrappers, "ZoomInfo for agents," "all-app" integration gateways, or enterprise-GTM-anchored lines. An authed action is fundable only as one narrow scoped write primitive behind a handshake, not as a broad Zapier-style proxy.
   </Accordion>
 
   <Accordion title="Marketing & SEO (on ice)">
@@ -348,8 +349,10 @@ When we reopen this category, ad-spy and app-intelligence workflows survive only
 | **Winning ad creative decision intelligence** | BigSpy / AdSpy | `Query` | solo media buyer / DTC operator | *"What creative hooks are actually converting for DTC skincare right now and why?"* | Medium-High |
 | **Affiliate offer decision intelligence** | AdSpy | `Query` or `both` | affiliate marketer / performance marketer | *"Which CPA offers in the weight-loss vertical are actually converting on Facebook this month?"* | Medium-High |
 | **App-store estimate and ranking primitives** | Sensor Tower / data.ai | `Execute` or `both` | growth workflow builder | *(Execute primitive: app-store research)* | Medium |
+| **Ad-account audit + guarded budget/bid action** | Ryze / Adspirer (ad-ops copilots) | `Execute` + handshake | solo media buyer / small agency | *(Execute + handshake: read account performance, then a budget or bid change behind a spend-capped approval)* | Medium |
+| **Authed social posting / scheduling action** | Composio / Zapier (one-app slice) | `Execute` + handshake | agent builder / social operator | *(Execute primitive: one app via OAuth handshake, e.g. post or schedule to X — not a 6,000-app gateway)* | Medium |
 
-Not funded even when reopened: generic SEO suites, broad AI marketing wrappers, "browse this feed of ads" products.
+Not funded even when reopened: generic SEO suites, broad AI marketing wrappers, "browse this feed of ads" products, or "all-app" integration gateways. Money-moving or write actions are only fundable as one narrow scoped primitive behind a handshake (OAuth and, for spend, a budget envelope), never as a generic Zapier-style proxy.
   </Accordion>
 
   <Accordion title="Legal & Regulatory (on ice)">
@@ -375,13 +378,16 @@ Not funded even when reopened: weather feeds, sports feeds, news feeds, or locat
   </Accordion>
 
   <Accordion title="Developer Tools (on ice)">
-When we reopen this category, it will only fund tools that compress expensive developer toil for solo or small-team devs who have no Snyk / GHAS budget.
+When we reopen this category, it will fund two shapes: (1) tools that compress expensive developer toil for solo or small-team devs who have no Snyk / GHAS budget, and (2) narrow **agent-infrastructure `Execute` primitives** a coding agent calls directly and consumes raw. The second shape is the lane behind some of the best-selling MCP tools today (web fetch, extraction, component retrieval). It is fundable only when it isolates the specific paid capability, not when it is a generic "call any API" proxy.
 
 | Opportunity | Source subscription | Mode | Buyer | Buyer query example | Priority |
 |-------------|---------------------|------|-------|---------------------|----------|
 | **Reachable dependency-risk intelligence for small teams** | Snyk / Semgrep Supply Chain / GitHub Advanced Security | `Query` or `both` | solo dev / small eng team with no enterprise security budget | *"Is this CVE actually reachable in my codebase, and what's the fastest safe fix?"* | Medium-High |
+| **JS-rendered web page → clean LLM-ready markdown** | Firecrawl | `Execute` | coding-agent / RAG pipeline builder | *(Execute primitive: anti-bot, JS-rendered fetch → portable markdown; the one slice devs actually pay Firecrawl for)* | Medium-High |
+| **Structured extraction for one high-value site class** | Apify / Bright Data | `Execute` | scraping / data-pipeline dev | *(Execute primitive: typed records from one site type, not "scrape anything")* | Medium |
+| **UI component retrieval primitive** | 21st.dev Magic | `Execute` | coding agent / frontend dev | *(Execute primitive: return a working component implementation by spec)* | Medium |
 
-Not funded even when reopened: generic wrappers around GitHub, Datadog, code-search APIs, or AI code-remediation (Cursor and Claude Code already do this for free with repo context).
+Not funded even when reopened: generic wrappers around GitHub, Datadog, code-search APIs, or AI code-remediation (Cursor and Claude Code already do this for free with repo context). A scrape or extraction primitive only fits if it isolates the specific paid capability (anti-bot rendering, clean markdown, one structured site class); a generic "fetch any URL" proxy is not fundable.
   </Accordion>
 
   <Accordion title="Research & Academia (on ice)">
