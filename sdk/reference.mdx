@@ -144,7 +144,7 @@ A future major release can add response-named aliases (for example, `pricePerRes
 | Option | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
 | `apiKey` | `string` | Yes | - | Your Context Protocol API key |
-| `baseUrl` | `string` | No | `https://ctxprotocol.com` | API base URL (for development) |
+| `baseUrl` | `string` | No | `https://www.ctxprotocol.com` | API base URL (for development) |
 
 ```typescript
 // Production
@@ -233,6 +233,23 @@ const featuredExecute = await client.discovery.getFeatured(5, {
 });
 ```
 
+#### `client.discovery.get(toolId)`
+
+Fetch one tool listing by UUID.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `toolId` | `string` | Yes | Marketplace tool UUID |
+
+**Returns:** `Promise<Tool>`
+
+```typescript
+const tool = await client.discovery.get("uuid-of-tool");
+console.log(tool.name);
+console.log(tool.mcpTools);
+```
+
 ---
 
 ### Tools (Execute Mode)
@@ -301,6 +318,34 @@ console.log(closed.session.status); // closed
 
 ---
 
+### Developer
+
+#### `client.developer.updateTool(toolId, updates)`
+
+Update contributor-owned tool metadata programmatically. This is for developers managing their own listings, not for buyer query execution.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `toolId` | `string` | Yes | Tool UUID |
+| `updates.name` | `string` | No | New display name |
+| `updates.description` | `string` | No | New description |
+| `updates.suggestedPrompts` | `string[]` | No | Suggested buyer prompts |
+| `updates.category` | `string` | No | Listing category |
+
+**Returns:** `Promise<UpdateToolResult>`
+
+```typescript
+const updated = await client.developer.updateTool("uuid-of-tool", {
+  description: "Updated coverage and data freshness notes.",
+  suggestedPrompts: ["Which Base wallets had the largest inflows today?"],
+});
+
+console.log(updated.tool);
+```
+
+---
+
 ### Query (Pay-Per-Response)
 
 <Info>
@@ -323,6 +368,8 @@ Run an agentic query. The managed runtime handles tool discovery, ambiguity reso
 | `includeDataUrl` | `boolean` | No | Persist execution data to blob and return a URL |
 | `includeDeveloperTrace` | `boolean` | No | Include optional developer trace + orchestration diagnostics |
 | `idempotencyKey` | `string` | No | Optional idempotency key (UUID recommended) |
+| `resumeFrom` | `{ sessionId: string; attemptId: string }` | No | Resume from a previous Query attempt handle |
+| `forkFrom` | `{ sessionId: string; attemptId: string; reason?: string }` | No | Fork a previous Query attempt into a new branch |
 
 Can also accept a plain string: `client.query.run("your question")`
 
@@ -422,6 +469,40 @@ When retrieval-first rollout is enabled in the deployment, the query runtime can
 - Final synthesis still passes through the existing synthesis safety contract.
 - `includeData` returns a bounded inline preview when needed, and `includeDataUrl`/`artifacts.canonicalDataRef` reference the same canonical execution dataset used by retrieval-first assembly.
 
+#### Resume and Fork
+
+Every Query response can include `querySession` handles. Use `resumeFrom` to continue from a previous attempt, or `forkFrom` to branch from an attempt while preserving lineage.
+
+```typescript
+const first = await client.query.run({
+  query: "Find the biggest Base whale movements today",
+  includeDeveloperTrace: true,
+});
+
+const handle = first.querySession;
+if (handle) {
+  const resumed = await client.query.run({
+    query: "Focus only on wallets with exchange interactions",
+    resumeFrom: {
+      sessionId: handle.sessionId,
+      attemptId: handle.attemptId,
+    },
+  });
+
+  const forked = await client.query.run({
+    query: "Try the same question with stricter evidence requirements",
+    forkFrom: {
+      sessionId: handle.sessionId,
+      attemptId: handle.attemptId,
+      reason: "manual_fork",
+    },
+  });
+
+  console.log(resumed.response);
+  console.log(forked.response);
+}
+```
+
 #### `client.query.stream(options)`
 
 Same as `run()` but streams events in real-time via SSE.
@@ -455,6 +536,31 @@ Use the same `idempotencyKey` when retrying the same logical request after netwo
 <Note>
 If you stream with `responseShape: "evidence_only"`, expect the structured result on the final `done` event and few or no `text-delta` events.
 </Note>
+
+<Note>
+`query.run()` uses the streaming path internally and has a default stream timeout of 600 seconds. Non-streaming SDK requests default to 300 seconds. For complex chart-heavy requests, use async jobs.
+</Note>
+
+#### Async Query Jobs
+
+Use async jobs when a query may exceed a single blocking SDK request.
+
+```typescript
+const job = await client.query.start({
+  query: "Build a chart-ready dataset of Base whale movements over the last 30 days",
+  responseShape: "evidence_only",
+  includeDataUrl: true,
+});
+
+const status = await client.query.getStatus(job.jobId);
+console.log(status.status); // queued | running | completed | failed
+
+const completed = await client.query.poll(job.jobId, {
+  intervalMs: 2000,
+  timeoutMs: 15 * 60_000,
+});
+console.log(completed.result);
+```
 
 ---
 
@@ -736,8 +842,18 @@ interface PolymarketContext {
 interface WalletContext {
   address: string;
   chainId: number;
-  balances: TokenBalance[];
-  fetchedAt: string;
+  nativeBalance?: string;
+}
+
+interface ERC20TokenBalance {
+  address: string;
+  symbol: string;
+  decimals: number;
+  balance: string;
+}
+
+interface ERC20Context {
+  tokens: ERC20TokenBalance[];
 }
 ```
 

@@ -1,0 +1,153 @@
+---
+title: "Buyer Quickstart"
+description: "Go from zero to your first paid Context marketplace answer with an API key, wallet, USDC on Base, and one query"
+---
+
+## What You'll Do
+
+This guide is for buyers who want to pay for marketplace data and answers, not contributors building tools.
+
+You will:
+
+1. Sign in to Context
+2. Fund your embedded wallet with USDC on Base
+3. Set a one-time spending cap
+4. Create an API key
+5. Run one paid Query from TypeScript or Python
+
+<Info>
+Most first queries cost around `$0.10`, depending on the tools selected and model cost. Your spending cap is only an allowance. You are charged after the answer is delivered, and only up to the actual settlement amount.
+</Info>
+
+## Prerequisites
+
+<Steps>
+  <Step title="Sign in">
+    Open [Context](https://www.ctxprotocol.com), sign in, and let Context create your embedded smart wallet.
+  </Step>
+  <Step title="Fund wallet">
+    Add USDC on Base to your embedded wallet. The app's Add Funds flow targets the embedded wallet, so you do not need to manually paste an address unless you want to transfer from another wallet.
+  </Step>
+  <Step title="Set spending cap">
+    Approve USDC spending for the ContextRouter. This is a one-time cap. It does not charge you immediately.
+  </Step>
+  <Step title="Create API key">
+    Go to Settings, create an API key, and copy the `sk_live_...` value.
+  </Step>
+</Steps>
+
+<Warning>
+Keep your API key private. Put it in an environment variable such as `CONTEXT_API_KEY`; do not paste it into client-side code or commit it to Git.
+</Warning>
+
+## Your First TypeScript Query
+
+Install the SDK:
+
+```bash
+pnpm add @ctxprotocol/sdk
+```
+
+Run a buyer query:
+
+```typescript
+import { ContextClient } from "@ctxprotocol/sdk";
+
+const client = new ContextClient({
+  apiKey: process.env.CONTEXT_API_KEY!,
+});
+
+const answer = await client.query.run({
+  query: "What are the top whale movements on Base today?",
+  responseShape: "answer_with_evidence",
+  includeDataUrl: true,
+});
+
+console.log(answer.response);
+console.log(answer.evidence?.facts);
+console.log(answer.cost);
+```
+
+## Your First Python Query
+
+Install the SDK:
+
+```bash
+uv add ctxprotocol
+```
+
+Run the same buyer query:
+
+```python
+import asyncio
+import os
+from ctxprotocol import ContextClient
+
+
+async def main():
+    async with ContextClient(api_key=os.environ["CONTEXT_API_KEY"]) as client:
+        answer = await client.query.run(
+            query="What are the top whale movements on Base today?",
+            response_shape="answer_with_evidence",
+            include_data_url=True,
+        )
+        print(answer.response)
+        print(answer.evidence.facts if answer.evidence else None)
+        print(answer.cost)
+
+
+asyncio.run(main())
+```
+
+## Long-Running Queries
+
+Some showcase-grade queries can take longer than a single blocking SDK request. Use the async job API when you want a durable start-and-poll flow:
+
+```typescript
+const job = await client.query.start({
+  query: "Build a chart-ready dataset of Base whale movements over the last 30 days",
+  responseShape: "evidence_only",
+  includeDataUrl: true,
+});
+
+const result = await client.query.poll(job.jobId);
+console.log(result.result);
+```
+
+<Note>
+MCP clients can use the same long-running path through `context_query_start` and `context_query_status`.
+</Note>
+
+## Troubleshooting
+
+### Insufficient USDC balance
+
+Add USDC to your embedded wallet on Base. If you just funded the wallet, refresh the dashboard and retry.
+
+### Insufficient spending cap
+
+Increase your spending cap in the app. The cap is an allowance, not an upfront charge.
+
+### `401` or `403`
+
+Check that the request sends:
+
+```text
+Authorization: Bearer sk_live_YOUR_KEY
+```
+
+Also confirm you are using the production API base URL:
+
+```text
+https://www.ctxprotocol.com
+```
+
+### Query timed out
+
+Use the async job API (`query.start` + `query.poll`) or the MCP tools (`context_query_start` + `context_query_status`) for complex chart-heavy requests.
+
+## Next Steps
+
+- Connect an MCP client with [MCP Server](/sdk/mcp)
+- Learn Query and Execute modes in the [TypeScript SDK Reference](/sdk/reference)
+- Build a repeatable report with [Agent Data Routines](/sdk/agent-routines)

@@ -37,6 +37,12 @@
             ]
           },
           {
+            "group": "Get Started",
+            "pages": [
+              "guides/buyer-quickstart"
+            ]
+          },
+          {
             "group": "Build a Tool",
             "pages": [
               "guides/quickstart",

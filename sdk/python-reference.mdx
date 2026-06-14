@@ -148,7 +148,7 @@ A future major release can add response-named aliases (for example, `price_per_r
 | Option | Type | Required | Default | Description |
 |--------|------|----------|---------|-------------|
 | `api_key` | `str` | Yes | - | Your Context Protocol API key |
-| `base_url` | `str` | No | `https://ctxprotocol.com` | API base URL (for development) |
+| `base_url` | `str` | No | `https://www.ctxprotocol.com` | API base URL (for development) |
 
 ```python
 import os
@@ -243,6 +243,23 @@ featured_execute = await client.discovery.get_featured(
 )
 ```
 
+#### `client.discovery.get(tool_id)`
+
+Fetch one tool listing by UUID.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tool_id` | `str` | Yes | Marketplace tool UUID |
+
+**Returns:** `Tool`
+
+```python
+tool = await client.discovery.get("uuid-of-tool")
+print(tool.name)
+print(tool.mcp_tools)
+```
+
 ---
 
 ### Tools (Execute Mode)
@@ -310,6 +327,35 @@ print(closed.session.status)  # closed
 
 ---
 
+### Developer
+
+#### `client.developer.update_tool(tool_id, ...)`
+
+Update contributor-owned tool metadata programmatically. This is for developers managing their own listings, not for buyer query execution.
+
+**Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `tool_id` | `str` | Yes | Tool UUID |
+| `name` | `str` | No | New display name |
+| `description` | `str` | No | New description |
+| `suggested_prompts` | `list[str]` | No | Suggested buyer prompts |
+| `category` | `str` | No | Listing category |
+
+**Returns:** `dict[str, Any]`
+
+```python
+updated = await client.developer.update_tool(
+    "uuid-of-tool",
+    description="Updated coverage and data freshness notes.",
+    suggested_prompts=["Which Base wallets had the largest inflows today?"],
+)
+
+print(updated)
+```
+
+---
+
 ### Query (Pay-Per-Response)
 
 <Info>
@@ -332,6 +378,8 @@ Run an agentic query. The managed runtime handles tool discovery, ambiguity reso
 | `include_data_url` | `bool` | No | Persist execution data to blob and return a URL |
 | `include_developer_trace` | `bool` | No | Include optional developer trace + orchestration diagnostics |
 | `idempotency_key` | `str` | No | Optional idempotency key (UUID recommended) |
+| `resume_from` | `QueryAttemptReference` | No | Resume from a previous Query attempt handle |
+| `fork_from` | `QueryForkReference` | No | Fork a previous Query attempt into a new branch |
 
 **Returns:** `QueryResult`
 
@@ -433,6 +481,39 @@ When retrieval-first rollout is enabled in the deployment, the query runtime can
 - Final synthesis still passes through the existing synthesis safety contract.
 - `include_data` returns a bounded inline preview when needed, and `include_data_url`/`artifacts.canonical_data_ref` reference the same canonical execution dataset used by retrieval-first assembly.
 
+#### Resume and Fork
+
+Every Query response can include `query_session` handles. Use `resume_from` to continue from a previous attempt, or `fork_from` to branch from an attempt while preserving lineage.
+
+```python
+first = await client.query.run(
+    query="Find the biggest Base whale movements today",
+    include_developer_trace=True,
+)
+
+handle = first.query_session
+if handle:
+    resumed = await client.query.run(
+        query="Focus only on wallets with exchange interactions",
+        resume_from={
+            "sessionId": handle.session_id,
+            "attemptId": handle.attempt_id,
+        },
+    )
+
+    forked = await client.query.run(
+        query="Try the same question with stricter evidence requirements",
+        fork_from={
+            "sessionId": handle.session_id,
+            "attemptId": handle.attempt_id,
+            "reason": "manual_fork",
+        },
+    )
+
+    print(resumed.response)
+    print(forked.response)
+```
+
 #### `client.query.stream(query, tools?, favorites_only?, agent_model_id?, response_shape?, include_data?, include_data_url?, include_developer_trace?, idempotency_key?)`
 
 Same as `run()` but streams events in real-time via SSE.
@@ -458,6 +539,32 @@ Use the same `idempotency_key` when retrying the same logical request after netw
 <Note>
 If you stream with `response_shape="evidence_only"`, expect the structured result on the final `done` event and few or no `text-delta` events.
 </Note>
+
+<Note>
+`query.run()` uses the streaming path internally and has a default stream timeout of 600 seconds. Non-streaming SDK requests default to 300 seconds. For complex chart-heavy requests, use async jobs.
+</Note>
+
+#### Async Query Jobs
+
+Use async jobs when a query may exceed a single blocking SDK request.
+
+```python
+job = await client.query.start(
+    query="Build a chart-ready dataset of Base whale movements over the last 30 days",
+    response_shape="evidence_only",
+    include_data_url=True,
+)
+
+status = await client.query.get_status(job.job_id)
+print(status.status)  # queued | running | completed | failed
+
+completed = await client.query.poll(
+    job.job_id,
+    interval_ms=2000,
+    timeout_ms=15 * 60_000,
+)
+print(completed.result)
+```
 
 ---
 
@@ -703,6 +810,17 @@ class WalletContext(BaseModel):
     address: str
     chain_id: int
     native_balance: str | None
+
+
+class ERC20TokenBalance(BaseModel):
+    address: str
+    symbol: str
+    decimals: int
+    balance: str
+
+
+class ERC20Context(BaseModel):
+    tokens: list[ERC20TokenBalance]
 ```
 
 ---
