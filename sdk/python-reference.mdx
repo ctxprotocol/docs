@@ -372,7 +372,7 @@ Run an agentic query. The managed runtime handles tool discovery, ambiguity reso
 | `query` | `str` | Yes | Natural-language question |
 | `tools` | `list[str]` | No | Tool IDs to use (auto-discover if omitted) |
 | `favorites_only` | `bool` | No | Override the account-level Favorites-Only Auto Mode for this request |
-| `agent_model_id` | `str` | No | Main librarian agent model ID (default: `kimi-k2.6-model`) |
+| `agent_model_id` | `str` | No | Main librarian agent model ID (default: `glm-5.2-model`) |
 | `response_shape` | `"answer_with_evidence" \| "evidence_only"` | No | Structured response mode (default: `answer_with_evidence`). |
 | `include_data` | `bool` | No | Include bounded execution data inline. Large payloads return a preview plus full-data references |
 | `include_data_url` | `bool` | No | Persist execution data to blob and return a URL |
@@ -421,7 +421,7 @@ print(
 `agent_model_id` lets headless users choose the main librarian agent model explicitly. If omitted, the API uses its managed default agent model. Internal tool selection remains managed by the server.
 If `response_shape` is `evidence_only`, Context skips the extra prose synthesis layer, but the librarian agent still runs to fetch, compute, and ground the result.
 
-Import `AGENT_MODEL_IDS` and `DEFAULT_AGENT_MODEL_ID` from `ctxprotocol` to see the current supported slugs. The default is `kimi-k2.6-model`.
+Import `AGENT_MODEL_IDS` and `DEFAULT_AGENT_MODEL_ID` from `ctxprotocol` to see the current supported slugs. The default is `glm-5.2-model`.
 </Note>
 
 <Info>

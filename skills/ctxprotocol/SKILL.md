@@ -54,7 +54,7 @@ Set `responseShape` based on who writes the final answer:
 Tips:
 
 - Avoid inline `includeData` unless you need a bounded preview. Use `includeDataUrl: true` when you need a fetchable full-data reference, especially for recurring routines.
-- You usually do not need a model parameter; omitting `agentModelId` uses `kimi-k2.6-model`. If the user explicitly asks for a different quality/cost tradeoff, inspect the MCP schema enum and pass one of its `agentModelId` values. Tool selection and depth remain managed by the runtime.
+- You usually do not need a model parameter; omitting `agentModelId` uses `glm-5.2-model`. If the user explicitly asks for a different quality/cost tradeoff, inspect the MCP schema enum and pass one of its `agentModelId` values. Tool selection and depth remain managed by the runtime.
 - Pass `toolIds` only to restrict the query to specific tools returned by `context_discover` in query mode.
 - Pass `includeDeveloperTrace: true` when you need to debug why the runtime chose certain tools.
 - If the result includes `computedArtifacts` with image URLs, treat those as first-class output. Mention the chart link or use it in the final answer instead of burying it behind JSON evidence.
