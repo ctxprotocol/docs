@@ -136,7 +136,7 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 | `includeDeveloperTrace` | boolean | No | Include a machine-readable runtime trace (tool selection, retries, loops) for debugging |
 
 <Note>
-The runtime auto-selects execution depth and the internal tool-selection model per request. `agentModelId` is optional and controls the main librarian loop only; most callers can omit it. MCP clients can inspect the `agentModelId` schema enum to see valid slugs. The default is `glm-5.2-model`.
+The runtime auto-selects execution depth and the internal tool-selection model per request. `agentModelId` is optional and controls the main librarian loop only; most callers can omit it. MCP clients can inspect the `agentModelId` schema enum to see valid slugs. When omitted, the managed default is `kimi-k2.6-model` (same as `DEFAULT_AGENT_MODEL_ID` in the SDK).
 </Note>
 
 **Example prompt to your agent:**

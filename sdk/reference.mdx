@@ -362,7 +362,7 @@ Run an agentic query. The managed runtime handles tool discovery, ambiguity reso
 | `query` | `string` | Yes | Natural-language question |
 | `tools` | `string[]` | No | Tool IDs to use (auto-discover if omitted) |
 | `favoritesOnly` | `boolean` | No | Override the account-level Favorites-Only Auto Mode for this request |
-| `agentModelId` | `string` | No | Main librarian agent model ID (default: `glm-5.2-model`) |
+| `agentModelId` | `string` | No | Main librarian agent model ID (omit to use `DEFAULT_AGENT_MODEL_ID`) |
 | `responseShape` | `"answer_with_evidence" \| "evidence_only"` | No | Structured response mode (default: `answer_with_evidence`). |
 | `includeData` | `boolean` | No | Include bounded execution data inline. Large payloads return a preview plus full-data references |
 | `includeDataUrl` | `boolean` | No | Persist execution data to blob and return a URL |
@@ -409,7 +409,7 @@ console.log(answer.developerTrace?.diagnostics?.selection); // internal runtime 
 `agentModelId` lets headless users choose the main librarian agent model explicitly. If omitted, the API uses its managed default agent model. Internal tool selection remains managed by the server.
 If `responseShape` is `evidence_only`, Context skips the extra prose synthesis layer, but the librarian agent still runs to fetch, compute, and ground the result.
 
-Import `AGENT_MODEL_IDS` and `DEFAULT_AGENT_MODEL_ID` from `@ctxprotocol/sdk` to see the current supported slugs. The default is `glm-5.2-model`.
+Import `AGENT_MODEL_IDS` and `DEFAULT_AGENT_MODEL_ID` from `@ctxprotocol/sdk` to see the current supported slugs. Omit `agentModelId` to use the managed default (`DEFAULT_AGENT_MODEL_ID`).
 </Note>
 
 <Info>
