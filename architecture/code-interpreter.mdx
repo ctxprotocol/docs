@@ -113,7 +113,7 @@ the alias store and canonical dataset remain full fidelity.
 │  MCP tools (fetch + HTTP)        ◀── never sandboxed   │
 │  code_interpreter[1]             ─▶ Sandbox.create     │
 │  code_interpreter[2..N]          ─▶ reuse sandbox      │
-│  returnResult                    ◀── never sandboxed   │
+│  finalResponse                   ◀── never sandboxed   │
 │  finally { disposeTurnSandbox }  ─▶ Sandbox.stop       │
 └────────────────────────────────────────────────────────┘
 ```

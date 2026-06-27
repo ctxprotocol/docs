@@ -246,11 +246,21 @@ When your tool is registered on the marketplace but not returning expected resul
 
 When enabled, a **Developer Logs** card appears at the bottom of AI responses. Click to expand and see:
 
-- **Initial Execution Snapshot**: The execution payload the runtime started from
-- **Execution Trace**: All attempts, including errors and retries
-- **Final Execution Snapshot**: The final execution payload after any recovery steps
-- **Tool Call History**: Every call made to your tool with arguments and results
-- **Final Execution Result**: The data or error returned
+- **User's Original Question**: the prompt that triggered the turn
+- **Execution Summary**: orchestration mode (`manual` / `auto` / `query`), success status, tool-loop step count, total MCP calls, and any handshake pause or bounded-answer notice
+- **Orchestration Selection**: which policy the runtime used, the candidate method count, and the tools/methods it selected (manual pin collapses discovery, so this section is shorter for manual turns)
+- **Execution Contract**: the planner query the iterative loop was working from
+- **Execution Diagnostics (tool registry)**: available vs. selected method counts, methods the planner picked that were filtered out at registry build, tool-call attempt/success/failure counts, and failure samples — the most actionable section for "why did my tool fail?"
+- **Tool Call History**: every MCP call (and every Python `code_interpreter` sandbox call, flagged) with arguments and a truncated result
+- **Execution Trace**: the iterative loop's per-step record (tool name, intent, output alias, duration, artifacts emitted)
+- **Verification**: completeness evaluations, repair events, capability-miss signals, and bounded-answer reasons when the runtime stopped before another retry
+- **Handshake** (action tools only): confirms the loop paused for your signature/approval rather than failing
+- **Code Interpreter Artifacts** (sandbox turns only): image artifacts the Python sandbox emitted, with Vercel Blob URLs
+- **Final Execution Result**: the data or error the runtime returned
+
+<Note>
+The runtime is an **iterative AI SDK tool loop** — it does not generate or execute JavaScript. Older docs referenced "Initial Execution Snapshot" / "Final Execution Snapshot" blocks; those sections have been removed because the iterative runtime uses a `// iterative execution: no generated code` sentinel and there is no generated code to snapshot. What you see instead is the **Tool Call History** and **Execution Trace** above.
+</Note>
 
 ### Copying Logs for Debugging
 
@@ -295,9 +305,9 @@ Click **"Copy All"** to copy the complete debug log. You can then:
   </Accordion>
 
   <Accordion title="Output Schema Mismatches">
-    **Symptom**: "Suspicious null values" in execution trace, or execution verification says the answer is still missing required data
+    **Symptom**: The Execution Diagnostics section shows tool-call failures, or the Verification section reports the answer is still missing required data.
     
-    **Check**: Compare your `outputSchema` with the actual result in "Final Execution Result"
+    **Check**: Compare your `outputSchema` with the actual result in "Tool Call History" — does the `structuredContent` you return match the schema you declared?
     
     **Fix**: Your `structuredContent` must exactly match your declared `outputSchema`:
     
@@ -340,10 +350,10 @@ Click **"Copy All"** to copy the complete debug log. You can then:
   <Accordion title="Poor Tool Descriptions">
     **Symptom**: AI picks the wrong tool or passes incorrect arguments
     
-    **Check**: Review the initial code, is the AI using your tool correctly?
+    **Check**: Review the **Orchestration Selection** and **Tool Call History** sections — did the runtime select your tool, and did it call your method with the arguments you expected?
     
     **Fix**: Write clear, specific tool descriptions:
-    
+
     ```typescript
     // ❌ Vague description
     description: "Gets market data"
@@ -380,16 +390,18 @@ Click **"Copy All"** to copy the complete debug log. You can then:
 
 ### Recovery and Retries
 
-The Context runtime automatically retries when:
+The iterative runtime automatically retries when:
 
-1. **Runtime errors**: Execution fails on a likely recoverable tool/data-shape issue
-2. **Suspicious nulls**: Execution returns null where data should exist
-3. **Incomplete data**: Results do not fully answer the question and a targeted follow-up may help
+1. **Tool-call / data-shape failures**: a managed MCP call returns a shape that does not match your `outputSchema`, or your tool returns a structured error the runtime can recover from.
+2. **Capability miss**: no available tool can satisfy the request — the Verification section will show `Needs Different Tools Triggered: YES` and a `Missing Capability`.
+3. **Bounded answer**: a safety guardrail (same-endpoint fanout, upstream abort, or explicit empty result) stops further retries and the runtime delivers the best answer from evidence already retrieved. The Verification section shows the `Bounded Answer Reason`.
 
-If you see multiple attempts in the execution trace, it usually means:
-- Your tool returned unexpected data format
-- The runtime had to adjust how it processes your response
-- There may be schema or description improvements you can make
+Retries surface as **extra tool-loop steps** in the Execution Trace and additional entries in the Tool Call History — not as JavaScript code edits. The runtime does not generate or execute code.
+
+If you see repeated calls or a bounded answer in the logs, it usually means:
+- Your tool returned unexpected data format (check the Tool Call History result vs your `outputSchema`)
+- Your tool returned zero results without an explicit `searchExhausted` / `noResultsReason` signal, so the runtime could not tell whether the absence was the answer
+- There may be schema or description improvements you can make (see the Output Schema Mismatches accordion above)
 
 <Tip>
 **Pro Tip**: Copy the Developer Logs, paste them into Claude or another AI assistant along with this troubleshooting page, and ask: "Based on these execution logs, why is my MCP tool not returning the expected results? What should I fix in my server?"

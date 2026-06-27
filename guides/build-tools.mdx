@@ -268,24 +268,24 @@ return JSON.stringify(allData);
   <Accordion title="Write Detailed Output Schemas (Performance Critical)" icon="bolt">
 Your `outputSchema` is the **single most impactful thing** you can do to reduce latency and cost for users.
 
-Context's managed runtime reads your `outputSchema` to decide how to call tools, interpret results, and recover from mistakes. If your schema is vague, the runtime has to *guess* property names, and it will guess wrong. Each guess triggers a retry that:
+Context's managed runtime reads your `outputSchema` to decide how to call your tool with schema-guided arguments, how to interpret the `structuredContent` you return, and when to retry. If your schema is vague, the iterative loop has to *guess* property names, and it will guess wrong. Each bad guess triggers an extra tool-loop step that:
 
 - Adds **~30-60 seconds** of latency
 - Costs **~$0.02 extra** in model inference
 - Consumes retry budget within the turn
 
-The #1 cause of these retries? **Property name mismatches** between what the LLM generates and what your tool actually returns.
+The #1 cause of these retries? **Property name mismatches** between what the iterative loop expects (from your `outputSchema`) and what your tool actually returns in `structuredContent`.
 
-The runtime retries likely code/data-shape issues. Infrastructure failures (rate limits, auth failures, upstream timeouts) are treated as non-healable for that turn.
+The runtime retries likely **tool-call / data-shape** issues. Infrastructure failures (rate limits, auth failures, upstream timeouts) are treated as non-healable for that turn.
 
 If your tool explicitly reports plan/tier capability limits (for example, "long/short ratio unavailable on current tier"), the platform treats that as a constraint signal and returns best-effort output plus limitations instead of looping.
 
 Expose capability flags in `structuredContent` (for example, `supportsLongShortThresholdCheck: false`) and include a human-readable `limitations` field to help the verifier distinguish true parsing bugs from plan constraints.
 
-**The execution model defaults to camelCase** (standard JavaScript convention). If your API returns `snake_case` and your `outputSchema` doesn't document the exact property names, the runtime may infer `data.exchangeName` when your API returns `data.exchange_name`, triggering recovery every time.
+**Document the exact property names your API returns.** If your API returns `snake_case`, declare `snake_case` in your `outputSchema` so the runtime reads the right paths. The iterative loop calls your tool with schema-guided arguments and reads `structuredContent` directly — there is no generated JavaScript that "defaults to camelCase" — but the schema still has to name the fields you actually return, or the loop will look for fields that are not there.
 
 ```typescript
-// ❌ Bad: Vague schema; LLM must guess property names
+// ❌ Bad: Vague schema; loop must guess property names
 outputSchema: {
   type: "object",
   properties: {

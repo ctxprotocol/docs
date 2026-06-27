@@ -380,7 +380,8 @@ const answer = await client.query.run("What are the top whale movements on Base?
 console.log(answer.response);     // response text or summary
 console.log(answer.toolsUsed);    // [{ id, name, skillCalls }]
 console.log(answer.cost);         // { modelCostUsd, toolCostUsd, totalCostUsd }
-console.log(answer.orchestrationMetrics); // Optional orchestration diagnostics
+// `orchestrationMetrics` and `developerTrace` are only populated when
+// `includeDeveloperTrace: true` is passed — see the next example.
 ```
 
 ```typescript
@@ -403,6 +404,7 @@ console.log(answer.freshness?.asOf); // freshness metadata
 console.log(answer.confidence?.level); // high | medium | low
 console.log(answer.developerTrace?.summary); // retries/fallbacks/loops summary
 console.log(answer.developerTrace?.diagnostics?.selection); // internal runtime policy diagnostics
+console.log(answer.orchestrationMetrics); // first-pass / capability-miss / rediscovery metrics (gated on includeDeveloperTrace)
 ```
 
 <Note>
@@ -416,7 +418,9 @@ Import `AGENT_MODEL_IDS` and `DEFAULT_AGENT_MODEL_ID` from `@ctxprotocol/sdk` to
 The query runtime now exposes a single managed executor surface.
 The server decides internal budgets, ambiguity handling, and exploration policy from the query itself instead of asking SDK callers to choose a lane.
 
-`includeDeveloperTrace` and `orchestrationMetrics` are optional diagnostic surfaces. Their inner fields are typed but may evolve across rollouts as the managed runtime changes, so treat them as debugging signals rather than a stable execution contract.
+`includeDeveloperTrace` and `orchestrationMetrics` are optional diagnostic surfaces that are **both gated on `includeDeveloperTrace: true`** — they are `undefined` on the response envelope when the flag is omitted. Their inner fields are typed but may evolve across rollouts as the managed runtime changes, so treat them as debugging signals rather than a stable execution contract.
+
+The `developerTrace` object mirrors the chat app's Developer Logs card (same iterative-runtime signals): `orchestrationMode: "query"`, `summary` (tool calls, retries, loop steps), `timeline`, `toolCallHistory` (with `isCodeInterpreter` flags on Python sandbox calls), `executionTrace`, `verification` (with `boundedAnswerReason` / `boundedAnswerDataGap` when a safety guardrail stopped retries), and `diagnostics` (selection, execution contract, cost, contributor searches, tool-registry stats, retry budget, stage timing). The `initialCode` / `finalCode` fields are the `// iterative execution: no generated code` sentinel kept for trace compatibility with the previous VM-based runtime — no JavaScript is generated or executed.
 </Info>
 
 #### Structured Response Shapes
@@ -464,7 +468,7 @@ console.log(result.usage?.toolsUsed);
 
 When retrieval-first rollout is enabled in the deployment, the query runtime can switch synthesis context assembly from baseline truncation to retrieval-first slices for full-data or truncation-sensitive requests.
 
-- Stage artifacts are emitted in request-scoped internal storage (selection, scout, execution, synthesis).
+- Stage artifacts are emitted in request-scoped internal storage (selection, execution, synthesis). The `scout` stage is a legacy artifact slot — scout probe execution is disabled in the current iterative runtime, so no scout stage artifacts are produced.
 - Retrieval primitives (path lookup, array windows/sampling, keyword slices, top-K relevance) are used to build a bounded context pack from canonical execution data.
 - Final synthesis still passes through the existing synthesis safety contract.
 - `includeData` returns a bounded inline preview when needed, and `includeDataUrl`/`artifacts.canonicalDataRef` reference the same canonical execution dataset used by retrieval-first assembly.

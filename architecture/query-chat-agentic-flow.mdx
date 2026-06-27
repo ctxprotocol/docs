@@ -84,6 +84,8 @@ If an answer renders correctly through `/api/v1/query` but breaks in chat, the c
 
 Pass `includeDeveloperTrace: true` to `/api/v1/query` to receive a structured diagnostics payload alongside the answer. Traces are the supported public way to inspect what the runtime did on a given request.
 
+The chat app exposes a sibling surface: enable **Developer Mode** in Settings → Developer Settings, and a **Developer Logs** card appears at the bottom of each response with the same iterative-runtime signals (orchestration mode, tool call history, execution trace, verification, tool-registry stats). The two surfaces are kept conceptually aligned — the chat card and the SDK `developerTrace` tell the same story for the same turn class — but the SDK trace additionally includes a `timeline`, `summary` rollups, `cost`, and `contributorSearches` that the chat card does not surface. See the [Debugging Guide](/guides/troubleshooting#using-developer-mode-for-debugging) for the full section list.
+
 The trace is intentionally a typed, stable surface — internal intermediate diagnostics can change across rollouts without breaking it.
 
 

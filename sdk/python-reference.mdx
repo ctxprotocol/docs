@@ -388,7 +388,8 @@ answer = await client.query.run("What are the top whale movements on Base?")
 print(answer.response)      # response text or summary
 print(answer.tools_used)    # [QueryToolUsage(id, name, skill_calls)]
 print(answer.cost)          # QueryCost(model_cost_usd, tool_cost_usd, total_cost_usd)
-print(answer.orchestration_metrics)  # Optional orchestration diagnostics
+# `orchestration_metrics` and `developer_trace` are only populated when
+# `include_developer_trace=True` is passed — see the next example.
 ```
 
 ```python
@@ -428,7 +429,9 @@ Import `AGENT_MODEL_IDS` and `DEFAULT_AGENT_MODEL_ID` from `ctxprotocol` to see 
 The query runtime now exposes a single managed executor surface.
 The server decides internal budgets, ambiguity handling, and exploration policy from the query itself instead of asking SDK callers to choose a lane.
 
-`include_developer_trace` and `orchestration_metrics` are optional diagnostic surfaces. Their inner fields are typed but may evolve across rollouts as the managed runtime changes, so treat them as debugging signals rather than a stable execution contract.
+`include_developer_trace` and `orchestration_metrics` are optional diagnostic surfaces that are **both gated on `include_developer_trace=True`** — they are `None` on the response envelope when the flag is omitted. Their inner fields are typed but may evolve across rollouts as the managed runtime changes, so treat them as debugging signals rather than a stable execution contract.
+
+The `developer_trace` object mirrors the chat app's Developer Logs card (same iterative-runtime signals): `orchestration_mode="query"`, `summary` (tool calls, retries, loop steps), `timeline`, `tool_call_history` (with `is_code_interpreter` flags on Python sandbox calls), `execution_trace`, `verification` (with `bounded_answer_reason` / `bounded_answer_data_gap` when a safety guardrail stopped retries), and `diagnostics` (selection, execution contract, cost, contributor searches, tool-registry stats, retry budget, stage timing). The `initial_code` / `final_code` fields are the `// iterative execution: no generated code` sentinel kept for trace compatibility with the previous VM-based runtime — no JavaScript is generated or executed.
 </Info>
 
 #### Structured Response Shapes
@@ -476,7 +479,7 @@ print(result.usage.tools_used if result.usage else None)
 
 When retrieval-first rollout is enabled in the deployment, the query runtime can switch synthesis context assembly from baseline truncation to retrieval-first slices for full-data or truncation-sensitive requests.
 
-- Stage artifacts are emitted in request-scoped internal storage (selection, scout, execution, synthesis).
+- Stage artifacts are emitted in request-scoped internal storage (selection, execution, synthesis). The `scout` stage is a legacy artifact slot — scout probe execution is disabled in the current iterative runtime, so no scout stage artifacts are produced.
 - Retrieval primitives (path lookup, array windows/sampling, keyword slices, top-K relevance) are used to build a bounded context pack from canonical execution data.
 - Final synthesis still passes through the existing synthesis safety contract.
 - `include_data` returns a bounded inline preview when needed, and `include_data_url`/`artifacts.canonical_data_ref` reference the same canonical execution dataset used by retrieval-first assembly.
