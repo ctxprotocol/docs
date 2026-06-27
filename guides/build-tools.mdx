@@ -755,11 +755,11 @@ Unlike Web2 "star ratings" that can be gamed by bots, Context disputes require *
   </Accordion>
 
   <Accordion title="Execution Limits & Product Design" icon="clock">
-**Critical**: MCP tool execution on the Context platform has a **~60 second timeout per call**. This applies to both Query and Execute mode. It shapes the marketplace toward high-quality data products, but what "high-quality" means depends on which mode you're designing for.
+**Critical**: MCP tool execution on the Context platform has a **60-second timeout per call**. This is a single, uniform budget: it is identical in Query and Execute mode, and identical for every method regardless of its `latencyClass`. (`latencyClass` controls *discovery eligibility* — e.g. Query skips `streaming` methods — it does **not** grant a method more execution time.) It shapes the marketplace toward high-quality data products, but what "high-quality" means depends on which mode you're designing for.
 
 **Where the Timeout Comes From**
 
-The timeout is enforced by the **platform infrastructure** (and in standard MCP setups like Claude Desktop, by the LLM client itself). When your tool is called, the system waits for a response, if it doesn't arrive in ~60 seconds, execution fails.
+The timeout is enforced by the **platform infrastructure** (and in standard MCP setups like Claude Desktop, by the LLM client itself). When your tool is called, the system waits for a response; if it doesn't arrive within 60 seconds, execution fails. The platform passes this same value to the underlying MCP request timer, so there is no second, hidden timeout that can cut a call short earlier.
 
 When a timeout is hit, the runtime propagates cancellation to in-flight MCP calls to avoid post-timeout "zombie" traffic. Tool authors should still return explicit failure/degraded states quickly so agents can recover gracefully.
 

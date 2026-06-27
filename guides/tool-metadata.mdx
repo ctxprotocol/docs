@@ -603,7 +603,7 @@ Add these fields to each method definition under `_meta`:
 |---|---|---|
 | `surface` | `"answer"` \| `"execute"` \| `"both"` | Which mode(s) this method is eligible for (API field name) |
 | `queryEligible` | `boolean` | Whether the Query runtime can select this method for answer synthesis |
-| `latencyClass` | `"instant"` \| `"fast"` \| `"slow"` \| `"streaming"` | Expected response time class (Query excludes `streaming` by default) |
+| `latencyClass` | `"instant"` \| `"fast"` \| `"slow"` \| `"streaming"` | Discovery/eligibility hint (Query excludes `streaming` by default). Does **not** change the per-call timeout — every method gets the same 60s budget. |
 | `pricing.executeUsd` | `string` | Per-call execute price in USD (required for Execute eligibility) |
 | `pricing.queryUsd` | `string` | Reserved metadata for future per-method query billing (not used for billing in current rollout) |
 
