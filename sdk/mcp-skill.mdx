@@ -74,7 +74,7 @@ Access live, premium data through the Context marketplace over MCP. Context is a
 ## Decide the approach first
 
 - **Default to `context_query` for natural-language questions.** It runs the full managed runtime, including discovery, execution, grounding, and optional chart/artifact generation. Omit `toolIds` for Auto Mode discovery and selection.
-- **Named providers still use Auto Mode by default.** If the user says "using Coinglass and Velo" or names venues/tools in a normal question, keep that constraint in the `question` text and do not call `context_discover` first.
+- **Named providers still use Auto Mode by default.** If the user says "using Crypto Positioning and Crypto Data" or names venues/tools in a normal question, keep that constraint in the `question` text and do not call `context_discover` first.
 - **Do not run `context_discover` before a normal question.** Use `context_discover` first only when you need to inspect available tools, prices, or method schemas, or when the user explicitly asks to pin tools.
 - **Pass `toolIds` to `context_query`** only when you want Manual Mode: the runtime uses only those specific tools, then still handles execution and grounding.
 - **Long jobs:** if `context_query` returns `jobId`, call `context_query_status` with that exact ID until it returns `completed` or `failed`. Do not start another paid query for the same prompt.
@@ -96,7 +96,7 @@ Use this progression when the user asks for daily/weekly reports, recurring anal
 
 For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) from the Context SDK repo.
 
-For dense Velo order-flow routines, prefer pinned `evidence_only` Query plus `includeDataUrl: true` as the recurring shape. Empty execute discovery is expected for Query-only tools, and scheduled bias labels should come from the saved client-side signal policy over `dataUrl` rows.
+For dense Crypto Data order-flow routines, prefer pinned `evidence_only` Query plus `includeDataUrl: true` as the recurring shape. Empty execute discovery is expected for Query-only tools, and scheduled bias labels should come from the saved client-side signal policy over `dataUrl` rows.
 
 ## context_query: answer vs evidence
 
@@ -161,7 +161,7 @@ Ask the host agent:
 
 ```text
 Use ctxprotocol for a recurring analyst routine. Start with Auto Mode unless I have pinned toolIds.
-For each run, ask: "Using Velo Data for BTC futures/order-flow rows over the last 60 days at 1h resolution, analyze buy/sell flow, CVD, funding, open interest, and liquidations. Return evidence for whether high-timeframe bias favors long, short, or neutral."
+For each run, ask: "Using Crypto Data for BTC futures/order-flow rows over the last 60 days at 1h resolution, analyze buy/sell flow, CVD, funding, open interest, and liquidations. Return evidence for whether high-timeframe bias favors long, short, or neutral."
 Use responseShape: "evidence_only" and includeDataUrl: true.
 If the job returns jobId, poll context_query_status until completed. Do not start a duplicate query.
 After completion, read the evidence first. Fetch dataUrl only if you need the full rows for signal computation.

@@ -156,7 +156,7 @@ If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxp
 `context_query` is the default one-call product surface:
 
 - **Auto Mode:** omit `toolIds`. The runtime runs marketplace discovery, selects tools with its managed selector, executes the librarian loop, and returns grounded output.
-- **Named-provider Auto Mode:** if a normal natural-language question names providers or venues, keep those names in the `question` text and still omit `toolIds`. For example, "using Coinglass and Velo" should usually stay Auto Mode unless the user explicitly asks to pin tools.
+- **Named-provider Auto Mode:** if a normal natural-language question names providers or venues, keep those names in the `question` text and still omit `toolIds`. For example, "using Crypto Positioning and Crypto Data" should usually stay Auto Mode unless the user explicitly asks to pin tools.
 - **Manual Mode:** pass `toolIds` from `context_discover` only when you explicitly want to pin/inspect tools or bypass broad marketplace selection. The runtime skips broad marketplace selection and runs the same librarian loop using only those tools.
 - **Agent-driven mode:** use `context_discover` + `context_execute` only when your host agent wants to drive exact method calls and synthesis itself.
 
@@ -259,7 +259,7 @@ The runtime discovers relevant tools, handles execution end-to-end, and returns 
 
 For more control, first call `context_discover`, choose the relevant tool IDs, then call `context_query` with `toolIds`. Context still handles execution, grounding, and response assembly, but it stays within your pinned tool shortlist.
 
-Use this only when pinning is intentional. If the user simply asks "using Coinglass and Velo" as part of a natural-language analysis request, put that provider constraint in the `question` and keep Auto Mode.
+Use this only when pinning is intentional. If the user simply asks "using Crypto Positioning and Crypto Data" as part of a natural-language analysis request, put that provider constraint in the `question` and keep Auto Mode.
 
 ### Recurring Agent Routine
 
@@ -273,7 +273,7 @@ For daily reports, alerts, and repeated analyst jobs:
 
 See [Agent Data Routines](/sdk/agent-routines) for a copy-paste routine prompt. TypeScript users can adapt the runnable SDK example at [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) in the [`examples/client`](https://github.com/ctxprotocol/sdk/tree/main/examples/client) package.
 
-For Velo order-flow routines, it is normal for Execute discovery to return no eligible methods. In that case, keep the routine on pinned Query with `responseShape: "evidence_only"` and `includeDataUrl: true`.
+For Crypto Data order-flow routines, it is normal for Execute discovery to return no eligible methods. In that case, keep the routine on pinned Query with `responseShape: "evidence_only"` and `includeDataUrl: true`.
 
 ### Discovery -> Execute (agent-driven loop)
 

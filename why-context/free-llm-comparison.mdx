@@ -17,12 +17,12 @@ disagree, and the reason they disagree is the entire point of Context.
 
     Built on the prompt's assumption that OI was *climbing*. Returned a
     plausible narrative plus a 100-line Python script for *you* to run on
-    *your own* Velo feed. No live numbers. No chart.
+    *your own* Crypto Data feed. No live numbers. No chart.
   </Card>
   <Card title="Context · grounded" icon="circle-check" color="#10B981">
     **Verdict: Neutral / Mixed**
 
-    Built from the live 7-day Velo feed. Open interest was actually
+    Built from the live 7-day Crypto Data feed. Open interest was actually
     *contracting* **−4.35%**. Returns the rendered dashboard, the exact
     metrics, and a grounded trade read.
   </Card>
@@ -46,7 +46,7 @@ and deliver one dashboard plus a trade verdict.
 
 <Accordion title="Read the full prompt" icon="terminal">
 ```text
-Please read the order flow for me on BTC. Using Velo Data over the last 7 days
+Please read the order flow for me on BTC. Using Crypto Data over the last 7 days
 at 1h granularity, aggregate funding rate and open interest across all
 exchanges; overlay BTC 1h close on the same timeline so price action reads
 against positioning. Chart funding and OI with hourly delta histograms
@@ -90,11 +90,11 @@ The model returned a multi-section narrative followed by a complete
 `pandas` / `scipy` / `matplotlib` script (roughly 100 lines) ending with:
 
 ```python
-# To run: generate_orderflow_dashboard(velo_btc_df)
+# To run: generate_orderflow_dashboard(crypto_data_btc_df)
 ```
 
 In other words: *here is the code to build the dashboard once you've sourced and
-cleaned the Velo data yourself.* The model can describe the method perfectly. It
+cleaned the Crypto Data yourself.* The model can describe the method perfectly. It
 cannot fetch the data or produce the chart.
 </Accordion>
 
@@ -102,11 +102,11 @@ cannot fetch the data or produce the chart.
 
 ## B · Context, grounded
 
-Context ran the live pipeline against the real Velo feed, computed every metric
+Context ran the live pipeline against the real Crypto Data feed, computed every metric
 the prompt asked for, and returned the **rendered dashboard** plus exact
 numbers.
 
-<Frame caption="BTC order-flow dashboard: 7-day Velo aggregate, 1h granularity, built from live data.">
+<Frame caption="BTC order-flow dashboard: 7-day Crypto Data aggregate, 1h granularity, built from live data.">
   <img
     src="https://7rs12nlupksbkzdm.public.blob.vercel-storage.com/python-sandbox/charts/b73d5c0a89f16c39b922f8ad58c5a58d59cdc1df49faa77210687825adf51052.png"
     alt="BTC order-flow dashboard: price vs open interest, funding rate with hourly deltas, normalized spot vs perp CVD, and rolling adjusted-slope panels"
@@ -142,7 +142,7 @@ numbers.
 > wait-and-confirm environment, not a high-conviction entry.
 
 <Info>
-  *Data: Velo Data, 7-day 1-hour aggregate across Binance, Bybit, OKX,
+  *Data: Crypto Data, 7-day 1-hour aggregate across Binance, Bybit, OKX,
   Hyperliquid, Deribit (perps) and Binance, Bybit Spot, OKX, Coinbase (spot).*
 </Info>
 
@@ -176,7 +176,7 @@ import { ContextClient } from "@ctxprotocol/sdk";
 const client = new ContextClient({ apiKey: process.env.CONTEXT_API_KEY });
 
 const result = await client.query.run({
-  query: "Read the order flow on BTC using Velo Data over the last 7 days at 1h granularity...",
+  query: "Read the order flow on BTC using Crypto Data over the last 7 days at 1h granularity...",
   responseShape: "answer_with_evidence",
   includeDataUrl: true,
 });

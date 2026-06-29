@@ -42,7 +42,7 @@ Use this progression when the user asks for daily/weekly reports, recurring anal
 
 For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`](https://github.com/ctxprotocol/sdk/blob/main/examples/client/src/agent-routine.ts) from the Context SDK repo.
 
-For dense Velo order-flow routines, prefer pinned `evidence_only` Query plus `includeDataUrl: true` as the recurring shape. Empty execute discovery is expected for Query-only tools, and scheduled bias labels should come from the saved client-side signal policy over `dataUrl` rows.
+For dense Crypto Data order-flow routines, prefer pinned `evidence_only` Query plus `includeDataUrl: true` as the recurring shape. Empty execute discovery is expected for Query-only tools, and scheduled bias labels should come from the saved client-side signal policy over `dataUrl` rows.
 
 ## context_query: answer vs evidence
 
@@ -106,7 +106,7 @@ Ask the host agent:
 
 ```text
 Use ctxprotocol for a recurring analyst routine. Start with Auto Mode unless I have pinned toolIds.
-For each run, ask: "Using Velo Data for BTC futures/order-flow rows over the last 60 days at 1h resolution, analyze buy/sell flow, CVD, funding, open interest, and liquidations. Return evidence for whether high-timeframe bias favors long, short, or neutral."
+For each run, ask: "Using Crypto Data for BTC futures/order-flow rows over the last 60 days at 1h resolution, analyze buy/sell flow, CVD, funding, open interest, and liquidations. Return evidence for whether high-timeframe bias favors long, short, or neutral."
 Use responseShape: "evidence_only" and includeDataUrl: true.
 If the job returns jobId, poll context_query_status until completed. Do not start a duplicate query.
 After completion, read the evidence first. Fetch dataUrl only if you need the full rows for signal computation.

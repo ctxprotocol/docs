@@ -45,7 +45,7 @@ For a runnable TypeScript starter, adapt [`examples/client/src/agent-routine.ts`
    - Before direct execution, call `context_discover` with `mode: "execute"`.
    - Use `context_execute` only when discovery returns an eligible method whose schema covers the routine.
    - If no execute method exists, keep the routine on pinned Query.
-   - For Velo order-flow routines, empty execute discovery is an expected Query-only outcome, not a failure.
+   - For Crypto Data order-flow routines, empty execute discovery is an expected Query-only outcome, not a failure.
 
 6. **Move signal logic client-side**
    - Once the returned data shape is stable, suggest a script that fetches `dataUrl`, computes local indicators, stores prior-run state, and emits the final report.
@@ -81,7 +81,7 @@ goal: "Create a recurring BTC order-flow analyst routine that decides whether hi
 asset_or_entity: "BTC"
 data_window: "last 60 days"
 resolution: "1h"
-preferred_providers_or_venues: "Use Velo Data for BTC futures/order-flow rows, funding, open interest, liquidations, and market-structure metrics. Start in Auto Mode, but keep Velo Data named in the question. Use Meridian V2 or other tools only as complementary sources if selected."
+preferred_providers_or_venues: "Use Crypto Data for BTC futures/order-flow rows, funding, open interest, liquidations, and market-structure metrics. Start in Auto Mode, but keep Crypto Data named in the question. Use Meridian V2 or other tools only as complementary sources if selected."
 report_fields: "bias, confidence, key evidence, CVD and buy/sell flow metrics, funding/open-interest context, liquidation context, chart artifacts, dataUrl, missing data/caveats, suggested pinned toolIds, Execute eligibility, next-run instructions"
 signal_policy: "Prefer short when recent buy ratio is below 45%, CVD is negative and deteriorating, and open interest falls with price. Prefer long when recent buy ratio is above 55%, CVD is positive and improving, and open interest confirms the move. Otherwise neutral."
 max_spend_guidance: "Keep economical. Do not start duplicate paid queries. Poll jobIds. Stop Execute testing if execute discovery returns no eligible method."
@@ -100,7 +100,7 @@ Then run:
 5. Execute discovery with `mode: "execute"` only if `test_execute_if_eligible` is true. If no eligible method appears, mark Execute blocked and do not force a direct call.
 6. Client-side starter plan or script in the requested language.
 
-For dense Velo routines, `answer_with_evidence` is mainly a human sanity check and recipe-capture step. The recurring routine should rely on `evidence_only` plus `includeDataUrl: true`.
+For dense Crypto Data routines, `answer_with_evidence` is mainly a human sanity check and recipe-capture step. The recurring routine should rely on `evidence_only` plus `includeDataUrl: true`.
 
 Return a final `Autopilot Result` with routine status, question template, pinned `toolIds`, evidence-only data policy, Execute status, client-side starter, caveats, and next manual checks.
 
