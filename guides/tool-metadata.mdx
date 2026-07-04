@@ -104,10 +104,9 @@ These hints are not a substitute for server-side protections. Keep your own upst
 
 ### Rate-Limit Reference Implementations
 
-- TypeScript: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor), rate limit hints + per-method pricing
 - TypeScript: [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider), Execute-mode data broker with background ingestion, `inputSchema` `default`/`examples`, and zero upstream rate limits
+- TypeScript: [Polymarket contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor), large-surface Query-mode tool with 20+ methods and complex schemas
 - Python: [Hummingbot contributor server](https://github.com/ctxprotocol/sdk-python/tree/main/examples/server/hummingbot-contributor)
-- Additional large-surface example: [Polymarket contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor)
 
 ---
 
@@ -785,7 +784,9 @@ To enable Execute visibility for a legacy tool, either set a default execute pri
 
 ### Reference Implementation
 
-The [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor) demonstrates all `_meta` capabilities in production:
+For a production example of `_meta` pricing and rate-limit metadata, see the [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider). For a large-surface contributor with 20+ methods and complex schemas, see the [Polymarket contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor).
+
+The following `_meta` capabilities are recommended for production tools with upstream API constraints:
 - Per-method `_meta.pricing.executeUsd` with a default fallback and explicit opt-out for query-only methods
 - Per-method `_meta.rateLimit` hints built from upstream API tier constraints
 - Batch tool recommendations via `recommendedBatchTools`

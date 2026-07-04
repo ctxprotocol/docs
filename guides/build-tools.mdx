@@ -323,7 +323,7 @@ outputSchema: {
 - If the response is an **object** (not an array), say so, `{ type: "object" }` not `{ type: "array" }`
 - Document **wrapper properties** your handler adds (e.g., `fetchedAt`, `count`, `symbol`)
 
-For third-party APIs with strict quotas, publish pacing hints via `_meta.rateLimit`. The runtime uses these hints to pace calls to your API. See [Tool Metadata](/guides/tool-metadata#rate-limit-hints). Reference implementation: [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor).
+For third-party APIs with strict quotas, publish pacing hints via `_meta.rateLimit`. The runtime uses these hints to pace calls to your API. See [Tool Metadata](/guides/tool-metadata#rate-limit-hints).
   </Accordion>
 </AccordionGroup>
 
@@ -722,7 +722,7 @@ See [Choosing a Mode](/guides/tool-metadata#choosing-a-mode) for the full visibi
 Execute pricing is typically **~1/100 of your listing response price** (e.g., \$0.10 response → \$0.001 per execute call) because a single Query response can invoke up to 100 method calls internally.
 </Tip>
 
-See [Tool Metadata](/guides/tool-metadata#pricing--execute-mode-eligibility) for the full metadata reference. For production examples, see the [Coinglass contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/coinglass-contributor) (rate limit hints + per-method pricing) and the [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider) (Execute-mode data broker with background ingestion).
+See [Tool Metadata](/guides/tool-metadata#pricing--execute-mode-eligibility) for the full metadata reference. For production examples, see the [Polymarket contributor server](https://github.com/ctxprotocol/sdk/tree/main/examples/server/polymarket-contributor) (large-surface Query-mode tool with 20+ methods) and the [Normalized Data Provider](https://github.com/ctxprotocol/sdk/tree/main/examples/server/normalized-data-provider) (Execute-mode data broker with background ingestion).
 
 ---
 
