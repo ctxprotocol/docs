@@ -55,6 +55,10 @@ The structured envelope can also include `marketIntelligence`, `view.rows`, `vie
 
 See the [TypeScript SDK Reference](/sdk/reference#query-pay-per-response) or [Python SDK Reference](/sdk/python-reference#query-pay-per-response) for the full API.
 
+<Tip>
+For LLM agent frameworks where every SDK/tool call consumes another model turn, prefer `client.query.runOrPoll()` (TypeScript), `client.query.run_or_poll()` (Python), or MCP `context_query_start` + `context_query_poll` for long chart-heavy requests. Avoid manual `getStatus()` / `context_query_status` loops unless polling is happening in normal program code.
+</Tip>
+
 ### Option 2: Build Your Own Loop
 
 If you want full control over tool selection, argument construction, and result synthesis, follow the **Discovery → Schema → Execution** loop below (typically in Execute mode with spending limits).

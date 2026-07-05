@@ -544,8 +544,27 @@ If you stream with `response_shape="evidence_only"`, expect the structured resul
 </Note>
 
 <Note>
-`query.run()` uses the streaming path internally and has a default stream timeout of 600 seconds. Non-streaming SDK requests default to 300 seconds. For complex chart-heavy requests, use async jobs.
+`query.run()` uses the streaming path internally and has a default client stream timeout of 600 seconds (configurable via `stream_timeout_seconds`). Non-streaming SDK requests default to 300 seconds. The hosted compute ceiling is 1800 seconds on every query path — sync, async jobs, and MCP. For complex chart-heavy requests, use `run_or_poll()` or async jobs.
 </Note>
+
+#### `client.query.run_or_poll(query, ..., interval_ms?, timeout_ms?)`
+
+Start a durable query job and wait internally until it completes. This is the recommended one-call helper for LLM agents and scheduled agent frameworks because the entire wait happens inside one SDK call (one model turn) instead of asking the host LLM to call `get_status()` 20-40 times.
+
+```python
+answer = await client.query.run_or_poll(
+    query="Build a chart-ready dataset of Base whale movements over the last 30 days",
+    response_shape="evidence_only",
+    include_data_url=True,
+)
+
+print(answer.response)
+print(answer.computed_artifacts)
+```
+
+The defaults are agent-friendly: status is checked every 5 seconds over plain HTTP (HTTP polls cost no model tokens — model *turns* do), and the client waits up to 31 minutes, slightly beyond the 1800-second hosted compute ceiling. Only pass `interval_ms` / `timeout_ms` if you need a shorter client-side wait.
+
+Use `run()` for short interactive queries that should finish inside your terminal/tool timeout. Use `run_or_poll()` when query time is uncertain or when every SDK call costs an LLM inference turn.
 
 #### Async Query Jobs
 
@@ -561,13 +580,11 @@ job = await client.query.start(
 status = await client.query.get_status(job.job_id)
 print(status.status)  # queued | running | completed | failed
 
-completed = await client.query.poll(
-    job.job_id,
-    interval_ms=2000,
-    timeout_ms=15 * 60_000,
-)
+completed = await client.query.poll(job.job_id)
 print(completed.result)
 ```
+
+For LLM agents, prefer `run_or_poll()` or `start()` + `poll()`. Reserve `get_status()` loops for normal programs where each check is just an HTTP request, never for LLM agents where each check is a full model turn.
 
 ---
 

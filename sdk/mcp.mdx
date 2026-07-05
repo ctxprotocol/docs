@@ -7,13 +7,14 @@ description: "Connect any MCP-compatible agent to the Context marketplace"
 
 Context provides a remote MCP server that exposes the entire marketplace (Query, Execute, and Discover) through the [Model Context Protocol](https://modelcontextprotocol.io). Any agent that supports Streamable HTTP MCP servers can connect in under a minute.
 
-**Five tools are available:**
+**Six tools are available:**
 
 | Tool | What it does |
 |------|-------------|
 | `context_query` | Run an agentic Q&A query against the marketplace. Quick jobs return a grounded answer; long jobs return a `jobId` |
 | `context_query_start` | Start a complex query and return a `jobId` immediately |
-| `context_query_status` | Poll a query job until it completes or fails |
+| `context_query_poll` | Wait inside one MCP tool call until a query job completes, fails, or reaches the poll timeout |
+| `context_query_status` | Check a query job's current status once |
 | `context_execute` | Call a specific marketplace tool method directly and get the structured result |
 | `context_discover` | Search the marketplace for available tools before querying or executing |
 
@@ -79,7 +80,7 @@ Add to your project's `.cursor/mcp.json` (or your global MCP settings):
 }
 ```
 
-Restart Cursor. The five tools appear in your MCP tool list automatically. If `context_query_status` is missing after a deploy, refresh or restart the MCP server before testing long jobs.
+Restart Cursor. The six tools appear in your MCP tool list automatically. If `context_query_poll` is missing after a deploy, refresh or restart the MCP server before testing long jobs.
 
 ### Claude Code
 
@@ -127,7 +128,8 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `question` | string | Yes | The question to answer (1–4000 chars) |
-| `agentModelId` | string | No | Advanced: choose the main librarian agent model for the merged execution/final-response loop |
+| `agentModelId` | string | No | Advanced: choose the main librarian agent model. Omit for the platform default |
+| `confirmAgentModelOverride` | boolean | No | Required when `agentModelId` is set. Confirms the model override was explicitly requested by the user |
 | `responseShape` | string | No | `answer_with_evidence` (default) or `evidence_only`. See [Answer vs evidence](#answer-vs-evidence) |
 | `toolIds` | string[] | No | Restrict query to specific tool UUIDs (Manual Mode). Omit for Auto Mode discovery and selection |
 | `favoritesOnly` | boolean | No | Override the account-level Favorites-Only Auto Mode for this request |
@@ -136,7 +138,7 @@ Ask a natural-language question and get a grounded answer powered by the full ma
 | `includeDeveloperTrace` | boolean | No | Include a machine-readable runtime trace (tool selection, retries, loops) for debugging |
 
 <Note>
-The runtime auto-selects execution depth and the internal tool-selection model per request. `agentModelId` is optional and controls the main librarian loop only; most callers can omit it. MCP clients can inspect the `agentModelId` schema enum to see valid slugs. When omitted, the managed default is `kimi-k2.6-model` (same as `DEFAULT_AGENT_MODEL_ID` in the SDK).
+Omit `agentModelId` for the platform-default librarian model. If a user explicitly wants a different Context librarian model, pass a supported `agentModelId` and set `confirmAgentModelOverride: true`. Calls that include `agentModelId` without confirmation fail fast so host LLMs do not accidentally leak their own model name into the librarian runtime.
 </Note>
 
 **Example prompt to your agent:**
@@ -145,7 +147,7 @@ The runtime auto-selects execution depth and the internal tool-selection model p
 
 The response includes the answer text, structured evidence, and metadata.
 
-For long jobs, `context_query` may return a `jobId` before the answer is ready. Poll `context_query_status` with that exact `jobId`; do not call `context_query` again for the same question unless you want to start a duplicate paid query.
+For long jobs, `context_query` may return a `jobId` before the answer is ready. Call `context_query_poll` with that exact `jobId`; do not call `context_query` again for the same question unless you want to start a duplicate paid query.
 
 <Info>
 If the API key owner enables Favorites-Only Auto Mode in [Settings](https://ctxprotocol.com/settings), `context_query` and `context_discover` inherit that account default automatically. Pass `favoritesOnly: true` or `favoritesOnly: false` on a single MCP call to override it. If you pass explicit `toolIds` to `context_query`, manual tool selection wins and favorites filtering is ignored.
@@ -172,16 +174,19 @@ This is the same managed Query runtime, not a lightweight background fetch. The 
 
 | Tool | When to use | Next step |
 |------|-------------|-----------|
-| `context_query` | Default natural-language workflow | If it returns an answer, use it. If it returns `jobId`, call `context_query_status` |
-| `context_query_start` | You know the job is complex and want a handle immediately | Call `context_query_status` |
-| `context_query_status` | You have a `jobId` | Poll until `completed` or `failed` |
+| `context_query` | Default natural-language workflow | If it returns an answer, use it. If it returns `jobId`, call `context_query_poll` |
+| `context_query_start` | You know the job is complex and want a handle immediately | Call `context_query_poll` |
+| `context_query_poll` | You have a `jobId` and want the final result in one agent turn | Waits internally until `completed`, `failed`, or timeout |
+| `context_query_status` | You need one cheap status check for UI/logging | Read status once; do not loop this manually from an LLM agent |
+
+`context_query_poll` blocks for up to 9 minutes by default (`timeoutMs`, raisable to 25 minutes if your MCP client tolerates long tool calls) and checks job status server-side every 5 seconds (`intervalMs` — this internal cadence costs no host-model tokens, so there is no reason to slow it down). While blocking, the server emits MCP progress notifications so progress-aware clients keep the call alive. If it returns a still-running status, call it again with the same `jobId`. Every query path — sync, async jobs, and MCP — shares the same 1800-second hosted compute ceiling.
 
 <Warning>
-Do not start another `context_query` for the same prompt after receiving a `jobId`. That creates a second paid query. Poll `context_query_status` instead.
+Do not start another `context_query` for the same prompt after receiving a `jobId`. That creates a second paid query. Use `context_query_poll` instead.
 </Warning>
 
 <Tip>
-For Cursor specifically, keep the loop simple: one `context_query` or `context_query_start`, then `context_query_status`. While status is `running`, do not inspect local files, fetch blobs, or start a duplicate query. If the status tool is not visible in Cursor's MCP tool list, refresh/restart the MCP server rather than falling back to file searches or shell polling.
+For Cursor and other LLM agents, keep the loop simple: one `context_query` or `context_query_start`, then `context_query_poll`. Manual `context_query_status` loops are expensive because every check can consume another full model turn. If the poll tool is not visible in your MCP tool list, refresh/restart the MCP server rather than falling back to file searches or shell polling.
 </Tip>
 
 ### Answer vs evidence
@@ -204,7 +209,7 @@ For recurring agent-written reports, use `responseShape: "evidence_only"` with `
 </Tip>
 
 <Tip>
-For routine recipe capture, read `toolsUsed` from the terminal structured result before fetching raw data. Direct `context_query` returns it at `structuredContent.toolsUsed`; completed `context_query_status` returns it at `structuredContent.result.toolsUsed`. Text-only hosts should show "Routine recipe tool candidates from toolsUsed".
+For routine recipe capture, read `toolsUsed` from the terminal structured result before fetching raw data. Direct `context_query` returns it at `structuredContent.toolsUsed`; completed `context_query_poll` or `context_query_status` returns it at `structuredContent.result.toolsUsed`. Text-only hosts should show "Routine recipe tool candidates from toolsUsed".
 </Tip>
 
 <Warning>

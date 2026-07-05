@@ -66,7 +66,7 @@ Routine config:
 - Client-side language for the final routine starter: [TypeScript/Python/none]
 
 Instructions:
-1. Start with Auto Query using answer_with_evidence. If the job returns jobId, poll context_query_status until terminal.
+1. Start with Auto Query using answer_with_evidence. If the job returns jobId, call context_query_poll until terminal.
 2. Capture a Routine Recipe from the terminal structured result. First read structuredContent.toolsUsed or structuredContent.result.toolsUsed. Do not fetch dataUrl just to find tool IDs.
 3. Rerun the approved question with responseShape: "evidence_only" and includeDataUrl: true. If Auto `evidence_only` fails after Auto `answer_with_evidence` succeeded, retry once with the useful pinned tool IDs from the recipe, then mark the recovery in the final result.
 4. If the evidence-only result has useful toolsUsed IDs, run one pinned Query test using those IDs as toolIds.
@@ -77,7 +77,7 @@ Instructions:
 
 Polling guidance for long jobs:
 
-- Poll after roughly 30 seconds, then every 60-120 seconds for large historical windows.
+- Use context_query_poll so waiting happens inside one MCP tool call. If you are writing normal program code, poll after roughly 30 seconds, then every 60-120 seconds for large historical windows.
 - Do not start a duplicate paid query while a `jobId` is running.
 - A 60-day, 1h, multi-tool crypto routine can take several minutes.
 
@@ -153,14 +153,14 @@ For this first run:
 - Omit `toolIds`.
 - Use the default `answer_with_evidence`.
 - Include named providers in the question text if you care about them, for example "using Crypto Positioning and Crypto Data".
-- If the result returns `jobId`, poll `context_query_status` until terminal.
+- If the result returns `jobId`, call `context_query_poll` until terminal.
 
 Use the answer to inspect whether the available tools, assumptions, evidence, charts, and time window match the routine you want. The successful response also includes `toolsUsed` in the structured payload. Those tool IDs are the starting point for a repeatable routine.
 
 Where to look:
 
 - Direct `context_query` result: `structuredContent.toolsUsed`
-- Completed `context_query_status` result: `structuredContent.result.toolsUsed`
+- Completed `context_query_poll` or `context_query_status` result: `structuredContent.result.toolsUsed`
 - Text-only hosts: look for "Routine recipe tool candidates from toolsUsed"
 
 ---
@@ -204,7 +204,7 @@ Tell your agent:
 ```text
 Use ctxprotocol for a recurring analyst routine.
 Ask the BTC order-flow question with responseShape: "evidence_only" and includeDataUrl: true.
-If the call returns jobId, poll context_query_status until completed.
+If the call returns jobId, call context_query_poll until completed.
 After completion, read the bounded evidence first.
 Fetch dataUrl only if you need the full rows for signal computation.
 Report bias, confidence, key evidence, chart artifacts, and dataUrl.
@@ -316,7 +316,7 @@ Run shape:
 - Use responseShape: "evidence_only".
 - Use includeDataUrl: true.
 - Omit toolIds unless I have already pinned them.
-- If the tool returns jobId, poll context_query_status with that exact jobId until completed or failed. Do not start a duplicate query.
+- If the tool returns jobId, call context_query_poll with that exact jobId until completed or failed. Do not start a duplicate query.
 - If Auto `evidence_only` fails after Auto `answer_with_evidence` worked, retry once with pinned `toolsUsed` IDs and record the recovery.
 
 After completion:

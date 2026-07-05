@@ -542,8 +542,27 @@ If you stream with `responseShape: "evidence_only"`, expect the structured resul
 </Note>
 
 <Note>
-`query.run()` uses the streaming path internally and has a default stream timeout of 600 seconds. Non-streaming SDK requests default to 300 seconds. For complex chart-heavy requests, use async jobs.
+`query.run()` uses the streaming path internally and has a default client stream timeout of 600 seconds (configurable via `streamTimeoutMs`). Non-streaming SDK requests default to 300 seconds. The hosted compute ceiling is 1800 seconds on every query path — sync, async jobs, and MCP. For complex chart-heavy requests, use `runOrPoll()` or async jobs.
 </Note>
+
+#### `client.query.runOrPoll(options, pollOptions?)`
+
+Start a durable query job and wait internally until it completes. This is the recommended one-call helper for LLM agents and scheduled agent frameworks because the entire wait happens inside one SDK call (one model turn) instead of asking the host LLM to call `getStatus()` 20-40 times.
+
+```typescript
+const answer = await client.query.runOrPoll({
+  query: "Build a chart-ready dataset of Base whale movements over the last 30 days",
+  responseShape: "evidence_only",
+  includeDataUrl: true,
+});
+
+console.log(answer.response);
+console.log(answer.computedArtifacts);
+```
+
+The defaults are agent-friendly: status is checked every 5 seconds over plain HTTP (HTTP polls cost no model tokens — model *turns* do), and the client waits up to 31 minutes, slightly beyond the 1800-second hosted compute ceiling. Only pass `pollOptions` if you need a shorter client-side wait.
+
+Use `run()` for short interactive queries that should finish inside your terminal/tool timeout. Use `runOrPoll()` when query time is uncertain or when every SDK call costs an LLM inference turn.
 
 #### Async Query Jobs
 
@@ -559,12 +578,11 @@ const job = await client.query.start({
 const status = await client.query.getStatus(job.jobId);
 console.log(status.status); // queued | running | completed | failed
 
-const completed = await client.query.poll(job.jobId, {
-  intervalMs: 2000,
-  timeoutMs: 15 * 60_000,
-});
+const completed = await client.query.poll(job.jobId);
 console.log(completed.result);
 ```
+
+For LLM agents, prefer `runOrPoll()` or `start()` + `poll()`. Reserve `getStatus()` loops for normal programs where each check is just an HTTP request, never for LLM agents where each check is a full model turn.
 
 ---
 
