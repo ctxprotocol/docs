@@ -356,6 +356,8 @@ The Query API is Context's **response marketplace**. Instead of buying raw API c
 
 Run an agentic query. The managed runtime handles tool discovery, ambiguity resolution, multi-tool execution (up to 100 MCP calls per response turn as a safety cap), and grounding — and returns the selected Query response contract (`answer_with_evidence` or `evidence_only`, default `answer_with_evidence`). Query billing is pay-per-response with automatic payment after delivery.
 
+Since SDK 0.21.0, `run()` is backed by the durable job path (`start()` + `poll()`), so a single call reliably covers the full 1800-second hosted compute ceiling and survives transient connection drops. Pass `QueryPollOptions` as an optional second argument to shorten the client-side wait.
+
 **Parameters:**
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
@@ -509,7 +511,7 @@ if (handle) {
 
 #### `client.query.stream(options)`
 
-Same as `run()` but streams events in real-time via SSE.
+Runs the same query pipeline as `run()` but over a live SSE connection, yielding events in real-time.
 
 Supports the same options as `run()` (`tools`, `favoritesOnly`, `agentModelId`, `responseShape`, `includeData`, `includeDataUrl`, `includeDeveloperTrace`, `idempotencyKey`).
 
@@ -542,7 +544,7 @@ If you stream with `responseShape: "evidence_only"`, expect the structured resul
 </Note>
 
 <Note>
-`query.run()` uses the streaming path internally and has a default client stream timeout of 600 seconds (configurable via `streamTimeoutMs`). Non-streaming SDK requests default to 300 seconds. The hosted compute ceiling is 1800 seconds on every query path — sync, async jobs, and MCP. For complex chart-heavy requests, use `runOrPoll()` or async jobs.
+`query.stream()` has a default client stream timeout of 600 seconds (configurable via `streamTimeoutMs`). `query.run()` is job-backed since 0.21.0 and is not bound by the stream timeout — it waits up to 31 minutes by default. The hosted compute ceiling is 1800 seconds on every query path — sync, async jobs, and MCP.
 </Note>
 
 #### `client.query.runOrPoll(options, pollOptions?)`
@@ -562,7 +564,7 @@ console.log(answer.computedArtifacts);
 
 The defaults are agent-friendly: status is checked every 5 seconds over plain HTTP (HTTP polls cost no model tokens — model *turns* do), and the client waits up to 31 minutes, slightly beyond the 1800-second hosted compute ceiling. Only pass `pollOptions` if you need a shorter client-side wait.
 
-Use `run()` for short interactive queries that should finish inside your terminal/tool timeout. Use `runOrPoll()` when query time is uncertain or when every SDK call costs an LLM inference turn.
+Since 0.21.0, `run()` and `runOrPoll()` share the same durable job-backed path, so either works for uncertain query times. `runOrPoll()` remains the explicit name for readers of agent code.
 
 #### Async Query Jobs
 
